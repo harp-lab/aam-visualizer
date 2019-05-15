@@ -6,7 +6,23 @@ Web application and server that processes code in analysis engine and visualizes
 
 
 
-## Documentation
+## Build instructions
+
+Run `npm install` to install all node modules.
+
+**Building:**
+* `npm run build` : builds application
+
+**Deploying:**
+* `npm run start` : starts server
+
+**Developing**
+* `npm run dev-start` : starts server with development environment
+* `npm run test` : runs tests (TODO: none at the moment)
+
+
+
+## Documentation (needs to be updated)
 
 ### Server
 
@@ -143,17 +159,3 @@ The client then sends `id=<project id>` GET requests at intervals until the serv
 
 
 
-## Build instructions
-
-Run `npm run <target>` in the console.
-
-**Building:**
-* `install`: install all node modules
-* `build` : builds application
-
-**Deploying:**
-* `start` : starts server
-
-**Developing**
-* `dev-start` : starts server with development environment
-* `test` : runs tests (TODO: none at the moment)
