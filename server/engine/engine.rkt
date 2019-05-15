@@ -7,7 +7,10 @@
   "consts.rkt"
   "global.rkt"
   "lexer.rkt"
-  "parser.rkt")
+  "parser.rkt"
+  "analyzer.rkt"
+  ;"output.rkt"
+  )
 
 ; handle commandline arguments
 (define output-file-path (make-parameter ""))
@@ -39,6 +42,7 @@
 ; parser
 (define-values (code-ast code-astStart) (parse code-toks))
 
+;(define state-graph s-nodes)
 
 
 ; write output json
@@ -49,6 +53,7 @@
       'ast (hash
         'graph code-ast
         'start code-astStart)
+      ;'state (hash 'graph s-nodes)
     )))
 (define out
   (if (non-empty-string? (output-file-path))
