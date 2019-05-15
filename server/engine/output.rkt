@@ -17,7 +17,7 @@
   (define label-ids (for/hash ([l labels][id (range (length labels))]) (values l id)))
   (define k-closures
     (list->set
-     (set-map (apply set-union (hash-values kstore))
+     (set-map (if (hash-empty? kstore)(set)(apply set-union (hash-values kstore)))
               (lambda(i) (match-define `(,c ,l) (divide-kont i)) `(,c ,(hash-ref label-ids l))))))
   (define k-c-ids (for/hash ([k k-closures][id (range (set-count k-closures))]) (values (car k) id)))
   (define l-c-trans (for/hash ([l labels])
