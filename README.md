@@ -148,6 +148,7 @@ The client then sends `id=<project id>` GET requests at intervals until the serv
 Run `npm run <target>` in the console.
 
 **Building:**
+* `npm i`: install all node modules
 * `build` : builds application
 
 **Deploying:**
