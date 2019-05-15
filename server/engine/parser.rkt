@@ -15,6 +15,11 @@
   (define (error s)
     (log LOG_TYPE_ENGINE (string-append "ERROR: " s))
     (exit 1))
+
+  (define hashsym_counter 0)
+  (define (hashsym s)
+    (set! hashsym_counter (+ 1 hashsym_counter))
+    (string->symbol (format "~a~a" s hashsym_counter)))
   
   (define (peek n)
     (if (> (length toks) n)
@@ -49,7 +54,7 @@
     (define start (tok-start (expect "(")))
     (define s (parseS))
     (define end (tok-end (expect ")")))
-    (define id (gensym 's))
+    (define id (hashsym 's))
     (hash-set! ast id (hash-union (hash 's-expr s 'start start 'end end) (process s)))
     (tokize (~a id) start end))
   (define (parseS)
@@ -68,7 +73,7 @@
     (define a (tok-s tok))
     (define start (tok-start tok))
     (define end (tok-end tok))
-    (define id (gensym 'a))
+    (define id (hashsym 'a))
     (define form
       (cond
         [(x? a)

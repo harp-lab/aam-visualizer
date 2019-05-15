@@ -3,5 +3,7 @@ server/data
 node-debug.log
 *.DS_Store
 *.*~
+*.*#
+server/engine/*-out
 package-lock.json
 server/engine/compiled

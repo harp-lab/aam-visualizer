@@ -4,7 +4,27 @@
 
 (require "analyzer.rkt")
 
-(provide s-nodes)
+(provide full-state-graph)
+
+(define (graph-states states tables state-gen kont-gen)
+  (match-define `(,id>lambda ,store ,kstore) tables)
+  (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
+  (define state-tran (for/hash ([s states])
+                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore))
+                       (values (hash-ref state-ids s) (for/list ([tr st-tr])
+                                                        (hash-ref state-ids tr)))))
+  (define labels (cons 'halt (hash-keys kstore)))
+  (define label-ids (for/hash ([l labels][id (range (length labels))]) (values l id)))
+  (define k-closures
+    (list->set
+     (set-map (apply set-union (hash-values kstore))
+              (lambda(i) (match-define `(,c ,l) (divide-kont i)) `(,c ,(hash-ref label-ids l))))))
+  (define k-c-ids (for/hash ([k k-closures][id (range (set-count k-closures))]) (values (car k) id)))
+  (define l-c-trans (for/hash ([l labels])
+                        (define l-tr (hash-ref kstore l (set)))
+                        (values (hash-ref label-ids l) (for/list ([tr l-tr])
+                                                         (hash-ref k-c-ids (car (divide-kont tr)))))))
+  `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
 
 (define (make-state-nodes states state-ids state-tran)
   (for/hash ([s states]) (values
@@ -27,10 +47,10 @@
                               'end `(0 0)
                               'data ""
                               'nodes (hash-ref state-tran (hash-ref state-ids s)))]
-                            [other
+                            [(? symbol? other)
                              (hash
                               'id (hash-ref state-ids s)
-                              'form other
+                              'form (symbol->string other)
                               'start `(0 0)
                               'end `(0 0)
                               'data ""
@@ -48,15 +68,11 @@
                                'data (~a (length (car c)))
                                'nodes (hash-ref l-c-trans (cadr c))))))
   
-;(define example `((lambda (x) (x x))(lambda (x) (x x))))
-;(define json "parseoutput.json")
-
-#;(match-define `(,s-nodes ,k-nodes)
-  (graph-states
-   example
-   make-state-nodes
-   make-kont-nodes))
-
-;(write-json s-nodes)
-;(display "\n\n")
-;(write-json k-nodes)
+(define (full-state-graph analysis-states data-tables)
+  (match-define `(,s-nodes ,k-nodes)
+    (graph-states
+     analysis-states
+     data-tables
+     make-state-nodes
+     make-kont-nodes))
+  s-nodes)

@@ -9,7 +9,7 @@
   "lexer.rkt"
   "parser.rkt"
   "analyzer.rkt"
-  ;"output.rkt"
+  "output.rkt"
   )
 
 ; handle commandline arguments
@@ -42,8 +42,11 @@
 ; parser
 (define-values (code-ast code-astStart) (parse code-toks))
 
-;(define state-graph s-nodes)
+; analyzer
+(match-define `(,analysis-states ,data-tables) (analyze code-ast code-astStart))
 
+; output
+(define state-graph (full-state-graph analysis-states data-tables))
 
 ; write output json
 (define out-hash
@@ -53,7 +56,7 @@
       'ast (hash
         'graph code-ast
         'start code-astStart)
-      ;'state (hash 'graph s-nodes)
+      'state (hash 'graph state-graph)
     )))
 (define out
   (if (non-empty-string? (output-file-path))

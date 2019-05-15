@@ -3,10 +3,17 @@
 (require json)
 
 (provide
- graph-states
+ analyze
+ step-state
+ divide-kont
  loc-start
  loc-end
  only-syntax)
+
+(define newsym_counter 0)
+(define (newsym s)
+  (set! newsym_counter (+ 1 newsym_counter))
+  (string->symbol (format "~a~a" s newsym_counter)))
 
 (define (get-json in-file)
   (define in (open-input-file in-file))
@@ -26,11 +33,11 @@
 (define (build-ast in)
   (match in
     [(? string? s)
-     (define json (get-json s))
-     (make-ast (hash-ref json 'ast) (string->symbol (hash-ref json 'astStart)))]
+     (define json (hash-ref (get-json s) 'ast))
+     (make-ast (hash-ref json 'graph) (string->symbol (hash-ref json 'start)))]
     [else (syntax->ast in)]))
 
-(struct ast/loc (ast bound loc lambda-id) ); #:transparent)
+(struct ast/loc (ast bound loc lambda-id)  #:transparent)
 
 (define (loc-start syn)
   (car (ast/loc-loc syn)))
@@ -80,7 +87,7 @@
              (define xs (map (lambda (p) (json->ast jast p (hash) last-lam-id)) params))
              (define bindings-new
                (foldl (lambda (xi bs) (hash-set bs (ast/loc-ast xi) xi)) bindings xs))
-             (define this-lam-id (or next-lam (gensym 'func)))
+             (define this-lam-id (or next-lam (newsym 'func)))
              (define aste (json->ast jast (caddr parts) bindings-new this-lam-id))
              (define this-lam (ast/loc `(lambda ,xs ,aste) 'lambda (get-loc item) last-lam-id))
              (hash-set! id>lambda this-lam-id this-lam)
@@ -90,11 +97,11 @@
              (match-define (cons pairs bindings-new)
                (foldr (lambda (id acc)
                         (match-define (cons ps bs) acc)
-                        (define jp (get-parts (hash-ref jast (id))))
+                        (define jp (get-parts (hash-ref jast id)))
                         (define xi (json->ast jast (car jp) bindings last-lam-id))
                         (define ei (json->ast jast (cadr jp) bindings last-lam-id (ast/loc-ast xi)))
                         (define bs+ (hash-set bs (ast/loc-ast xi) xi))
-                        (define ps+ (cons (xi ei) ps))
+                        (define ps+ (cons (list xi ei) ps))
                         (cons ps+ bs+))
                       (cons '() bindings)
                       binds))
@@ -121,7 +128,7 @@
                   (match-define (cons ps bs) acc)
                   (define astx (syntax->ast xi (hash) last-lam-id))
                   (define aste (syntax->ast ei bindings last-lam-id (ast/loc-ast astx)))
-                  (define ps+ (cons (cons astx aste) ps))
+                  (define ps+ (cons (list astx aste) ps))
                   (define bs+ (hash-set bs xi astx))
                   (cons ps+ bs+))
                 (cons '() bindings)
@@ -139,7 +146,7 @@
                   (cons vs+ bs+))
                 (cons '() bindings)
                 xs))
-       (define this-lam-id (or next-lam-id (gensym 'func)))
+       (define this-lam-id (or next-lam-id (newsym 'func)))
        (define aste (syntax->ast e bindings-new this-lam-id))
        (define this-lam (ast/loc `(lambda ,vars ,aste) 'lambda (gensym 'lambda) last-lam-id))
        (hash-set! id>lambda this-lam-id this-lam)
@@ -378,27 +385,11 @@
       `(,(cons (car k) f) ,a)]
     [else `((),k)]))
 
-(define (graph-states data state-gen kont-gen)
-  (match-define `(,ast ,id>lambda)(inject data))
-  (match-define `(,states ,store ,kstore) (explore-state (set ast) (set) (hash) (hash)))
-  (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
-  (define state-tran (for/hash ([s states])
-                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore))
-                       (values (hash-ref state-ids s) (for/list ([tr st-tr])
-                                                        (hash-ref state-ids tr)))))
-  (define labels (cons 'halt (hash-keys kstore)))
-  (define label-ids (for/hash ([l labels][id (range (length labels))]) (values l id)))
-  (define k-closures
-    (list->set
-     (set-map (apply set-union (hash-values kstore))
-              (lambda(i) (match-define `(,c ,l) (divide-kont i)) `(,c ,(hash-ref label-ids l))))))
-  (define k-c-ids (for/hash ([k k-closures][id (range (set-count k-closures))]) (values (car k) id)))
-  (define l-c-trans (for/hash ([l labels])
-                        (define l-tr (hash-ref kstore l (set)))
-                        (values (hash-ref label-ids l) (for/list ([tr l-tr])
-                                                         (hash-ref k-c-ids (car (divide-kont tr)))))))
-  `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
-
+(define (analyze json-ast start-token)
+  (match-define `(,ast ,id>lambda) (make-ast json-ast (string->symbol start-token)))
+  (match-define `(,states ,sigma ,sigmak) (explore-state (set `(eval ,ast ,(hash) () halt)) (set) (hash) (hash)))
+  (print-explore (list states sigma sigmak))
+  (list states (list id>lambda sigma sigmak)))
 
 (define (explore data)
   (display "explored expression:\n")(show-syntax data)(display "\n")
