@@ -140,23 +140,8 @@ class App extends Component {
   }
 
   render() {
-    let view;
+    let title, view;
     const selectedProjectId = this.state.selectedProjectId;
-
-    const buttons = [
-      {
-        label: 'new project',
-        onClick: this.createProject,
-        color: 'primary',
-        variant: 'contained'
-      },
-      {
-        label: 'project list',
-        onClick: this.deselectProject,
-        color: 'primary',
-        variant: 'outlined'
-      },
-    ];
 
     switch (this.state.view) {
       case VIEWS.list:
@@ -168,6 +153,7 @@ class App extends Component {
         break;
       case VIEWS.project:
         const project = this.selectedProject;
+        title = project.name || selectedProjectId;
         view = <Project
           id={ selectedProjectId }
           project = { this.selectedProject }
@@ -175,10 +161,6 @@ class App extends Component {
         break;
     }
 
-    let title;
-    if (selectedProjectId) {
-      const project = this.selectedProject;
-    }
     return (
       <div style={ {
         display: 'flex',
