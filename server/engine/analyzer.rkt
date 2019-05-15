@@ -47,12 +47,14 @@
 
 (define (only-syntax ast)
   (define syn-ast (ast/loc-ast ast))
+  (define (conv-list l)
+    (map (lambda (i)
+           (match i
+             [(? ast/loc? i) (only-syntax i)]
+             [(? list? l+)(conv-list l+)]
+             [else i])) l))  
   (if (list? syn-ast)
-      (map (lambda (i)
-             (match i
-               [(? ast/loc? i) (only-syntax i)]
-               [(? list? i)(map only-syntax i)]
-               [else i])) syn-ast)
+      (conv-list syn-ast)
       syn-ast))
 
 (define (get-loc item)
@@ -197,7 +199,7 @@
 (define (print-bind b inline col)
   (define ncol (+ 1 col))
   (for ([t (if inline 0 col)])(display "  "))
-  (match-define (cons x exp) b)
+  (match-define (list x exp) b)
   (display "[")
   (print-var x #t ncol)
   (display " ")
@@ -315,7 +317,7 @@
 
 (define (step-state state sigma sigmak)
   (match state
-    [`(eval ,(ast/loc `(let ([,xs . ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
+    [`(eval ,(ast/loc `(let ([,xs ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
      (define new-i (tick i state))
      (define new-state
        `(eval ,(car es) ,rho ,new-i ,(cons `(frame let (,(set `(clo ,xs ,e_b ,rho))) ,(cdr es) () ,lid ,rho ,new-i) kappa)))
@@ -345,7 +347,7 @@
                 (match-define `(,states ,sigma+ ,sigmak+) acc)
                 (match-define `(clo ,xs ,e ,rho) clo)
                 (define i+ (tick i state))
-                (define ais (map (lambda (xi) (cons xi i+)) xs))
+                (define ais (map (lambda (xi) (list xi i+)) xs))
                 (define rho+ (foldl (lambda (xi ai r)
                                       (hash-set r xi ai))
                                     rho
@@ -388,7 +390,6 @@
 (define (analyze json-ast start-token)
   (match-define `(,ast ,id>lambda) (make-ast json-ast (string->symbol start-token)))
   (match-define `(,states ,sigma ,sigmak) (explore-state (set `(eval ,ast ,(hash) () halt)) (set) (hash) (hash)))
-  (print-explore (list states sigma sigmak))
   (list states (list id>lambda sigma sigmak)))
 
 (define (explore data)
