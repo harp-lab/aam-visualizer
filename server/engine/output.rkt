@@ -42,7 +42,7 @@
                             ['proc
                              (hash
                               'id (hash-ref state-ids s)
-                              'form (symbol->string (cadr s))
+                              'form (format "proc-~a" (cadr s))
                               'start `(0 0)
                               'end `(0 0)
                               'data ""
