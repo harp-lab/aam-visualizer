@@ -11,8 +11,8 @@
   (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define state-tran (for/hash ([s states])
                        (match-define `(,st-tr ,_ ,_) (step-state s store kstore))
-                       (values (hash-ref state-ids s) (for/list ([tr st-tr])
-                                                        (hash-ref state-ids tr)))))
+                       (values (hash-ref state-ids s) (for/hash ([tr st-tr])
+                                                        (values (hash-ref state-ids tr)(hash))))))
   (define labels (cons 'halt (hash-keys kstore)))
   (define label-ids (for/hash ([l labels][id (range (length labels))]) (values l id)))
   (define k-closures
@@ -22,8 +22,8 @@
   (define k-c-ids (for/hash ([k k-closures][id (range (set-count k-closures))]) (values (car k) id)))
   (define l-c-trans (for/hash ([l labels])
                         (define l-tr (hash-ref kstore l (set)))
-                        (values (hash-ref label-ids l) (for/list ([tr l-tr])
-                                                         (hash-ref k-c-ids (car (divide-kont tr)))))))
+                        (values (hash-ref label-ids l) (for/hash ([tr l-tr])
+                                                         (values (hash-ref k-c-ids (car (divide-kont tr)))(hash))))))
   `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
 
 (define (make-state-nodes states state-ids state-tran)
@@ -38,7 +38,7 @@
                               'start (loc-start (cadr s))
                               'end (loc-end (cadr s))
                               'data (~a (only-syntax (cadr s)))
-                              'nodes (hash-ref state-tran (hash-ref state-ids s)))]
+                              'children (hash-ref state-tran (hash-ref state-ids s)))]
                             ['proc
                              (hash
                               'id (hash-ref state-ids s)
@@ -46,7 +46,7 @@
                               'start `(0 0)
                               'end `(0 0)
                               'data ""
-                              'nodes (hash-ref state-tran (hash-ref state-ids s)))]
+                              'children (hash-ref state-tran (hash-ref state-ids s)))]
                             [(? symbol? other)
                              (hash
                               'id (hash-ref state-ids s)
@@ -54,7 +54,7 @@
                               'start `(0 0)
                               'end `(0 0)
                               'data ""
-                              'nodes (hash-ref state-tran (hash-ref state-ids s)))]))))
+                              'children (hash-ref state-tran (hash-ref state-ids s)))]))))
 
 (define (make-kont-nodes k-closures k-c-ids l-c-trans)
   (for/hash ([c k-closures]) (values
@@ -66,7 +66,7 @@
                                'start `(0 0)
                                'end `(0 0)
                                'data (~a (length (car c)))
-                               'nodes (hash-ref l-c-trans (cadr c))))))
+                               'children (hash-ref l-c-trans (cadr c))))))
   
 (define (full-state-graph analysis-states data-tables)
   (match-define `(,s-nodes ,k-nodes)
