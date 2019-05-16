@@ -12,7 +12,7 @@
   (define state-tran (for/hash ([s states])
                        (match-define `(,st-tr ,_ ,_) (step-state s store kstore))
                        (values (hash-ref state-ids s) (for/hash ([tr st-tr])
-                                                        (values (hash-ref state-ids tr)(hash))))))
+                                                        (values (string->symbol(~a (hash-ref state-ids tr)))(hash))))))
   (define labels (cons 'halt (hash-keys kstore)))
   (define label-ids (for/hash ([l labels][id (range (length labels))]) (values l id)))
   (define k-closures
@@ -23,7 +23,7 @@
   (define l-c-trans (for/hash ([l labels])
                         (define l-tr (hash-ref kstore l (set)))
                         (values (hash-ref label-ids l) (for/hash ([tr l-tr])
-                                                         (values (hash-ref k-c-ids (car (divide-kont tr)))(hash))))))
+                                                         (values (string->symbol(~a(hash-ref k-c-ids (car (divide-kont tr)))))(hash))))))
   `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
 
 (define (make-state-nodes states state-ids state-tran)
