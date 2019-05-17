@@ -158,7 +158,7 @@ class Project extends Component {
                       onSelect={ this.select } />
                   </Pane>
                   <Pane height='50%'>
-                    { selectedNodeId && <NodeViewer data={ graph.nodes[selectedNodeId] } /> }
+                    { graph.nodes[selectedNodeId] && <NodeViewer data={ graph.nodes[selectedNodeId] } /> }
                   </Pane>
                 </SplitPane>
               </Pane>
