@@ -30,7 +30,7 @@ class Project extends Component {
     this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
   }
   getCode() {
-    return fetch(`http://localhost:8086/api/project?id=${this.props.id}&code`, { method: 'GET' })
+    return fetch(`/api/project?id=${this.props.id}&code`, { method: 'GET' })
     .then((response) => response.json())
     .then((data) => {
       const project = this.props.project;
@@ -49,7 +49,7 @@ class Project extends Component {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
         this.saveLocalCode(code);
-        return fetch(`http://localhost:8086/api/project?id=${this.props.id}&save`, {
+        return fetch(`/api/project?id=${this.props.id}&save`, {
           method: 'POST',
           body: JSON.stringify({ code })
         });
@@ -57,7 +57,7 @@ class Project extends Component {
   }
   async processCode(code) {
     await this.saveCode(code);
-    return fetch(`http://localhost:8086/api/project?id=${this.props.id}&process`, { method: 'POST' })
+    return fetch(`/api/project?id=${this.props.id}&process`, { method: 'POST' })
     .then(() => {
       const project = this.props.project;
       project.status = project.STATUSES.process;
@@ -66,7 +66,7 @@ class Project extends Component {
     });
   }
   getGraphs() {
-    return fetch(`http://localhost:8086/api/project?id=${this.props.id}&data`, { method: 'GET' })
+    return fetch(`/api/project?id=${this.props.id}&data`, { method: 'GET' })
     .then((response) => {
       switch (response.status) {
         case 200:

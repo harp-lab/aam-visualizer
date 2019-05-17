@@ -61,7 +61,7 @@ class ProjectList extends Component {
     const project = this.props.data[projectId];
     project.name = name;
     this.props.onSave(projectId, project);
-    return fetch(`http://localhost:8086/api/project?id=${projectId}&save`, {
+    return fetch(`/api/project?id=${projectId}&save`, {
       method: 'POST',
       body: JSON.stringify({ name })
     });

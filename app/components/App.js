@@ -69,7 +69,7 @@ class App extends Component {
     this.requestAllProjects();
   }
   requestAllProjects() {
-    return fetch('http://localhost:8086/api/project?all', { method: 'GET' })
+    return fetch('/api/project?all', { method: 'GET' })
     .then((response) => response.json())
     .then((data) => {
       let refresh = false;
@@ -93,7 +93,7 @@ class App extends Component {
     });
   }
   createProject() {
-    return fetch('http://localhost:8086/api/project?create', { method: 'GET' })
+    return fetch('/api/project?create', { method: 'GET' })
     .then(response => response.json())
     .then(data => {
       const projectId = data.id;
@@ -107,7 +107,7 @@ class App extends Component {
     });
   }
   deleteProject(projectId) {
-    return fetch(`http://localhost:8086/api/project?id=${projectId}`, { method: 'DELETE' })
+    return fetch(`/api/project?id=${projectId}`, { method: 'DELETE' })
     .then(this.setState((state, props) => {
       const selectedProjectId = undefined;
       const projects = state.projects;
