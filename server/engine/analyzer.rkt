@@ -378,34 +378,43 @@
 
 (define (regroup-by-call init states data-tables)
   (match-define (list id>lambda sigma sigmak) data-tables)
+  (define (states->ids states)
+    (list->set (set-map states ((curry hash-ref) state>sid))))
   (define state>sid (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define sid>state (for/hash ([s states][id (range (set-count states))]) (values id s)))
   (define state>state-trans (for/hash ([s states])
                               (match-define (list st-tr _ _) (step-state s sigma sigmak))
                               (values s st-tr)))
+  (define state>sid-trans (for/hash ([s states])
+                              (match-define (list st-tr _ _) (step-state s sigma sigmak))
+                              (values s (states->ids st-tr))))
   (define lri>states (foldl (lambda (s l>s)
                               (match s
                                 [`(eval ,(ast/loc _ _ _ l) ,r ,i ,_) (store-include l>s (list l r i) s)]
                                 [else l>s]))
                             (hash)
                             states))
+  (define (returns-include store key kont state)
+    (define old-hash (hash-ref store key (hash)))
+    (define new-hash (store-include old-hash kont state))
+    (hash-set store key new-hash))
   (define lri>returns
     (foldl (lambda (s l>r)
              (match s
                [`(eval ,(? atomic? ae) ,rho ,i ,kappa)
                 (match (atomic ae rho sigma)
+                  ['notfound l>r]
                   [dn (foldl (lambda (k l>r)
                                (match k
                                  [(cons `(frame ,cat ,ds () ,e0s ,lid ,rhok ,i+) kappa+)
-                                  (store-include l>r (list lid rhok i+)
-                                                 (list k `(proc ,cat (,@ds ,dn) ,e0s (tick2 i i+ s) ,kappa+)))]
+                                  (returns-include l>r (list lid rhok i+)
+                                                   k (set `(proc ,cat (,@ds ,dn) ,e0s (tick2 i i+ s) ,kappa+)))]
                                  [(cons `(frame ,cat ,ds ,es ,e0s ,lid ,rhok ,i+) kappa+)
                                   (define new-i (tick2 i i+ s))
-                                  (store-include l>r (list lid rhok i+)
-                                                 (list k `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat (,@ds ,dn) ,(cdr es) ,e0s ,lid ,rhok ,new-i) kappa+))))]
+                                  (returns-include l>r (list lid rhok i+)
+                                                   k (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat (,@ds ,dn) ,(cdr es) ,e0s ,lid ,rhok ,new-i) kappa+))))]
                                  [else l>r]))
-                             l>r (lookupk kappa sigmak))]
-                  [else l>r])]
+                             l>r (lookupk kappa sigmak))])]
                [else l>r]))
            (hash) states))
   (define subgraphs (make-hash))
@@ -413,27 +422,42 @@
     (match-define `(eval ,(ast/loc _ _ _ lid) ,rho ,i ,k) body-state)
     (define include-states (hash-ref lri>states (list lid rho i)))
     (define return-states (hash-ref lri>returns (list lid rho i)))
-    (define (follow-state f c trans out-trans calls returns)
-      (define s (set-first f))
-      (define c+ (set-add c s))
-      (define s-out (match s
-                      [`(proc apply (,cs . ,_) ,_ ,ia ,ka)
-                       (for/set ([c cs])
-                         (match-define `(clo ,xs ,ec ,rhoc) c)
-                         'todo-search-returns)]
-                      ['to 'do]
-                      [else 'todo-get-trans-check-exiting]))
-      (define f+ (set-subtract (set-union trans (set-rest f)) c+))
-      (define trans+ 'todo)
-      (define out-trans+ 'todo)
-      (define calls+ 'todo)
-      (define returns+ 'todo)
-      (if (set-empty? f+)
-          'todo-add-unconnected ;(list trans+ out-trans+ calls+ returns+)
-          (follow-state f+ c+ trans+ out-trans+ calls+ returns+)))
-    (follow-state (set body-state)(set)(hash)(hash)(set)(set)))
-  'todo-save-sub-make-main)
-  
+    (match-define (list trans out-trans calls returns)
+      (foldl
+       (lambda(s data)
+         (match-define (list trans out-trans calls returns) data)
+         (define sid (hash-ref state>sid s))
+         (define trans+ (match s
+                          [`(proc apply . _) trans]
+                          [else (hash-set trans sid
+                                          (hash-ref state>sid-trans s))]))
+         (define out-trans+ (match s
+                              [`(proc apply ,_ ,_ ,_ ,kont)
+                               (foldl (lambda (k ot)
+                                        (define rs (hash-ref return-states k))
+                                        (if (set-empty? rs)
+                                            ot
+                                            (store-include ot sid (states->ids rs))))
+                                      out-trans (lookupk kont sigmak))]
+                              [else out-trans]))
+         (define calls+ (match s
+                          [`(proc apply (,clos . ,_) . ,_)
+                           (foldl (lambda(clo cs)
+                                    (match-define `(clo ,_ ,e ,_) clo)
+                                    (set-add cs (ast/loc-lambda-id e)))
+                                  calls clos)]
+                          [else calls]))
+         (define returns+ (match s
+                            [`(eval ,(? atomic? ae) ,rho ,i ,kappa)
+                             (match (atomic ae rho sigma)
+                               ['notfound returns]
+                               [dn 'todo-find-lri])]))
+         (list trans+ out-trans+ calls+ returns+))
+       (list (hash)(hash)(set)(set))
+       include-states))
+    'todo-finish-subgraph)
+  'todo-finish-regroup)
+    
 (define (inject data)
   (match-define `(,ast ,ids) (build-ast data))
   (list `(eval ,ast ,(hash) () halt) ids))
