@@ -43,7 +43,7 @@
 (define-values (code-ast code-astStart) (parse code-toks))
 
 ; analyzer
-(match-define `(,analysis-states ,data-tables) (analyze code-ast code-astStart))
+(match-define (list initial-state analysis-states data-tables) (analyze code-ast code-astStart))
 
 ; output
 (define state-graph (full-state-graph analysis-states data-tables))
