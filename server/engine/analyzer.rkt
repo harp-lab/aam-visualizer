@@ -381,6 +381,17 @@
   (define state>state-trans (for/hash ([s states])
                               (match-define (list trans _ _) (step-state s sigma sigmak))
                               (values s trans)))
+  (define all-calls (foldl (lambda (s calls)
+                             (match s
+                               [`(proc apply . ,_)
+                                (foldl (lambda(t c)
+                                         (match t
+                                           [`(eval ,e ,_ ,i ,_)(set-add c (list e i))]
+                                           [else c]))
+                                       calls (state>state-trans s))]
+                               [else calls]))
+                           (match init [`(eval ,e ,_ ,i ,_)(set(list e i))][else (set)])
+                           states))
   (define li>states (foldl (lambda (s l>s)
                               (match s
                                 [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_) (store-include l>s (list l i) s)]
@@ -455,7 +466,17 @@
        (list trans+ out-trans+ calls+ returns+))
      (list (hash)(hash)(set)(set))
      include-states))
-  ;(match-define (list trans out-trans calls returns) (make-subgraph state))
+  (match-define (list calls returns subs)
+    (foldl (lambda(c t)
+             (match-define (list e i) c)
+             (match-define (list calls returns subs) t)
+             (match-define (list trans out-trans s-calls s-returns) (make-subgraph e))
+             (define calls+ 'todo)
+             (define returns+ 'todo)
+             (define subs+ 'todo)
+             (list calls+ returns+ subs+))
+           (list (hash)(hash)(hash))
+           all-calls))
   'todo-finish-regroup)
 
 (define (inject data)
