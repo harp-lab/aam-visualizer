@@ -16,6 +16,7 @@ class Project extends Component {
     this.state = { selectedNodeId };
     switch (project.status) {
       case project.STATUSES.edit:
+      case project.STATUSES.error:
         if (project.code == '')
           this.getCode(this.props.id);
         break;
@@ -169,6 +170,12 @@ class Project extends Component {
           view = (
             <div>getting</div>
           );
+        break;
+      case 'error':
+        view = (
+          <Editor
+            data={ project.code }/>
+        );
         break;
     };
     return view;

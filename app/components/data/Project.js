@@ -15,7 +15,8 @@ class Project {
       empty: 'empty',
       edit: 'edit',
       process: 'process',
-      done: 'done'
+      done: 'done',
+      error: 'error'
     };
     this.status = this.STATUSES.empty;
   }

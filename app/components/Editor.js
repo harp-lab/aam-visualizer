@@ -69,9 +69,10 @@ class Editor extends Component {
     this.refresh();
   }
   componentDidUpdate(prevProps) {
+    const dataUpdate = this.props.data !== prevProps.data;
     const idUpdate = this.props.id !== prevProps.id;
     const typeUpdate = this.props.type !== prevProps.type;
-    if (idUpdate || typeUpdate)
+    if (dataUpdate || idUpdate || typeUpdate)
       this.refresh();
     
     if (this.props.selected !== prevProps.selected)
