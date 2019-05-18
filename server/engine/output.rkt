@@ -43,16 +43,12 @@
                              (hash
                               'id (hash-ref state-ids s)
                               'form (format "proc-~a" (cadr s))
-                              'start `(0 0)
-                              'end `(0 0)
                               'data ""
                               'children (hash-ref state-tran (hash-ref state-ids s)))]
                             [(? symbol? other)
                              (hash
                               'id (hash-ref state-ids s)
                               'form (symbol->string other)
-                              'start `(0 0)
-                              'end `(0 0)
                               'data ""
                               'children (hash-ref state-tran (hash-ref state-ids s)))]))))
 
@@ -63,8 +59,6 @@
                               (hash
                                'id (hash-ref k-c-ids (car c))
                                'form "frames"
-                               'start `(0 0)
-                               'end `(0 0)
                                'data (~a (length (car c)))
                                'children (hash-ref l-c-trans (cadr c))))))
   
