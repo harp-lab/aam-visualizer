@@ -52,8 +52,9 @@ class Graph extends Component {
       });
       this.cy.fit();
     }
-    else
+    else {
       this.cy.layout({ name: 'cose', directed: true }).run();
+    }
   }
   save(props) {
     const positions = {};

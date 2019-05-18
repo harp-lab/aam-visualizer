@@ -20,7 +20,8 @@ class Project extends Component {
           this.getCode(this.props.id);
         break;
       case project.STATUSES.done:
-        this.getGraphs();
+        if (Object.keys(project.graphs).length == 0)
+          this.getGraphs();
         break;
     }
 
