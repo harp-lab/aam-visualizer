@@ -61,6 +61,7 @@ class App extends Component {
       projects
     };
 
+    this.requestAllProjects = this.requestAllProjects.bind(this);
     this.selectProject = this.selectProject.bind(this);
     this.deselectProject = this.deselectProject.bind(this);
     this.createProject = this.createProject.bind(this);
@@ -70,26 +71,34 @@ class App extends Component {
   }
   requestAllProjects() {
     return fetch('/api/project?all', { method: 'GET' })
-    .then((response) => response.json())
-    .then((data) => {
-      let refresh = false;
-      this.setState((state, props) => {
-        const projects = state.projects;
-        for (const [projectId, projectData] of Object.entries(data)) {
-          let project = projects[projectId];
-          if (!project) {
-            project = new ProjectData();
-            projects[projectId] = project;
-          }
-          project.status = projectData.status;
-          project.name = projectData.name;
-          if (project.status == project.STATUSES.process)
-            refresh = true;
-        }
-        return { projects };
-      });
-      if (refresh)
-        setTimeout(this.requestAllProjects, 5000);
+    .then(response => {
+      switch (response.status) {
+        case 200:
+          return response.json()
+          .then(data => {
+            this.setState(state => {
+              const projects = state.projects;
+              let refresh = false;
+              for (const [projectId, projectData] of Object.entries(data)) {
+                let project = projects[projectId];
+                if (!project) {
+                  project = new ProjectData();
+                  projects[projectId] = project;
+                }
+                project.status = projectData.status;
+                project.name = projectData.name;
+                if (project.status == project.STATUSES.process)
+                  refresh = true;
+              }
+              if (refresh)
+                setTimeout(this.requestAllProjects, 5000)
+              return { projects };
+            });
+          });
+        default:
+          setTimeout(this.requestAllProjects, 1000);
+          break;
+      }
     });
   }
   createProject() {
