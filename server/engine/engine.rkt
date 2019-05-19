@@ -46,7 +46,7 @@
 (match-define (list initial-state analysis-states data-tables) (analyze code-ast code-astStart))
 
 ; output
-(define state-graph (full-state-graph analysis-states data-tables))
+(define main-graph (full-state-graph analysis-states data-tables))
 
 ; write output json
 (define out-hash
@@ -56,7 +56,7 @@
       'ast (hash
         'graph code-ast
         'start code-astStart)
-      'state (hash 'graph state-graph)
+      'main (hash 'graph main-graph)
     )))
 (define out
   (if (non-empty-string? (output-file-path))
