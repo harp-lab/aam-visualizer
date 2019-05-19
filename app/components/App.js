@@ -174,10 +174,11 @@ class App extends Component {
     }
 
     return (
-      <div style={ {
+      <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%' } }>
+        height: '100%',
+        overflow: 'hidden' }}>
         <AppBar position='static'>
           <Toolbar>
             <ProjectListButton onClick={ this.deselectProject } />

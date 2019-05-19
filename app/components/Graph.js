@@ -67,6 +67,7 @@ class Graph extends Component {
 
   componentDidMount() {
     this.cy.mount(this.cyRef);
+    this.cy.resize();
     this.position();
     this.eventsEnabled = true;
   }
@@ -87,7 +88,9 @@ class Graph extends Component {
     }
     this.eventsEnabled = true;
 
-    if (this.props.width !== prevProps.width)
+    const widthUpdate = this.props.width !== prevProps.width;
+    const heightUpdate = this.props.height !== prevProps.height;
+    if (widthUpdate || heightUpdate)
       this.cy.resize();
   }
   componentWillUnmount() {

@@ -79,7 +79,8 @@ class Project extends Component {
             project.status = data.status;
             project.code = data.code;
             project.importGraphs(data.graphs);
-            project.selectedGraphType = Object.keys(data.graphs)[0];
+            const graphTypes = Object.keys(data.graphs).filter(type => type !== 'main');
+            project.selectedGraphType = graphTypes[0];
             this.props.onSave(project);
           })
         case 204:
@@ -117,65 +118,92 @@ class Project extends Component {
         view = <Loading status='Processing' variant='circular'/>;
         break;
       case 'done':
-        if (Object.keys(project.graphs).length == 0) {
+        if (Object.keys(project.graphs).length == 0)
           view = <Loading status='Downloading' variant='circular'/>;
-        }
         else {
-          const graph = project.graphs[project.selectedGraphType];
-          const graphMenuItems = Object.entries(project.graphs).map(([graphType, graph]) => {
+          const mainGraph = project.graphs.main;
+          const subGraph = project.graphs[project.selectedGraphType];
+          const subGraphMenuItems = Object.entries(project.graphs)
+          .filter(([graphType, graph]) => graphType !== 'main')
+          .map(([graphType, graph]) => {
             return <MenuItem key={ graphType } value={ graphType }>{ graphType }</MenuItem>
           });
           const marks = {};
-          for (const [id, node] of Object.entries(graph.nodes)) {
+          for (const [id, node] of Object.entries(subGraph.nodes)) {
             if (node.start && node.end)
               marks[id] = { start: node.start, end: node.end };
           }
           const selectedNodeId = this.state.selectedNodeId;
+
+          const mainGraphElement = (
+            <Pane height='50%'>
+              <Graph
+                id={ this.props.id }
+                type={ 'main' }
+                data={ mainGraph.export() }
+                positions={ mainGraph.metadata.positions }
+                selected={ selectedNodeId }
+                onSelect={ this.select }
+                onSave={ this.saveGraphMetadata } />
+            </Pane>
+          );
+          const subGraphElement = (
+            <Pane height='50%'>
+              <Graph
+                id={ this.props.id }
+                type={ project.selectedGraphType }
+                data={ subGraph.export() }
+                positions={ subGraph.metadata.positions }
+                selected={ selectedNodeId }
+                onSelect={ this.select }
+                onSave={ this.saveGraphMetadata } />
+              <Select
+                value={ project.selectedGraphType }
+                onChange={ event => {
+                  const project = this.props.project;
+                  project.selectedGraphType = event.target.value;
+                  this.props.onSave(project);
+                } }>
+                { subGraphMenuItems }
+              </Select>
+            </Pane>
+          );
+          const editorElement = (
+            <Pane height='50%'>
+              <Editor
+                id={ this.props.id }
+                type={ project.selectedGraphType }
+                data={ project.code }
+                marks={ marks }
+                selected={ selectedNodeId }
+                onSelect={ this.select } />
+            </Pane>
+          );
+          const nodeViewerElement = (
+            <Pane height='50%'>
+              <NodeViewer data={ subGraph.nodes[selectedNodeId] } />
+            </Pane>
+          );
+
           view = (
             <SplitPane vertical>
               <Pane width='50%'>
-                <Graph
-                  id={ this.props.id }
-                  type={ project.selectedGraphType }
-                  data={ graph.export() }
-                  positions={ graph.metadata.positions }
-                  selected={ selectedNodeId }
-                  onSelect={ this.select }
-                  onSave={ this.saveGraphMetadata } />
-                <Select
-                  value={ project.selectedGraphType }
-                  onChange={ event => {
-                    const project = this.props.project;
-                    project.selectedGraphType = event.target.value;
-                    this.props.onSave(project);
-                  } }>
-                  { graphMenuItems }
-                </Select>
+                <SplitPane horizontal>
+                { mainGraphElement }
+                { subGraphElement }
+                </SplitPane>
               </Pane>
               <Pane width='50%'>
                 <SplitPane horizontal>
-                  <Pane height='50%'>
-                    <Editor
-                      id={ this.props.id }
-                      type={ project.selectedGraphType }
-                      data={ project.code }
-                      marks={ marks }
-                      selected={ selectedNodeId }
-                      onSelect={ this.select } />
-                  </Pane>
-                  <Pane height='50%'>
-                    { graph.nodes[selectedNodeId] && <NodeViewer data={ graph.nodes[selectedNodeId] } /> }
-                  </Pane>
+                  { editorElement }
+                  { nodeViewerElement }
                 </SplitPane>
               </Pane>
             </SplitPane>);
         }
         break;
       case 'error':
-        view = (
-          <Editor
-            data={ project.code }/>
-        );
+        view = <Editor data={ project.code }/>;
         break;
     };
     return view;

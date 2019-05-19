@@ -15,7 +15,8 @@ class Pane extends Component {
       display: 'flex',
       flexDirection: 'column',
       height: this.props.height ? this.props.height : '100%',
-      width: this.props.width ? this.props.width : '100%'
+      width: this.props.width ? this.props.width : '100%',
+      overflow: 'hidden'
     }};
 
     return <div style={ style }>{ children }</div>;
