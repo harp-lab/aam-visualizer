@@ -22,6 +22,7 @@ class ProjectMenu extends Component {
     this.state = {};
 
     this.open = this.open.bind(this);
+    this.close = this.close.bind(this);
   }
   open(event) { this.setState({ anchor: event.currentTarget }); }
   close() { this.setState({ anchor: undefined }); }
@@ -34,7 +35,8 @@ class ProjectMenu extends Component {
 
         <Menu
           anchorEl={ this.state.anchor }
-          open={ Boolean(this.state.anchor) } >
+          open={ Boolean(this.state.anchor) }
+          onClose={ this.close } >
           <MenuItem
             onClick={ () => {
               this.close();
@@ -64,7 +66,9 @@ class RenameDialog extends Component {
   }
   render() {
     return (
-    <Dialog open={ this.props.open }>
+    <Dialog
+      open={ this.props.open }
+      onClose={ this.props.onClose }>
       <DialogContent>
         <TextField
           label='name'

@@ -11,12 +11,14 @@ class Pane extends Component {
         props = { height: this.props.height };
       return React.cloneElement(children, props);
     });
-    return <div style={ {
+    const style = {...this.props.style, ...{
       display: 'flex',
       flexDirection: 'column',
       height: this.props.height ? this.props.height : '100%',
       width: this.props.width ? this.props.width : '100%'
-    } }>{ children }</div>;
+    }};
+
+    return <div style={ style }>{ children }</div>;
   }
 }
 

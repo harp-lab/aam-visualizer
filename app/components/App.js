@@ -3,22 +3,17 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import Menu from './Menu';
+import Loading from './Loading.js';
 import ProjectList from './ProjectList';
 import Project from './Project';
 
 import ProjectData from './data/Project'
 
 const VIEWS = {
+  load: 'load',
   list: 'list',
   project: 'project'
 };
-
-const styles = {
-  menu: {
-    flex: '1 1 auto'
-  }
-}
 
 class NewProjectButton extends Component {
   render() {
@@ -33,6 +28,7 @@ class NewProjectButton extends Component {
     </Button>;
   }
 }
+
 class ProjectListButton extends Component {
   render() {
     return <Button
@@ -50,11 +46,13 @@ class App extends Component {
   constructor(props) {
     super(props);
 
+    const load = false;
     const view = VIEWS.list;
     const title = undefined;
     const selectedProjectId = undefined;
     const projects = {};
     this.state = {
+      load,
       view,
       title,
       selectedProjectId,
@@ -91,11 +89,13 @@ class App extends Component {
                   refresh = true;
               }
               if (refresh)
-                setTimeout(this.requestAllProjects, 5000)
-              return { projects };
+                setTimeout(this.requestAllProjects, 5000);
+              const load = false;
+              return { load, projects };
             });
           });
         default:
+          this.setState({ load: true });
           setTimeout(this.requestAllProjects, 1000);
           break;
       }
@@ -154,11 +154,14 @@ class App extends Component {
 
     switch (this.state.view) {
       case VIEWS.list:
-        view = <ProjectList
-          data={ this.state.projects }
-          onClick={ this.selectProject }
-          onSave={ this.saveLocalProject }
-          onDelete={ this.deleteProject } />;
+        if (this.state.load) {
+          view = <Loading status='Getting projects' variant='linear'/>;
+        } else
+          view = <ProjectList
+            data={ this.state.projects }
+            onClick={ this.selectProject }
+            onSave={ this.saveLocalProject }
+            onDelete={ this.deleteProject } />;
         break;
       case VIEWS.project:
         const project = this.selectedProject;

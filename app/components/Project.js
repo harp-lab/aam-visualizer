@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
 import Editor from './Editor';
@@ -113,10 +114,13 @@ class Project extends Component {
           edit />;
         break;
       case 'process':
-        view = <div>{ status }</div>
+        view = <Loading status='Processing' variant='circular'/>;
         break;
       case 'done':
-        if (project.selectedGraphType) {
+        if (Object.keys(project.graphs).length == 0) {
+          view = <Loading status='Downloading' variant='circular'/>;
+        }
+        else {
           const graph = project.graphs[project.selectedGraphType];
           const graphMenuItems = Object.entries(project.graphs).map(([graphType, graph]) => {
             return <MenuItem key={ graphType } value={ graphType }>{ graphType }</MenuItem>
@@ -166,10 +170,6 @@ class Project extends Component {
               </Pane>
             </SplitPane>);
         }
-        else
-          view = (
-            <div>getting</div>
-          );
         break;
       case 'error':
         view = (
