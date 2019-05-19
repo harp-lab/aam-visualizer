@@ -44,6 +44,13 @@ class ProjectMenu extends Component {
             } }>
             rename
           </MenuItem>
+          <MenuItem
+            onClick={ () => {
+              this.close();
+              this.props.onFork();
+            } }>
+            fork
+          </MenuItem>
         </Menu>
       </React.Fragment>
     );
@@ -135,7 +142,9 @@ class ProjectList extends Component {
           <ListItemText>{ (project.name || 'unnamed') }</ListItemText>
           <ListItemText style={ { flex: '0 0 10em' } }>{ project.status }</ListItemText>
           <ListItemSecondaryAction>
-            <ProjectMenu onRename={ () => this.openRenameDialog(id) }/>
+            <ProjectMenu
+              onRename={ () => this.openRenameDialog(id) }
+              onFork={ () => this.props.onFork(id) } />
             <IconButton onClick={ () => this.props.onDelete(id) }>
               <DeleteIcon />
             </IconButton>

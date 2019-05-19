@@ -7,18 +7,19 @@ class NodeViewer extends Component {
     if (this.props.data) {
       const info = Object.entries(this.props.data)
       .map(([id, data]) => {
+        const string = typeof data == 'object' ? data.toString() : data;
+        const output = string || 'undefined';
         return (
           <div key={ id }>
             <Typography variant='h6'>{ id }</Typography>
-            <Typography>{ (typeof data == 'object' ? data.toString() : data) }</Typography>
+            <Typography>{ output }</Typography>
           </div>);
       });
       element = (
-        <div style={{
-          padding: '1em',
-          overflow: 'auto'
-        }}>
+        <div style={{ overflow: 'auto' }}>
+          <div style={{ padding: '1em' }}>
           { info }
+          </div>
         </div>
       );
     } else {

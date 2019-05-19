@@ -19,7 +19,7 @@ class Project extends Component {
       case project.STATUSES.edit:
       case project.STATUSES.error:
         if (project.code == '')
-          this.getCode(this.props.id);
+          this.props.getCode(this.props.id);
         break;
       case project.STATUSES.done:
         if (Object.keys(project.graphs).length == 0)
@@ -32,17 +32,12 @@ class Project extends Component {
     this.select = this.select.bind(this);
     this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
   }
-  getCode() {
-    return fetch(`/api/project?id=${this.props.id}&code`, { method: 'GET' })
-    .then((response) => response.json())
-    .then((data) => {
-      const project = this.props.project;
-      project.code = data.code;
-      this.props.onSave(project);
-    });
-  }
   saveLocalCode(code) {
     const project = this.props.project;
+    if (code == '')
+      project.status = project.STATUSES.empty;
+    else
+      project.status = project.STATUSES.edit;
     project.code = code;
     this.props.onSave(project);
   }
@@ -79,7 +74,8 @@ class Project extends Component {
             project.status = data.status;
             project.code = data.code;
             project.importGraphs(data.graphs);
-            const graphTypes = Object.keys(data.graphs).filter(type => type !== 'main');
+            const graphTypes = Object.keys(data.graphs)
+            .filter(type => type !== 'main');
             project.selectedGraphType = graphTypes[0];
             this.props.onSave(project);
           })
@@ -96,10 +92,7 @@ class Project extends Component {
     this.props.onSave(project);
   }
 
-  select(nodeId) {
-    const selectedNodeId = nodeId;
-    this.setState({ selectedNodeId });
-  }
+  select(nodeId) { this.setState({ selectedNodeId: nodeId }); }
 
   render() {
     let view;

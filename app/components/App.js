@@ -63,7 +63,9 @@ class App extends Component {
     this.selectProject = this.selectProject.bind(this);
     this.deselectProject = this.deselectProject.bind(this);
     this.createProject = this.createProject.bind(this);
+    this.forkProject = this.forkProject.bind(this);
     this.deleteProject = this.deleteProject.bind(this);
+
     this.saveLocalProject = this.saveLocalProject.bind(this);
     this.requestAllProjects();
   }
@@ -113,6 +115,7 @@ class App extends Component {
         projects[projectId] = new ProjectData();
         return { view, selectedProjectId, projects };
       });
+      return projectId;
     });
   }
   deleteProject(projectId) {
@@ -124,7 +127,36 @@ class App extends Component {
       return { selectedProjectId, projects }
     }));
   }
-  
+  async forkProject(projectId) {
+    const status = this.state.projects[projectId].status;
+    switch (status) {
+      case 'empty':
+        break;
+      default:
+        await this.getProjectCode(projectId);
+        break;
+    }
+    const forkProjectId = await this.createProject();
+    this.setState(state => {
+      const projects = state.projects;
+      const forkProject = projects[forkProjectId];
+      const project = projects[projectId];
+      forkProject.code = project.code;
+      return { projects };
+    });
+    this.selectProject(forkProjectId);
+  }
+
+  getProjectCode(projectId) {
+    return fetch(`/api/project?id=${projectId}&code`, { method: 'GET' })
+    .then((response) => response.json())
+    .then((data) => {
+      const project = this.state.projects[projectId];
+      project.code = data.code;
+      this.saveLocalProject(projectId, project);
+    });
+  }
+
   get selectedProject() { return this.state.projects[this.state.selectedProjectId]; }
   selectProject(projectId) {
     this.setState({
@@ -161,6 +193,7 @@ class App extends Component {
             data={ this.state.projects }
             onClick={ this.selectProject }
             onSave={ this.saveLocalProject }
+            onFork = { this.forkProject }
             onDelete={ this.deleteProject } />;
         break;
       case VIEWS.project:
@@ -169,7 +202,8 @@ class App extends Component {
         view = <Project
           id={ selectedProjectId }
           project = { this.selectedProject }
-          onSave={ project => this.saveLocalProject(selectedProjectId, project) } />
+          onSave={ project => this.saveLocalProject(selectedProjectId, project) }
+          getCode={ () => this.getProjectCode(selectedProjectId) } />
         break;
     }
 

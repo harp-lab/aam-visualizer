@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import cytoscape from 'cytoscape';
 
 const style = {
-    flex: '1 1 10%',
+    flex: '1 1 1%',
     display: 'block',
     minHeight: 0,
     width: '100%'
@@ -27,7 +27,7 @@ const config = {
     }
   ],
   headless: true,
-  wheelSensitivity: 0.1
+  wheelSensitivity: 1
 };
 
 class Graph extends Component {
@@ -52,9 +52,8 @@ class Graph extends Component {
       });
       this.cy.fit();
     }
-    else {
+    else
       this.cy.layout({ name: 'cose', directed: true }).run();
-    }
   }
   save(props) {
     const positions = {};
@@ -67,8 +66,8 @@ class Graph extends Component {
 
   componentDidMount() {
     this.cy.mount(this.cyRef);
-    this.cy.resize();
     this.position();
+    this.cy.resize();
     this.eventsEnabled = true;
   }
   componentDidUpdate(prevProps) {
@@ -98,11 +97,9 @@ class Graph extends Component {
     this.cy.unmount();
   }
   render() {
-    return (
-      <div
+    return <div
         style={ style }
-        ref={ (ref) => this.cyRef = ref } />
-    );
+        ref={ (ref) => this.cyRef = ref } />;
   }
 }
 
