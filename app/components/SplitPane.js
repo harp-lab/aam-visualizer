@@ -42,7 +42,10 @@ class SplitPane extends Component {
     }
   }
   startDrag() { this.setState({ resize: true }); }
-  stopDrag() { this.setState({ resize: false }); }
+  stopDrag() {
+    if (this.state.resize)
+      this.setState({ resize: false });
+  }
   unfocus() {
     const selection = window.getSelection();
     if (selection)

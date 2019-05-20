@@ -58,7 +58,7 @@
       'ast (hash
         'graph code-ast
         'start code-astStart)
-      'state (hash 'graph state-graph)
+      'main (hash 'graph state-graph)
     )))
 (define out
   (if (non-empty-string? (output-file-path))

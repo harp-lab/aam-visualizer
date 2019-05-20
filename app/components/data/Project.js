@@ -1,9 +1,9 @@
 import AstGraph from './AstGraph';
-import StateGraph from './StateGraph';
+import MainGraph from './MainGraph';
 
 const GRAPHS = {
   ast: 'ast',
-  state: 'state'
+  main: 'main'
 };
 
 class Project {
@@ -15,7 +15,8 @@ class Project {
       empty: 'empty',
       edit: 'edit',
       process: 'process',
-      done: 'done'
+      done: 'done',
+      error: 'error'
     };
     this.status = this.STATUSES.empty;
   }
@@ -26,8 +27,8 @@ class Project {
         case 'fakeGraphType':
           this.graphs[type] = new AstGraph(data);
           break;
-        case GRAPHS.state:
-          this.graphs[type] = new StateGraph(data);
+        case GRAPHS.main:
+          this.graphs[type] = new MainGraph(data);
           break;
       }
     }

@@ -1,14 +1,14 @@
 {
-  "name": "code-vis-react",
+  "name": "aam-visualizer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode=production",
     "start": "node server/main.js",
-    "dev-start": "npm run dev-client & npm run dev-server",
+    "dev-start": "nodemon -x \"npm run dev-client & npm run dev-server\"",
     "dev-client": "webpack-dev-server",
-    "dev-server": "nodemon -x \"NODE_ENV=development npm run start\""
+    "dev-server": "NODE_ENV=development npm run start"
   },
   "author": "",
   "license": "ISC",

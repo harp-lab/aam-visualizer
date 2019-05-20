@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
 import Editor from './Editor';
@@ -11,16 +12,20 @@ class Project extends Component {
   constructor(props) {
     super(props);
 
+    const selectedGraphId = undefined;
     const selectedNodeId = undefined;
     const project = this.props.project;
-    this.state = { selectedNodeId };
+    this.state = { selectedGraphId, selectedNodeId };
+
     switch (project.status) {
       case project.STATUSES.edit:
+      case project.STATUSES.error:
         if (project.code == '')
-          this.getCode(this.props.id);
+          this.props.getCode(this.props.id);
         break;
       case project.STATUSES.done:
-        this.getGraphs();
+        if (Object.keys(project.graphs).length == 0)
+          this.getGraphs();
         break;
     }
 
@@ -29,17 +34,12 @@ class Project extends Component {
     this.select = this.select.bind(this);
     this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
   }
-  getCode() {
-    return fetch(`/api/project?id=${this.props.id}&code`, { method: 'GET' })
-    .then((response) => response.json())
-    .then((data) => {
-      const project = this.props.project;
-      project.code = data.code;
-      this.props.onSave(project);
-    });
-  }
   saveLocalCode(code) {
     const project = this.props.project;
+    if (code == '')
+      project.status = project.STATUSES.empty;
+    else
+      project.status = project.STATUSES.edit;
     project.code = code;
     this.props.onSave(project);
   }
@@ -76,7 +76,9 @@ class Project extends Component {
             project.status = data.status;
             project.code = data.code;
             project.importGraphs(data.graphs);
-            project.selectedGraphType = Object.keys(data.graphs)[0];
+            const graphIds = Object.keys(data.graphs)
+            .filter(type => type !== 'main');
+            project.selectedSubGraphId = graphIds[0];
             this.props.onSave(project);
           })
         case 204:
@@ -85,16 +87,17 @@ class Project extends Component {
       }
     });
   }
-  saveGraphMetadata(graphType, metadata) {
+  saveGraphMetadata(graphId, metadata) {
     const project = this.props.project;
-    const graph = project.graphs[graphType];
+    const graph = project.graphs[graphId];
     graph.metadata = metadata;
     this.props.onSave(project);
   }
 
-  select(nodeId) {
+  select(graphId, nodeId) {
+    const selectedGraphId = graphId;
     const selectedNodeId = nodeId;
-    this.setState({ selectedNodeId });
+    this.setState({ selectedGraphId, selectedNodeId });
   }
 
   render() {
@@ -111,63 +114,97 @@ class Project extends Component {
           edit />;
         break;
       case 'process':
-        view = <div>{ status }</div>
+        view = <Loading status='Processing' variant='circular'/>;
         break;
       case 'done':
-        if (project.selectedGraphType) {
-          const graph = project.graphs[project.selectedGraphType];
-          const graphMenuItems = Object.entries(project.graphs).map(([graphType, graph]) => {
-            return <MenuItem key={ graphType } value={ graphType }>{ graphType }</MenuItem>
+        if (Object.keys(project.graphs).length == 0)
+          view = <Loading status='Downloading' variant='circular'/>;
+        else {
+          const mainGraph = project.graphs.main;
+          const subGraph = project.graphs[project.selectedSubGraphId];
+          const subGraphMenuItems = Object.entries(project.graphs)
+          .filter(([graphId, graph]) => graphId !== 'main')
+          .map(([graphId, graph]) => {
+            return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
           });
           const marks = {};
-          for (const [id, node] of Object.entries(graph.nodes)) {
+          for (const [id, node] of Object.entries(subGraph.nodes)) {
             if (node.start && node.end)
               marks[id] = { start: node.start, end: node.end };
           }
+          const selectedGraphId = this.state.selectedGraphId;
           const selectedNodeId = this.state.selectedNodeId;
+          const selectedSubGraphId = project.selectedSubGraphId;
+
+          const mainGraphElement = (
+            <Pane height='50%'>
+              <Graph
+                id={ this.props.id }
+                type={ 'main' }
+                data={ mainGraph.export() }
+                positions={ mainGraph.metadata.positions }
+                selected={ selectedNodeId }
+                onSelect={ nodeId => this.select('main', nodeId) }
+                onSave={ this.saveGraphMetadata } />
+            </Pane>
+          );
+          const subGraphElement = (
+            <Pane height='50%'>
+              <Graph
+                id={ this.props.id }
+                type={ selectedSubGraphId }
+                data={ subGraph.export() }
+                positions={ subGraph.metadata.positions }
+                selected={ selectedNodeId }
+                onSelect={ nodeId => this.select(selectedSubGraphId, nodeId) }
+                onSave={ this.saveGraphMetadata } />
+              <Select
+                value={ selectedSubGraphId }
+                onChange={ event => {
+                  const project = this.props.project;
+                  project.selectedSubGraphId = event.target.value;
+                  this.props.onSave(project);
+                } }>
+                { subGraphMenuItems }
+              </Select>
+            </Pane>
+          );
+          const editorElement = (
+            <Pane height='50%'>
+              <Editor
+                id={ this.props.id }
+                type={ selectedSubGraphId }
+                data={ project.code }
+                marks={ marks }
+                selected={ selectedNodeId }
+                onSelect={ nodeId => this.select(selectedSubGraphId, nodeId) } />
+            </Pane>
+          );
+          const nodeViewerElement = (
+            <Pane height='50%'>
+              <NodeViewer data={ (project.graphs[selectedGraphId] && project.graphs[selectedGraphId].nodes[selectedNodeId]) } />
+            </Pane>
+          );
+
           view = (
             <SplitPane vertical>
               <Pane width='50%'>
-                <Graph
-                  id={ this.props.id }
-                  type={ project.selectedGraphType }
-                  data={ graph.export() }
-                  positions={ graph.metadata.positions }
-                  selected={ selectedNodeId }
-                  onSelect={ this.select }
-                  onSave={ this.saveGraphMetadata } />
-                <Select
-                  value={ project.selectedGraphType }
-                  onChange={ event => {
-                    const project = this.props.project;
-                    project.selectedGraphType = event.target.value;
-                    this.props.onSave(project);
-                  } }>
-                  { graphMenuItems }
-                </Select>
+                <SplitPane horizontal>
+                { mainGraphElement }
+                { subGraphElement }
+                </SplitPane>
               </Pane>
               <Pane width='50%'>
                 <SplitPane horizontal>
-                  <Pane height='50%'>
-                    <Editor
-                      id={ this.props.id }
-                      type={ project.selectedGraphType }
-                      data={ project.code }
-                      marks={ marks }
-                      selected={ selectedNodeId }
-                      onSelect={ this.select } />
-                  </Pane>
-                  <Pane height='50%'>
-                    { graph.nodes[selectedNodeId] && <NodeViewer data={ graph.nodes[selectedNodeId] } /> }
-                  </Pane>
+                  { editorElement }
+                  { nodeViewerElement }
                 </SplitPane>
               </Pane>
             </SplitPane>);
         }
-        else
-          view = (
-            <div>getting</div>
-          );
+        break;
+      case 'error':
+        view = <Editor data={ project.code }/>;
         break;
     };
     return view;
