@@ -4,7 +4,7 @@
 
 (require "analyzer.rkt")
 
-(provide full-state-graph)
+(provide full-state-graph function-graphs)
 
 (define (graph-states states tables state-gen kont-gen)
   (match-define `(,id>lambda ,store ,kstore) tables)
@@ -25,6 +25,13 @@
                         (values (hash-ref label-ids l) (for/hash ([tr l-tr])
                                                          (values (string->symbol(~a(hash-ref k-c-ids (car (divide-kont tr)))))(hash))))))
   `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
+
+(define (function-graphs groupings)
+  (match-define (list calls returns subs) groupings)
+  (define all-funcs (set-union (list->set (hash-keys calls)) (list->set (hash-keys returns))))
+  (define li>labels 'todo)
+  
+  (list 'todo-main 'todo-subs))
 
 (define (make-state-nodes states state-ids state-tran)
   (for/hash ([s states]) (values

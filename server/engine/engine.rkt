@@ -44,9 +44,11 @@
 
 ; analyzer
 (match-define (list initial-state analysis-states data-tables) (analyze code-ast code-astStart))
+(define analysis-groupings (regroup-by-call initial-state analysis-states data-tables))
 
 ; output
 (define state-graph (full-state-graph analysis-states data-tables))
+(match-define (list func-graph func-detail-graphs) (function-graphs analysis-groupings))
 
 ; write output json
 (define out-hash

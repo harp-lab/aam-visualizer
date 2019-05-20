@@ -4,6 +4,7 @@
 
 (provide
  analyze
+ regroup-by-call
  step-state
  divide-kont
  loc-start
@@ -117,6 +118,7 @@
          [_
           (make-apply)])]))
   (define ast (json->ast jast start (hash) 'top))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
   (list ast id>lambda))
   
 
@@ -156,6 +158,7 @@
       [(? list? es)
        (ast/loc (map (lambda (ei) (syntax->ast ei bindings last-lam-id)) es) 'apply (gensym 'apply) last-lam-id)]))
   (define ast (syntax->ast syntax (hash) 'top))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
   (list ast id>lambda))
   
 (define (store-include store key values)
@@ -164,10 +167,13 @@
   (hash-set store key new-val))
 
 (define (print-explore result)
+  (display "states:\n")
   (match-define `(,states ,sigma ,sigmak) result)
-  (for ([s states]) (print-state s #f 0)(display "\n"))
-  (pretty-print sigma)
-  (pretty-print sigmak))
+  (for ([s states]) (print-state s #f 0)(display "\n")))
+  ;(display "store:\n")
+  ;(pretty-print sigma)
+  ;(display "k-store:\n")
+  ;(pretty-print sigmak))
 
 (define (print-clo v inline col)
   (define ncol (+ 1 col))
@@ -386,18 +392,18 @@
                                [`(proc apply . ,_)
                                 (foldl (lambda(t c)
                                          (match t
-                                           [`(eval ,e ,_ ,i ,_)(set-add c (list e i))]
+                                           [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(set-add c (list l i))]
                                            [else c]))
-                                       calls (state>state-trans s))]
+                                       calls (set->list (hash-ref state>state-trans s)))]
                                [else calls]))
-                           (match init [`(eval ,e ,_ ,i ,_)(set(list e i))][else (set)])
-                           states))
+                           (match init [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(set(list l i))][else (set)])
+                           (set->list states)))
   (define li>states (foldl (lambda (s l>s)
                               (match s
-                                [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_) (store-include l>s (list l i) s)]
+                                [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_) (store-include l>s (list l i) (set s))]
                                 [else l>s]))
                             (hash)
-                            states))
+                            (set->list states)))
   (define (returns-include store key kont state)
     (define old-hash (hash-ref store key (hash)))
     (define new-hash (store-include old-hash kont state))
@@ -418,14 +424,13 @@
                                   (returns-include l>r (list lid i+)
                                                    k (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat (,@ds ,dn) ,(cdr es) ,e0s ,lid ,rhok ,new-i) kappa+))))]
                                  [else l>r]))
-                             l>r (lookupk kappa sigmak))])]
+                             l>r (set->list (lookupk kappa sigmak)))])]
                [else l>r]))
-           (hash) states))
+           (hash) (set->list states)))
   (define subgraphs (make-hash))
-  (define (make-subgraph body-state)
-    (match-define `(eval ,(ast/loc _ _ _ lid) ,_ ,i ,_) body-state)
-    (define include-states (hash-ref li>states (list lid i)))
-    (define return-states (hash-ref li>returns (list lid i)))
+  (define (make-subgraph li)
+    (define include-states (hash-ref li>states li (set)))
+    (define return-states (hash-ref li>returns li (set)))
     (foldl
      (lambda(s data)
        (match-define (list trans out-trans calls returns) data)
@@ -461,23 +466,21 @@
                                             ['halt (set-add rs 'halt)]
                                             ['notfound rs]
                                             [(cons `(frame ,_ ,_ ,_ ,_ ,lid ,_ ,i+) kappa+)
-                                             (set-add rs (list lid (tick2 i i+)))]))
-                                        (returns) (lookupk kappa sigmak))])]))
+                                             (set-add rs (list lid (tick2 i i+ s)))]))
+                                        returns (set->list (lookupk kappa sigmak)))])]
+                          [else returns]))
        (list trans+ out-trans+ calls+ returns+))
      (list (hash)(hash)(set)(set))
-     include-states))
-  (match-define (list calls returns subs)
-    (foldl (lambda(c t)
-             (match-define (list e i) c)
-             (match-define (list calls returns subs) t)
-             (match-define (list trans out-trans s-calls s-returns) (make-subgraph e))
-             (define calls+ 'todo)
-             (define returns+ 'todo)
-             (define subs+ 'todo)
-             (list calls+ returns+ subs+))
-           (list (hash)(hash)(hash))
-           all-calls))
-  'todo-finish-regroup)
+     (set->list include-states)))
+  (foldl (lambda(c t)
+           (match-define (list calls returns subs) t)
+           (match-define (list trans out-trans s-calls s-returns) (make-subgraph c))
+           (define calls+ (hash-set calls c s-calls))
+           (define returns+ (hash-set returns c s-returns))
+           (define subs+ (hash-set subs c (list trans out-trans)))
+           (list calls+ returns+ subs+))
+         (list (hash)(hash)(hash))
+         (set->list all-calls)))
 
 (define (inject data)
   (match-define `(,ast ,ids) (build-ast data))
@@ -498,18 +501,25 @@
 
 (define (explore data)
   (display "explored expression:\n")(show-syntax data)(display "\n")
-  (match-define `(,ast ,id>lambda)(inject data))
-  (define results (explore-state (set ast) (set) (hash) (hash)))
-  (print-explore results))
-  ;(void))
+  (match-define `(,initial-state ,id>lambda)(inject data))
+  (define sg-results (explore-state (set initial-state) (set) (hash) (hash)))
+  (match-define (list states sigma sigmak) sg-results)
+  (define tables (list id>lambda sigma sigmak))
+  (match-define (list calls returns subs) (regroup-by-call initial-state states tables))
+  (print-explore sg-results)
+  (display "\ncalls:\n")
+  (pretty-print calls)
+  (display "\nreturns:\n")
+  (pretty-print returns))
+  ;(display "\nsubs:\n")
+  ;(pretty-print subs))
 
-(define (ex1) (explore `(let ([a ((lambda (x) (let ([a (x x)]) a))(lambda (x) (let ([a (x x)]) a)))]) a)))
-(define (ex2) (explore `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
+(define (ex1) (explore `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
+(define (ex2) (explore `(let ([a ((lambda (x) (let ([a (x x)]) a))(lambda (x) (let ([a (x x)]) a)))]) a)))
 (define (ex3) (explore `((lambda (x) (x x))(lambda (x) (x x)))))
 (define (ex5) (explore `((((lambda (x) (lambda (y) (lambda (z) (((x x) y) z))))(lambda (a) (lambda (b) (lambda (c) (((b a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((c a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((a a) b) c)))))))
 (define (ex6) (explore `((lambda (x y z) (x x y z))(lambda (a b c) (b a b c))(lambda (a b c) (c a b c))(lambda (a b c) (a a b c)))))
 ;stuck states: free vars
 (define (ex4) (explore `(let ([a ((let ([b (x x)]) (let ([z b]) b)) (let ([c (z a)]) c))]) a)))
 ;from json
-(define (ex7) (explore "parseoutput.json"))
-
+;(define (ex7) (explore "parseoutput.json"))
