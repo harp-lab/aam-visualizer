@@ -1,6 +1,7 @@
 #lang racket
 
 (require json)
+(require racket/hash)
 
 (require "analyzer.rkt")
 
@@ -26,12 +27,58 @@
                                                          (values (string->symbol(~a(hash-ref k-c-ids (car (divide-kont tr)))))(hash))))))
   `(,(state-gen states state-ids state-tran) ,(kont-gen k-closures k-c-ids l-c-trans)))
 
-(define (function-graphs groupings)
+(define (graph-functions states groupings tables main-gen sub-gen)
   (match-define (list calls returns subs) groupings)
+  (match-define `(,id>lambda ,store ,kstore) tables)
+  (define state>ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
+  (define (s->sym s) (string->symbol (~a(hash-ref state>ids s))))
   (define all-funcs (set-union (list->set (hash-keys calls)) (list->set (hash-keys returns))))
-  (define li>labels 'todo)
-  
-  (list 'todo-main 'todo-subs))
+  (define li>labels (for/hash ([num (range (set-count all-funcs))][f all-funcs])
+                      (values f (format "~a-~a" num (car f)))))
+  (define (li->sym li) (string->symbol (~a(hash-ref li>labels li (lambda()(error "found halt"))))))
+  (define main-calls (for/hash([li (hash-keys calls)])
+                       (define li-trans (hash-ref calls li))
+                       (values (li->sym li)
+                               (for/hash ([li li-trans])
+                                 (values (li->sym li) (hash
+                                                       ;'trans "call"
+                                                       ))))))
+  (define main-returns (for/hash([li (hash-keys returns)])
+                         (define li-trans (hash-ref returns li))
+                         (values (li->sym li)
+                                 (for/hash ([li li-trans])
+                                   (values (li->sym li) (hash
+                                                         ;'trans "return"
+                                                         ))))))
+  (define main-trans (hash-union main-calls main-returns
+                                 #:combine (lambda (c r)
+                                             (hash-union c r #:combine
+                                                         (lambda _ "call+return")))))
+  (define (sub-states li)
+    (match-define (list trans out-trans) (hash-ref subs li))
+    (set-union (list->set (hash-keys trans)) (list->set (hash-keys out-trans))))
+  (define (sub-trans li)
+    (match-define (list trans out-trans) (hash-ref subs li))
+    (define direct (for/hash([s (hash-keys trans)])
+                     (define s-trans (hash-ref trans s))
+                     (values (s->sym s) (for/hash ([s s-trans])
+                                          (values (s->sym s) (hash
+                                                              ;'trans "direct"
+                                                              ))))))
+    (define indirect (for/hash([s (hash-keys out-trans)])
+                       (define s-trans (hash-ref out-trans s))
+                       (values (s->sym s) (for/hash ([o s-trans])
+                                            (match-define (list outs s) o)
+                                            (values (s->sym s) (hash
+                                                                ;'trans "return" 'outs (set->list outs)
+                                                                ))))))
+    
+    (hash-union direct indirect))
+  (define main-nodes (main-gen all-funcs li->sym main-trans))
+  (define sub-nodes (for/hash ([li (hash-keys subs)])
+                      (values (li->sym li) (hash
+                                            'graph (sub-gen (sub-states li) s->sym (sub-trans li))))))
+  (list main-nodes sub-nodes))
 
 (define (make-state-nodes states state-ids state-tran)
   (for/hash ([s states]) (values
@@ -68,7 +115,40 @@
                                'form "frames"
                                'data (~a (length (car c)))
                                'children (hash-ref l-c-trans (cadr c))))))
-  
+
+(define (make-func-nodes funcs li->sym trans)
+  (for/hash ([li funcs])
+    (define id (li->sym li))
+    (values id (hash
+                 'id (symbol->string id)
+                 'form "function"
+                 'data (~a (cadr li))
+                 'children (hash-ref trans id)))))
+(define (make-sub-nodes states s->sym trans)
+  (for/hash ([s states])
+    (define id (s->sym s))
+    (values id (match (car s)
+                 ['eval
+                  (hash
+                   'id (symbol->string id)
+                   'form "eval"
+                   'start (loc-start (cadr s))
+                   'end (loc-end (cadr s))
+                   'data (~a (only-syntax (cadr s)))
+                   'children (hash-ref trans id))]
+                 ['proc
+                  (hash
+                   'id (symbol->string id)
+                   'form (format "proc-~a" (cadr s))
+                   'data ""
+                   'children (hash-ref trans id))]
+                 [(? symbol? other)
+                  (hash
+                   'id (symbol->string id)
+                   'form (symbol->string other)
+                   'data ""
+                   'children (hash-ref trans id))]))))
+
 (define (full-state-graph analysis-states data-tables)
   (match-define `(,s-nodes ,k-nodes)
     (graph-states
@@ -77,3 +157,9 @@
      make-state-nodes
      make-kont-nodes))
   s-nodes)
+
+(define (function-graphs states groupings tables)
+  (graph-functions
+   states groupings tables
+   make-func-nodes
+   make-sub-nodes))

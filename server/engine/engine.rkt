@@ -44,11 +44,12 @@
 
 ; analyzer
 (match-define (list initial-state analysis-states data-tables) (analyze code-ast code-astStart))
-(define analysis-groupings (regroup-by-call initial-state analysis-states data-tables))
+#;(define analysis-groupings (regroup-by-call initial-state analysis-states data-tables))
 
 ; output
 (define state-graph (full-state-graph analysis-states data-tables))
-(match-define (list func-graph func-detail-graphs) (function-graphs analysis-groupings))
+#;(match-define (list func-graph func-detail-graphs)
+  (function-graphs analysis-states analysis-groupings data-tables))
 
 ; write output json
 (define out-hash
@@ -59,6 +60,9 @@
         'graph code-ast
         'start code-astStart)
       'main (hash 'graph state-graph)
+      ;'states (hash 'graph state-graph)
+      ;'main (hash 'graph func-graph)
+      ;'detail func-detail-graphs
     )))
 (define out
   (if (non-empty-string? (output-file-path))

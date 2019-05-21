@@ -447,8 +447,8 @@
                                       (define rs (hash-ref return-states k))
                                       (if (set-empty? rs)
                                           ot
-                                          (store-include ot s (list->set (set-map rs (lambda(r)(list outs r))))))
-                                      out-trans (lookupk kont sigmak)))]
+                                          (store-include ot s (list->set (set-map rs (lambda(r)(list outs r)))))))
+                                      out-trans (set->list (lookupk kont sigmak)))]
                             [else out-trans]))
        (define calls+ (match s
                         [`(proc apply (,clos . ,_) ,_ ,i ,_)
