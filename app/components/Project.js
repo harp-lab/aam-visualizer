@@ -121,6 +121,7 @@ class Project extends Component {
           view = <Loading status='Downloading' variant='circular'/>;
         else {
           const mainGraph = project.graphs.main;
+          console.log(project);
           const subGraph = project.graphs[project.selectedSubGraphId];
           const subGraphMenuItems = Object.entries(project.graphs)
           .filter(([graphId, graph]) => graphId !== 'main')
