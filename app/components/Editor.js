@@ -11,13 +11,8 @@ class Editor extends Component {
   }
   set value(data) { this.cm.getDoc().setValue(data); }
   get value() { return this.cm.getDoc().getValue(); }
-  
-  save() {
-    this.props.onSave(this.value);
-  }
-  process() {
-    this.props.onProcess(this.value);
-  }
+  save() { this.props.onSave(this.value); }
+  process() { this.props.onProcess(this.value); }
   refresh() {
     this.value = this.props.data;
     if (this.props.marks){
@@ -40,16 +35,37 @@ class Editor extends Component {
   }
   selectMark() {
     const selectedId = this.props.selected;
-    if (this.selectedMark)
+    const doc = this.cm.getDoc();
+
+    // unselect previous mark
+    let marks;
+    if (this.selectedMark) {
       this.selectedMark.clear();
+
+      // unhighlight bookmarks in range
+      marks = doc.getAllMarks();
+      marks.forEach(mark => {
+        if (mark.type == 'bookmark')
+          mark.widgetNode.classList.remove('selected');
+      });
+    }
+    
+    
     if (selectedId) {
       const mark = this.props.marks[selectedId];
       if (mark) {
-        const doc = this.cm.getDoc();
         doc.setCursor(mark.start);
+
         this.selectedMark = doc.markText(mark.start, mark.end, {
-          className: 'selected',
-          css: 'background-color: #f4d03f' });
+          className: 'selected'});
+
+        // highlight bookmarks in range
+        marks = doc.findMarks(mark.start, mark.end);
+        console.log(marks);
+        marks.forEach(mark => {
+          if (mark.type == 'bookmark')
+            mark.widgetNode.classList.add('selected');
+        });
       }
     }
   }
