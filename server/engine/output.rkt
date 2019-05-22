@@ -35,7 +35,8 @@
   (define all-funcs (set-union (list->set (hash-keys calls)) (list->set (hash-keys returns))))
   (define li>labels (for/hash ([num (range (set-count all-funcs))][f all-funcs])
                       (values f (format "~a-~a" num (car f)))))
-  (define (li->sym li) (string->symbol (~a(hash-ref li>labels li (lambda()(error "found halt"))))))
+  (define (li->sym li)
+    (if (equal? li 'halt) 'halt (string->symbol (~a(hash-ref li>labels li)))))
   (define main-calls (for/hash([li (hash-keys calls)])
                        (define li-trans (hash-ref calls li))
                        (values (li->sym li)
@@ -77,6 +78,7 @@
   (define main-nodes (main-gen all-funcs li->sym main-trans))
   (define sub-nodes (for/hash ([li (hash-keys subs)])
                       (values (li->sym li) (hash
+                                            'type "state"
                                             'graph (sub-gen (sub-states li) s->sym (sub-trans li))))))
   (list main-nodes sub-nodes))
 
@@ -93,11 +95,13 @@
                               'end (loc-end (cadr s))
                               'data (~a (only-syntax (cadr s)))
                               'children (hash-ref state-tran (hash-ref state-ids s)))]
-                            ['proc
+                            ['inner
                              (hash
                               'id (hash-ref state-ids s)
-                              'form (format "proc-~a" (cadr s))
-                              'data ""
+                              'form (format "inner-~a" (cadr s))
+                              'data (~a(only-syntax (caddr s)))
+                              'start (loc-start (caddr s))
+                              'end (loc-end (caddr s))
                               'children (hash-ref state-tran (hash-ref state-ids s)))]
                             [(? symbol? other)
                              (hash
@@ -136,10 +140,10 @@
                    'end (loc-end (cadr s))
                    'data (~a (only-syntax (cadr s)))
                    'children (hash-ref trans id))]
-                 ['proc
+                 ['inner
                   (hash
                    'id (symbol->string id)
-                   'form (format "proc-~a" (cadr s))
+                   'form (format "inner-~a" (cadr s))
                    'data ""
                    'children (hash-ref trans id))]
                  [(? symbol? other)
