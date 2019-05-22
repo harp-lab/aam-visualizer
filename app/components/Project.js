@@ -146,7 +146,9 @@ class Project extends Component {
                 onNodeSelect={ nodeId => {
                   if (nodeId) {
                     const project = this.props.project;
-                    project.selectedSubGraphId = project.graphs['main'].nodes[nodeId].detail;
+                    const detail = project.graphs['main'].nodes[nodeId].detail;
+                    if (detail)
+                      project.selectedSubGraphId = detail;
                     this.props.onSave(project);
                   }
                   this.selectNode('main', nodeId);
