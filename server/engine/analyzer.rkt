@@ -334,6 +334,12 @@
     [`(inner ,_ ,(ast/loc _ _ _ l) ,_ ,_ ,i ,_)(list l i)]
     [else (car state)]))
 
+(define (get-kappa state)
+  (match state
+    [`(eval ,_ ,_ ,_ ,k) k]
+    [`(inner ,_ ,_ ,_ ,_ ,_ ,k) k]
+    [else (car state)]))
+
 (define (step-state state sigma sigmak)
   (match state
     [`(eval ,(ast/loc `(let ([,xs ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
@@ -402,20 +408,29 @@
   (define state>state-trans (for/hash ([s states])
                               (match-define (list trans _ _) (step-state s sigma sigmak))
                               (values s trans)))
-  (define all-calls (foldl (lambda (s calls)
-                             (match s
-                               [`(inner apply . ,_)
-                                (foldl (lambda(t c)
-                                         (match t
-                                           [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)
-                                            (store-include c (list l i)(set t))]
-                                           [else c]))
-                                       calls (set->list (hash-ref state>state-trans s)))]
-                               [else calls]))
-                           (match init [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(hash (list l i) (set init))][else (hash)])
-                           (set->list states)))
+  (define all-calls
+    (foldl (lambda (s calls)
+             (match s
+               [`(inner apply . ,_)
+                (foldl (lambda(t c)
+                         (match t
+                           [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)
+                            (store-include c (list l i)(set t))]
+                           [else c]))
+                       calls (set->list (hash-ref state>state-trans s)))]
+               [else calls]))
+           (match init [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(hash (list l i) (set init))][else (hash)])
+           (set->list states)))
+  (define all-returns
+    (foldl (lambda (s returns)
+             (match s
+               [`(eval (? atomic? _) ,_ ,_ ,k)
+                (store-include returns k (hash-ref state>state-trans s))]
+               [else returns]))
+           (hash)
+           (set->list states)))
   (define li>states (foldl (lambda (s l>s)
-                              (match s
+                             (match s
                                 [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_) (store-include l>s (list l i) (set s))]
                                 [`(inner ,_ ,(ast/loc _ _ _ l) ,_ ,_ ,i ,_)(store-include l>s (list l i) (set s))]
                                 [else l>s]))
@@ -447,39 +462,64 @@
   (define (make-subgraph-follow li)
     (define calls (mutable-set))
     (define returns (mutable-set))
+    (define finals (mutable-set))
     (define (s->trans s) (hash-ref state>state-trans s (set)))
     (define init (hash-ref all-calls li))
-    (define (build-graph fronteer trans)
+    (define (build-graph fronteer complete trans)
       (define next (set-first fronteer))
+      (define complete+ (set-add next complete))
       (define next-trans
         (match next
-          [(? set? _)
+          [(? set? (not (? set-empty?)))
+           (define next-states (apply set-union (set-map next s->trans)))
            (match (set-first next)
-             [`(eval ,(? atomic? ae) . ,_)
-              (define next-states (apply set-union (set-map next s->trans)))
+             [`(eval ,(? atomic? _) . ,_)
               (make-immutable-hash
-               (map (lambda (state)
+               (set-map (lambda (state)
                       (define li (get-li state))
                       (match li
                         [(list _ _)
                          (set-add! returns li)
                          (cons `(return ,li)(hash 'transition "return"))]
-                        ['halt (cons state (hash 'transition "halt"))]
-                        [else (cons state (hash 'transition "fail"))]))
+                        ['halt
+                         (set-add! finals 'halt)
+                         (cons state (hash 'transition "halt"))]
+                        [else
+                         (set-add! finals 'stuck)
+                         (cons state (hash 'transition "stuck"))]))
                     next-states))]
-             [`(inner apply ,_ (,d . ,_) . ,_)
-              'todo-calls]
-             [else (hash
-                    (apply set-union (set-map next s->trans))
-                    (hash 'transition "step"))])]
+             [`(inner apply . ,_)
+              (match-define (list stop go)
+                (foldl (lambda(s rs)
+                         (match-define (list stop go) rs)
+                         (define li (get-li s))
+                         (define k (get-kappa s))
+                         (match li
+                           [(list _ _)
+                            (set-add! calls li)
+                            (define returns (hash-ref all-returns k (set)))
+                            (if (set-empty? returns)
+                                (list (set-add stop
+                                               (cons `(no-return li) (hash 'transition "call-out"))) go)
+                                (list stop (cons
+                                            (set-union returns (car go))
+                                            (set-union (set li) (cdr go)))))]
+                           [else
+                            (set-add! finals 'stuck)
+                            (list (set-add stop (cons s (hash 'transition "stuck"))) go)]))
+                       (list (set) (set))
+                       (set->list next-states)))
+              (make-immutable-hash (cons (cons (car go) (hash 'transition "call-return" 'ids (cdr go)))
+                                         (set->list stop)))]
+             [else (hash next-states (hash 'transition "step"))])]
           [else (hash)]))
       (define fronteer+ (set-union (set-rest fronteer) (list->set (hash-keys next-trans))))
       (define trans+ (hash-set trans next next-trans))
       (if (set-empty? fronteer+)
-          trans+
-          (build-graph fronteer+ trans+)))
-    (define trans (build-graph (set init) (hash))) 
-    (list init trans calls returns))
+          (list complete+ trans+)
+          (build-graph fronteer+ complete+ trans+)))
+    (match-define (list nodes trans) (build-graph (set init) (hash))) 
+    (list init nodes trans calls returns finals))
   (define (make-subgraph-li li)
     (define include-states (hash-ref li>states li (set)))
     (define return-states (hash-ref li>returns li (set)))
