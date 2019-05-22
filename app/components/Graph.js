@@ -8,6 +8,17 @@ const style = {
     width: '100%'
 };
 
+function getStyle(prop, defaultStyle) {
+  return element => {
+    const style = element.data('style');
+    let output;
+    if (style && style[prop])
+      output = style[prop];
+    else
+      output = defaultStyle;
+    return output;
+  }
+}
 const config = {
   style: [
     {
@@ -22,7 +33,8 @@ const config = {
       style: {
         'label': 'data(label)',
         'curve-style': 'bezier',
-        'target-arrow-shape': 'triangle'
+        'target-arrow-shape': 'triangle',
+        'line-style': getStyle('line-style', 'solid')
       }
     }
   ],
@@ -38,10 +50,10 @@ class Graph extends Component {
     this.cy = cytoscape(config);
     this.cy.on('select', 'node', event => {
       const nodeId = event.target.id();
-      if (this.eventsEnabled) { this.props.onSelect(nodeId); }
+      if (this.eventsEnabled) { this.props.onNodeSelect(nodeId); }
     });
     this.cy.on('unselect', 'node', event => {
-      if (this.eventsEnabled) { this.props.onSelect(undefined); }
+      if (this.eventsEnabled) { this.props.onNodeSelect(undefined); }
     });
     this.eventsEnabled = false;
   }

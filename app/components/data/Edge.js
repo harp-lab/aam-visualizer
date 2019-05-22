@@ -4,6 +4,7 @@ class Edge {
     this.target = target;
 
     this.label = data.label || '';
+    this.style = data.style;
   }
   export(id) {
     return {
@@ -11,7 +12,8 @@ class Edge {
         id: id,
         label: this.label,
         source: this.source,
-        target: this.target
+        target: this.target,
+        style: this.style
       }
     }
   }

@@ -6,7 +6,7 @@ import SplitPane from './SplitPane';
 import Pane from './Pane';
 import Editor from './Editor';
 import Graph from './Graph';
-import NodeViewer from './NodeViewer';
+import PropViewer from './PropViewer';
 
 class Project extends Component {
   constructor(props) {
@@ -31,7 +31,6 @@ class Project extends Component {
 
     this.saveCode = this.saveCode.bind(this);
     this.processCode = this.processCode.bind(this);
-    this.select = this.select.bind(this);
     this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
   }
   saveLocalCode(code) {
@@ -94,7 +93,7 @@ class Project extends Component {
     this.props.onSave(project);
   }
 
-  select(graphId, nodeId) {
+  selectNode(graphId, nodeId) {
     const selectedGraphId = graphId;
     const selectedNodeId = nodeId;
     this.setState({ selectedGraphId, selectedNodeId });
@@ -144,13 +143,13 @@ class Project extends Component {
                 data={ mainGraph.export() }
                 positions={ mainGraph.metadata.positions }
                 selected={ selectedNodeId }
-                onSelect={ nodeId => {
+                onNodeSelect={ nodeId => {
                   if (nodeId) {
                     const project = this.props.project;
                     project.selectedSubGraphId = project.graphs['main'].nodes[nodeId].detail;
                     this.props.onSave(project);
                   }
-                  this.select('main', nodeId);
+                  this.selectNode('main', nodeId);
                 } }
                 onSave={ this.saveGraphMetadata } />
             </Pane>
@@ -163,7 +162,7 @@ class Project extends Component {
                 data={ subGraph.export() }
                 positions={ subGraph.metadata.positions }
                 selected={ selectedNodeId }
-                onSelect={ nodeId => this.select(selectedSubGraphId, nodeId) }
+                onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) }
                 onSave={ this.saveGraphMetadata } />
               <Select
                 value={ selectedSubGraphId }
@@ -184,12 +183,12 @@ class Project extends Component {
                 data={ project.code }
                 marks={ marks }
                 selected={ selectedNodeId }
-                onSelect={ nodeId => this.select(selectedSubGraphId, nodeId) } />
+                onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) } />
             </Pane>
           );
-          const nodeViewerElement = (
+          const propViewerElement = (
             <Pane height='50%'>
-              <NodeViewer data={ (project.graphs[selectedGraphId] && project.graphs[selectedGraphId].nodes[selectedNodeId]) } />
+              <PropViewer data={ (project.graphs[selectedGraphId] && project.graphs[selectedGraphId].nodes[selectedNodeId]) } />
             </Pane>
           );
 
@@ -204,7 +203,7 @@ class Project extends Component {
               <Pane width='50%'>
                 <SplitPane horizontal>
                   { editorElement }
-                  { nodeViewerElement }
+                  { propViewerElement }
                 </SplitPane>
               </Pane>
             </SplitPane>);
