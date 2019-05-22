@@ -157,6 +157,8 @@
                   (hash
                    'id (symbol->string id)
                    'form (format "inner-~a" (cadr s))
+                   'start (loc-start (caddr s))
+                   'end (loc-end (caddr s))
                    'data ""
                    'children (hash-ref trans id (hash)))]
                  [(? symbol? other)
