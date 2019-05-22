@@ -4,6 +4,7 @@
   json
   racket/cmdline
   racket/path
+  racket/hash
   "consts.rkt"
   "global.rkt"
   "lexer.rkt"
@@ -55,7 +56,7 @@
 (define out-hash
   (hash-set* proj-hash
     'status "done"
-    'graphs (hash
+    'graphs (hash-union (hash
       'ast (hash
         'type "ast"
         'graph code-ast
@@ -64,8 +65,8 @@
         'graph state-graph)
       'main (hash
         'graph func-graph)
-      ;'detail func-detail-graphs
-    )))
+    ) func-detail-graphs)))
+
 (define out
   (if (non-empty-string? (output-file-path))
     (open-output-file (output-file-path) #:exists 'replace)
