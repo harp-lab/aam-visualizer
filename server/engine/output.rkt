@@ -56,7 +56,13 @@
                                                          (lambda _ "call+return")))))
   (define (sub-states li)
     (match-define (list trans out-trans) (hash-ref subs li))
-    (set-union (list->set (hash-keys trans)) (list->set (hash-keys out-trans))))
+    (define from (set-union (list->set (hash-keys trans)) (list->set (hash-keys out-trans))))
+    (define to-in (apply set-union (hash-values trans)))
+    (define to-out (apply set-union (set)
+                          (map (lambda(os)(list->set
+                                           (set-map os (lambda(o)(cadr o)))))
+                               (hash-values out-trans))))
+    (set-union from to-in to-out))
   (define (sub-trans li)
     (match-define (list trans out-trans) (hash-ref subs li))
     (define direct (for/hash([s (hash-keys trans)])
@@ -134,7 +140,7 @@
                    'form "function"
                    'detail (symbol->string id)
                    'data (~a (cadr li))
-                   'children (hash-ref trans id)))])))
+                   'children (hash-ref trans id (hash))))])))
 (define (make-sub-nodes states s->sym trans)
   (for/hash ([s states])
     (define id (s->sym s))
@@ -146,19 +152,19 @@
                    'start (loc-start (cadr s))
                    'end (loc-end (cadr s))
                    'data (~a (only-syntax (cadr s)))
-                   'children (hash-ref trans id))]
+                   'children (hash-ref trans id (hash)))]
                  ['inner
                   (hash
                    'id (symbol->string id)
                    'form (format "inner-~a" (cadr s))
                    'data ""
-                   'children (hash-ref trans id))]
+                   'children (hash-ref trans id (hash)))]
                  [(? symbol? other)
                   (hash
                    'id (symbol->string id)
                    'form (symbol->string other)
                    'data ""
-                   'children (hash-ref trans id))]))))
+                   'children (hash-ref trans id (hash)))]))))
 
 (define (full-state-graph analysis-states data-tables)
   (match-define `(,s-nodes ,k-nodes)
@@ -190,3 +196,4 @@
 )
 
 (define (ex1) (test `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
+(define (ex2) (test `((lambda (y) (y y)) (lambda (x) (x x)))))
