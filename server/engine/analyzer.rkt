@@ -500,7 +500,7 @@
                          (foldl (lambda(clo cs)
                                   (match-define `(clo ,_ ,e ,_) clo)
                                   (set-add cs (list (ast/loc-lambda-id e)(tick i s))))
-                                calls clos)]
+                                calls (set->list clos))]
                         [else calls]))
        (define returns+ (match s
                           [`(eval ,(? atomic? ae) ,rho ,i ,kappa)
