@@ -61,10 +61,8 @@
         'graph code-ast
         'start code-astStart)
       'states (hash
-        'type "state"
         'graph state-graph)
       'main (hash
-        'type "state"
         'graph func-graph)
       ;'detail func-detail-graphs
     )))

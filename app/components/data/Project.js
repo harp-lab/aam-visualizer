@@ -1,9 +1,9 @@
 import AstGraph from './AstGraph';
-import StateGraph from './StateGraph';
+import DefaultGraph from './DefaultGraph';
+import SummaryGraph from './SummaryGraph';
 
 const GRAPHS = {
-  ast: 'ast',
-  state: 'state'
+  ast: 'ast'
 };
 
 class Project {
@@ -22,13 +22,20 @@ class Project {
   }
   importGraphs(graphs) {
     for (const [id, data] of Object.entries(graphs)) {
-      const type = data.type;
-      switch (type) {
-        case GRAPHS.ast:
-          this.graphs[id] = new AstGraph(data);
+      switch (id) {
+        case 'main':
+          this.graphs[id] = new SummaryGraph(data);
           break;
-        case GRAPHS.state:
-          this.graphs[id] = new StateGraph(data);
+        default:
+          const type = data.type;
+          switch (type) {
+            case GRAPHS.ast:
+              this.graphs[id] = new AstGraph(data);
+              break;
+            default:
+              this.graphs[id] = new DefaultGraph(data);
+              break;
+          }
           break;
       }
     }

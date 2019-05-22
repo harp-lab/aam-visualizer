@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Typography from '@material-ui/core/Typography';
 
-class NodeViewer extends Component {
+class PropViewer extends Component {
   render() {
     let element;
     if (this.props.data) {
@@ -33,7 +33,7 @@ class NodeViewer extends Component {
             alignItems: 'center'
           }}>
           <Typography variant='h6'>
-            No node selected
+            No element selected
           </Typography>
         </div>
       );
@@ -42,4 +42,4 @@ class NodeViewer extends Component {
   }
 }
 
-export default NodeViewer;
+export default PropViewer;
