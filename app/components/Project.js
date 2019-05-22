@@ -121,7 +121,6 @@ class Project extends Component {
           view = <Loading status='Downloading' variant='circular'/>;
         else {
           const mainGraph = project.graphs.main;
-          console.log(project);
           const subGraph = project.graphs[project.selectedSubGraphId];
           const subGraphMenuItems = Object.entries(project.graphs)
           .filter(([graphId, graph]) => graphId !== 'main')
@@ -145,7 +144,14 @@ class Project extends Component {
                 data={ mainGraph.export() }
                 positions={ mainGraph.metadata.positions }
                 selected={ selectedNodeId }
-                onSelect={ nodeId => this.select('main', nodeId) }
+                onSelect={ nodeId => {
+                  if (nodeId) {
+                    const project = this.props.project;
+                    project.selectedSubGraphId = project.graphs['main'].nodes[nodeId].detail;
+                    this.props.onSave(project);
+                  }
+                  this.select('main', nodeId);
+                } }
                 onSave={ this.saveGraphMetadata } />
             </Pane>
           );

@@ -1,7 +1,7 @@
 import AbstractGraph from './AbstractGraph';
 import ParentNode from './ParentNode';
 
-class StateGraph extends AbstractGraph {
+class DefaultGraph extends AbstractGraph {
   processNode(data) {
     let node;
     switch (data.form) {
@@ -13,4 +13,4 @@ class StateGraph extends AbstractGraph {
   }
 }
 
-export default StateGraph;
+export default DefaultGraph;
