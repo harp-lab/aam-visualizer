@@ -4,6 +4,7 @@
 
 (provide
  analyze
+ analyze-syn
  regroup-by-call
  step-state
  divide-kont
@@ -41,10 +42,16 @@
 (struct ast/loc (ast bound loc lambda-id)  #:transparent)
 
 (define (loc-start syn)
-  (car (ast/loc-loc syn)))
+  (define loc (ast/loc-loc syn))
+  (if (pair? loc)
+      (car loc)
+      (ast/loc-bound syn)))
 
 (define (loc-end syn)
-  (cdr (ast/loc-loc syn)))
+  (define loc (ast/loc-loc syn))
+  (if (pair? loc)
+      (cdr loc)
+      loc))
 
 (define (only-syntax ast)
   (define syn-ast (ast/loc-ast ast))
@@ -541,6 +548,11 @@
 (define (analyze json-ast start-token)
   (match-define `(,ast ,id>lambda) (make-ast json-ast (string->symbol start-token)))
   (define init `(eval ,ast ,(hash) () halt))
+  (match-define `(,states ,sigma ,sigmak) (explore-state (set init) (set) (hash) (hash)))
+  (list init states (list id>lambda sigma sigmak)))
+
+(define (analyze-syn syn)
+  (match-define `(,init ,id>lambda)(inject syn))
   (match-define `(,states ,sigma ,sigmak) (explore-state (set init) (set) (hash) (hash)))
   (list init states (list id>lambda sigma sigmak)))
 

@@ -32,24 +32,23 @@
   (match-define `(,id>lambda ,store ,kstore) tables)
   (define state>ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define (s->sym s) (string->symbol (~a(hash-ref state>ids s))))
-  (define all-funcs (set-union (list->set (hash-keys calls)) (list->set (hash-keys returns))))
+  (define all-funcs (set-union (set 'halt)(list->set (hash-keys calls)) (list->set (hash-keys returns))))
   (define li>labels (for/hash ([num (range (set-count all-funcs))][f all-funcs])
-                      (values f (format "~a-~a" num (car f)))))
-  (define (li->sym li)
-    (if (equal? li 'halt) 'halt (string->symbol (~a(hash-ref li>labels li)))))
+                      (if (equal? f 'halt)(values f "halt")(values f (format "~a-~a" num (car f))))))
+  (define (li->sym li) (string->symbol (~a(hash-ref li>labels li))))
   (define main-calls (for/hash([li (hash-keys calls)])
                        (define li-trans (hash-ref calls li))
                        (values (li->sym li)
                                (for/hash ([li li-trans])
                                  (values (li->sym li) (hash
-                                                       ;'trans "call"
+                                                       'trans "call"
                                                        ))))))
   (define main-returns (for/hash([li (hash-keys returns)])
                          (define li-trans (hash-ref returns li))
                          (values (li->sym li)
                                  (for/hash ([li li-trans])
                                    (values (li->sym li) (hash
-                                                         ;'trans "return"
+                                                         'trans "return"
                                                          ))))))
   (define main-trans (hash-union main-calls main-returns
                                  #:combine (lambda (c r)
@@ -64,14 +63,14 @@
                      (define s-trans (hash-ref trans s))
                      (values (s->sym s) (for/hash ([s s-trans])
                                           (values (s->sym s) (hash
-                                                              ;'trans "direct"
+                                                              'trans "direct"
                                                               ))))))
     (define indirect (for/hash([s (hash-keys out-trans)])
                        (define s-trans (hash-ref out-trans s))
                        (values (s->sym s) (for/hash ([o s-trans])
                                             (match-define (list outs s) o)
                                             (values (s->sym s) (hash
-                                                                ;'trans "return" 'outs (set->list outs)
+                                                                'trans "return" 'outs (set->list outs)
                                                                 ))))))
     
     (hash-union direct indirect))
@@ -123,11 +122,19 @@
 (define (make-func-nodes funcs li->sym trans)
   (for/hash ([li funcs])
     (define id (li->sym li))
-    (values id (hash
-                 'id (symbol->string id)
-                 'form "function"
-                 'data (~a (cadr li))
-                 'children (hash-ref trans id)))))
+    (match li
+      ['halt
+       (values id (hash
+                  'id (symbol->string id)
+                  'form "halt"
+                  'children (hash)))]
+      [else
+       (values id (hash
+                   'id (symbol->string id)
+                   'form "function"
+                   'detail (symbol->string id)
+                   'data (~a (cadr li))
+                   'children (hash-ref trans id)))])))
 (define (make-sub-nodes states s->sym trans)
   (for/hash ([s states])
     (define id (s->sym s))
@@ -167,3 +174,19 @@
    states groupings tables
    make-func-nodes
    make-sub-nodes))
+
+(define (test syntax)
+  (match-define (list init states tables) (analyze-syn syntax))
+  (define groups (regroup-by-call init states tables))
+  (define state-graph (full-state-graph states tables))
+  (match-define (list func-graph func-detail-graphs)
+    (function-graphs states groups tables))
+  (display "\n\nstates:\n")
+  (pretty-print state-graph)
+  (display "\n\nfunctions:\n")
+  (pretty-print func-graph)
+  (display "\n\nfunction-details:\n")
+  (pretty-print func-detail-graphs)
+)
+
+(define (ex1) (test `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
