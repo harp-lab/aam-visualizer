@@ -63,8 +63,7 @@
         'start code-astStart)
       'states (hash
         'graph state-graph)
-      'main (hash
-        'graph func-graph)
+      'main func-graph
     ) func-detail-graphs)))
 
 (define out
