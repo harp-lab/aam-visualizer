@@ -28,7 +28,7 @@ class Editor extends Component {
       element.classList.add('mark');
       element.textContent = id;
       element.addEventListener('click', event => {
-        this.props.onSelect(id);
+        this.props.onNodeSelect(id);
       });
       doc.setBookmark(mark.end, { widget: element, insertLeft: true });
     }
