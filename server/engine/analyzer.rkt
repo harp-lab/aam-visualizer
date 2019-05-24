@@ -421,7 +421,7 @@
                            [else c]))
                        calls (set->list (hash-ref state>state-trans s)))]
                [else calls]))
-           (hash (get-li init) init)
+           (hash (get-li init) (set init))
            (set->list states)))
   (define all-returns
     (foldl (lambda (s returns)
@@ -474,7 +474,7 @@
           [(? set? (not (? set-empty?)))
            (define next-states (apply set-union (set-map next s->trans)))
            (match (set-first next)
-             [`(eval ,(? atomic? _) . ,_)
+             [`(eval ,(? atomic? _) ,_ ,_ ,(not `((frame . ,_) . ,_)))
               (make-immutable-hash
                (set-map next-states (lambda (state)
                       (define li (get-li state))
@@ -500,17 +500,19 @@
                             (define returns (hash-ref all-returns k (set)))
                             (if (set-empty? returns)
                                 (list (set-add stop
-                                               (cons `(no-return li) `(call-out))) go)
+                                               (cons `(no-return ,li) `(call-out))) go)
                                 (list stop (cons
                                             (set-union returns (car go))
                                             (set-union (set li) (cdr go)))))]
                            [else
                             (set-add! finals 'stuck)
                             (list (set-add stop (cons s `(stuck))) go)]))
-                       (list (set) (set))
+                       (list (set) (cons (set)(set)))
                        (set->list next-states)))
-              (make-immutable-hash (cons (cons (car go) `(call-return ,(cdr go)))
-                                         (set->list stop)))]
+              (if (set-empty? (car go))
+                  (make-immutable-hash (set->list stop))
+                  (make-immutable-hash (cons (cons (car go) `(call-return ,(cdr go)))
+                                             (set->list stop))))]
              [else (hash next-states `(step))])]
           [else (hash)]))
       (define fronteer+ (set-union (set-rest fronteer) (list->set (hash-keys next-trans))))
