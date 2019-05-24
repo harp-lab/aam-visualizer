@@ -73,19 +73,23 @@ class Graph extends Component {
       const id = node.data.id;
       positions[id] = this.cy.$(`#${id}`).position();
     });
-    props.onSave(props.type, { positions });
+    props.onSave(props.graphId, { positions });
   }
 
   componentDidMount() {
+    const bounds = this.cyRef.getBoundingClientRect();
+    this.height = bounds.height;
+    this.width = bounds.width;
+
     this.cy.mount(this.cyRef);
     this.position();
     this.cy.resize();
     this.eventsEnabled = true;
   }
   componentDidUpdate(prevProps) {
-    const idUpdate = this.props.id !== prevProps.id;
-    const typeUpdate = this.props.type !== prevProps.type;
-    if (idUpdate || typeUpdate) {
+    const projectUpdate = this.props.projectId !== prevProps.projectId;
+    const graphUpdate = this.props.graphId !== prevProps.graphId;
+    if (projectUpdate || graphUpdate) {
       this.save(prevProps);
       this.cy.nodes().remove();
       this.cy.add(this.props.data);
@@ -99,10 +103,14 @@ class Graph extends Component {
     }
     this.eventsEnabled = true;
 
-    const widthUpdate = this.props.width !== prevProps.width;
-    const heightUpdate = this.props.height !== prevProps.height;
-    if (widthUpdate || heightUpdate)
+    const bounds = this.cyRef.getBoundingClientRect();
+    const heightUpdate = bounds.height !== this.height;
+    const widthUpdate = bounds.width !== this.width;
+    if (heightUpdate || widthUpdate) {
+      this.height = bounds.height;
+      this.width = bounds.width;
       this.cy.resize();
+    }
   }
   componentWillUnmount() {
     this.save(this.props);
