@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Typography from '@material-ui/core/Typography';
 import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -75,9 +76,6 @@ class Project extends Component {
             project.status = data.status;
             project.code = data.code;
             project.importGraphs(data.graphs);
-            const graphIds = Object.keys(data.graphs)
-            .filter(type => type !== 'main');
-            project.selectedSubGraphId = graphIds[0];
             this.props.onSave(project);
           })
         case 204:
@@ -126,11 +124,6 @@ class Project extends Component {
           .map(([graphId, graph]) => {
             return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
           });
-          const marks = {};
-          for (const [id, node] of Object.entries(subGraph.nodes)) {
-            if (node.start && node.end)
-              marks[id] = { start: node.start, end: node.end };
-          }
           const selectedGraphId = this.state.selectedGraphId;
           const selectedNodeId = this.state.selectedNodeId;
           const selectedSubGraphId = project.selectedSubGraphId;
@@ -138,8 +131,8 @@ class Project extends Component {
           const mainGraphElement = (
             <Pane height='50%'>
               <Graph
-                id={ this.props.id }
-                type={ 'main' }
+                projectId={ this.props.id }
+                graphId={ 'main' }
                 data={ mainGraph.export() }
                 positions={ mainGraph.metadata.positions }
                 selected={ selectedNodeId }
@@ -147,8 +140,7 @@ class Project extends Component {
                   if (nodeId) {
                     const project = this.props.project;
                     const detail = project.graphs['main'].nodes[nodeId].detail;
-                    if (detail)
-                      project.selectedSubGraphId = detail;
+                    project.selectedSubGraphId = detail;
                     this.props.onSave(project);
                   }
                   this.selectNode('main', nodeId);
@@ -156,27 +148,51 @@ class Project extends Component {
                 onSave={ this.saveGraphMetadata } />
             </Pane>
           );
-          const subGraphElement = (
-            <Pane height='50%'>
-              <Graph
-                id={ this.props.id }
-                type={ selectedSubGraphId }
-                data={ subGraph.export() }
-                positions={ subGraph.metadata.positions }
-                selected={ selectedNodeId }
-                onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) }
-                onSave={ this.saveGraphMetadata } />
-              <Select
-                value={ selectedSubGraphId }
-                onChange={ event => {
-                  const project = this.props.project;
-                  project.selectedSubGraphId = event.target.value;
-                  this.props.onSave(project);
-                } }>
-                { subGraphMenuItems }
-              </Select>
-            </Pane>
-          );
+
+          let subGraphElement;
+          if (subGraph)
+            subGraphElement = (
+              <Pane height='50%'>
+                <Graph
+                  projectId={ this.props.id }
+                  graphId={ selectedSubGraphId }
+                  data={ subGraph.export() }
+                  positions={ subGraph.metadata.positions }
+                  selected={ selectedNodeId }
+                  onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) }
+                  onSave={ this.saveGraphMetadata } />
+                <Select
+                  value={ selectedSubGraphId }
+                  onChange={ event => {
+                    const project = this.props.project;
+                    project.selectedSubGraphId = event.target.value;
+                    this.props.onSave(project);
+                  } }>
+                  { subGraphMenuItems }
+                </Select>
+              </Pane>
+            );
+          else
+            subGraphElement = (
+              <Pane
+                height='50%'
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                <Typography variant='h6'>
+                  No subgraph selected
+                </Typography>
+              </Pane>
+            );
+
+          const marks = {};
+          if (subGraph) {
+            for (const [id, node] of Object.entries(subGraph.nodes)) {
+              if (node.start && node.end)
+                marks[id] = { start: node.start, end: node.end };
+            }
+          }
           const editorElement = (
             <Pane height='50%'>
               <Editor
@@ -188,6 +204,7 @@ class Project extends Component {
                 onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) } />
             </Pane>
           );
+
           const propViewerElement = (
             <Pane height='50%'>
               <PropViewer data={ (project.graphs[selectedGraphId] && project.graphs[selectedGraphId].nodes[selectedNodeId]) } />
