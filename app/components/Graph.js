@@ -36,6 +36,12 @@ const config = {
         'target-arrow-shape': 'triangle',
         'line-style': getStyle('line-style', 'solid')
       }
+    },
+    {
+      selector: '.highlighted',
+      style: {
+        'background-color': 'yellow'
+      }
     }
   ],
   headless: true,
@@ -48,6 +54,8 @@ class Graph extends Component {
 
     config.elements = this.props.data;
     this.cy = cytoscape(config);
+    this.highlight();
+
     this.cy.on('select', 'node', event => {
       const nodeId = event.target.id();
       if (this.eventsEnabled) { this.props.onNodeSelect(nodeId); }
@@ -55,6 +63,15 @@ class Graph extends Component {
     this.cy.on('unselect', 'node', event => {
       if (this.eventsEnabled) { this.props.onNodeSelect(undefined); }
     });
+    if (this.props.onEdgeSelect) {
+      this.cy.on('select', 'edge', event => {
+        const edgeId = event.target.id();
+        if (this.eventsEnabled) { this.props.onEdgeSelect(edgeId); }
+      });
+      this.cy.on('unselect', 'edge', event => {
+        if (this.eventsEnabled) { this.props.onEdgeSelect(undefined); }
+      });
+    }
     this.eventsEnabled = false;
   }
   position() {
@@ -66,6 +83,17 @@ class Graph extends Component {
     }
     else
       this.cy.layout({ name: 'cose', directed: true }).run();
+  }
+  highlight() {
+    const highlighted = this.props.highlighted;
+    this.cy.batch(() => {
+      this.cy.nodes().removeClass('highlighted');
+      if (highlighted) {
+        highlighted.forEach(nodeId => {
+          this.cy.$(`#${nodeId}`).addClass('highlighted');
+        });
+      }
+    });
   }
   save(props) {
     const positions = {};
@@ -102,6 +130,8 @@ class Graph extends Component {
       this.cy.$(`#${this.props.selected}`).select();
     }
     this.eventsEnabled = true;
+
+    this.highlight();
 
     const bounds = this.cyRef.getBoundingClientRect();
     const heightUpdate = bounds.height !== this.height;

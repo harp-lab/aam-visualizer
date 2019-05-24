@@ -15,8 +15,9 @@ class Project extends Component {
 
     const selectedGraphId = undefined;
     const selectedNodeId = undefined;
+    const highlightedNodeIds = undefined;
     const project = this.props.project;
-    this.state = { selectedGraphId, selectedNodeId };
+    this.state = { selectedGraphId, selectedNodeId, highlightedNodeIds };
 
     switch (project.status) {
       case project.STATUSES.edit:
@@ -96,6 +97,15 @@ class Project extends Component {
     const selectedNodeId = nodeId;
     this.setState({ selectedGraphId, selectedNodeId });
   }
+  selectEdge(graphId, edgeId) {
+    const project = this.props.project;
+    const graph = project.graphs[graphId];
+    const edge = graph.edges[edgeId];
+    let highlightedNodeIds;
+    if (edge)
+      highlightedNodeIds = edge.calls;
+    this.setState({ highlightedNodeIds });
+  }
 
   render() {
     let view;
@@ -136,6 +146,7 @@ class Project extends Component {
                 data={ mainGraph.export() }
                 positions={ mainGraph.metadata.positions }
                 selected={ selectedNodeId }
+                highlighted={ this.state.highlightedNodeIds }
                 onNodeSelect={ nodeId => {
                   if (nodeId) {
                     const project = this.props.project;
@@ -160,6 +171,7 @@ class Project extends Component {
                   positions={ subGraph.metadata.positions }
                   selected={ selectedNodeId }
                   onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) }
+                  onEdgeSelect={ edgeId => this.selectEdge(selectedSubGraphId, edgeId) }
                   onSave={ this.saveGraphMetadata } />
                 <Select
                   value={ selectedSubGraphId }
@@ -187,6 +199,10 @@ class Project extends Component {
             );
 
           const marks = {};
+          for (const [id, node] of Object.entries(mainGraph.nodes)) {
+            if (node.start && node.end)
+              marks[id] = { start: node.start, end: node.end };
+          }
           if (subGraph) {
             for (const [id, node] of Object.entries(subGraph.nodes)) {
               if (node.start && node.end)
