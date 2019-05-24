@@ -4,6 +4,7 @@ class Edge {
     this.target = target;
 
     this.label = data.label || '';
+    this.calls = data.calls;
     this.style = data.style;
   }
   export(id) {
