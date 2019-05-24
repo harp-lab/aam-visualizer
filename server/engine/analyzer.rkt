@@ -127,7 +127,7 @@
          [_
           (make-apply)])]))
   (define ast (json->ast jast start (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 
@@ -167,7 +167,7 @@
       [(? list? es)
        (ast/loc (map (lambda (ei) (syntax->ast ei bindings last-lam-id)) es) 'apply (gensym 'apply) last-lam-id)]))
   (define ast (syntax->ast syntax (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 (define (store-include store key values)

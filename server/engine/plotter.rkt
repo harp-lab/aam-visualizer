@@ -98,7 +98,7 @@
        (define syntax (hash-ref id>lambda l))
        (hash
         'id (symbol->string id)
-        'form form
+        'form (~a form)
         'data (~a (only-syntax syntax))
         'start (loc-start syntax)
         'end (loc-end syntax)
@@ -109,7 +109,7 @@
       [states
        (define s (if (set? states) (set-first states) states))
        (hash-set* (state-node (symbol->string id) s)
-                  'instr (~a (cadr (get-li s)))
+                  'instr (~a (match (get-li s)[(list l i) i][end end]))
                   'children (for/hash([child (hash-keys trans)])
                               (values (n->sym child)
                                       (make-edge (hash-ref trans child)))))]))
@@ -143,5 +143,5 @@
   (pretty-print func-detail-graphs)
 )
 
-(define (ex1) (test `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
+(define (ex1) (test `((lambda(x)x)(lambda(y)y))))
 (define (ex2) (test `((lambda (y) (y y)) (lambda (x) (x x)))))
