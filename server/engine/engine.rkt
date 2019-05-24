@@ -10,7 +10,7 @@
   "lexer.rkt"
   "parser.rkt"
   "analyzer.rkt"
-  "output.rkt"
+  "plotter.rkt"
   )
 
 ; handle commandline arguments
