@@ -80,7 +80,7 @@
                                                                 ))))))
     
     (hash-union direct indirect))
-  (define main-nodes (main-gen all-funcs li->sym main-trans))
+  (define main-nodes (hash 'graph (main-gen all-funcs li->sym main-trans)))
   (define sub-nodes (for/hash ([li (hash-keys subs)])
                       (values (li->sym li) (hash
                                             'type "state"

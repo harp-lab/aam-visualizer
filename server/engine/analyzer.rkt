@@ -1,6 +1,7 @@
 #lang racket
 
 (require json)
+(require racket/hash)
 
 (provide
  analyze
@@ -10,6 +11,7 @@
  divide-kont
  loc-start
  loc-end
+ get-li
  only-syntax)
 
 (define newsym_counter 0)
@@ -125,7 +127,7 @@
          [_
           (make-apply)])]))
   (define ast (json->ast jast start (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 
@@ -165,7 +167,7 @@
       [(? list? es)
        (ast/loc (map (lambda (ei) (syntax->ast ei bindings last-lam-id)) es) 'apply (gensym 'apply) last-lam-id)]))
   (define ast (syntax->ast syntax (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top 'top 'none))
+  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 (define (store-include store key values)
@@ -419,7 +421,7 @@
                            [else c]))
                        calls (set->list (hash-ref state>state-trans s)))]
                [else calls]))
-           (match init [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(hash (list l i) (set init))][else (hash)])
+           (hash (get-li init) init)
            (set->list states)))
   (define all-returns
     (foldl (lambda (s returns)
@@ -465,9 +467,8 @@
     (define finals (mutable-set))
     (define (s->trans s) (hash-ref state>state-trans s (set)))
     (define init (hash-ref all-calls li))
-    (define (build-graph fronteer complete trans)
+    (define (build-graph fronteer trans)
       (define next (set-first fronteer))
-      (define complete+ (set-add next complete))
       (define next-trans
         (match next
           [(? set? (not (? set-empty?)))
@@ -475,19 +476,18 @@
            (match (set-first next)
              [`(eval ,(? atomic? _) . ,_)
               (make-immutable-hash
-               (set-map (lambda (state)
+               (set-map next-states (lambda (state)
                       (define li (get-li state))
                       (match li
                         [(list _ _)
                          (set-add! returns li)
-                         (cons `(return ,li)(hash 'transition "return"))]
+                         (cons `(return ,li) `(return-out))]
                         ['halt
                          (set-add! finals 'halt)
-                         (cons state (hash 'transition "halt"))]
+                         (cons state `(halt))]
                         [else
                          (set-add! finals 'stuck)
-                         (cons state (hash 'transition "stuck"))]))
-                    next-states))]
+                         (cons state `(stuck))]))))]
              [`(inner apply . ,_)
               (match-define (list stop go)
                 (foldl (lambda(s rs)
@@ -500,26 +500,26 @@
                             (define returns (hash-ref all-returns k (set)))
                             (if (set-empty? returns)
                                 (list (set-add stop
-                                               (cons `(no-return li) (hash 'transition "call-out"))) go)
+                                               (cons `(no-return li) `(call-out))) go)
                                 (list stop (cons
                                             (set-union returns (car go))
                                             (set-union (set li) (cdr go)))))]
                            [else
                             (set-add! finals 'stuck)
-                            (list (set-add stop (cons s (hash 'transition "stuck"))) go)]))
+                            (list (set-add stop (cons s `(stuck))) go)]))
                        (list (set) (set))
                        (set->list next-states)))
-              (make-immutable-hash (cons (cons (car go) (hash 'transition "call-return" 'ids (cdr go)))
+              (make-immutable-hash (cons (cons (car go) `(call-return ,(cdr go)))
                                          (set->list stop)))]
-             [else (hash next-states (hash 'transition "step"))])]
+             [else (hash next-states `(step))])]
           [else (hash)]))
       (define fronteer+ (set-union (set-rest fronteer) (list->set (hash-keys next-trans))))
       (define trans+ (hash-set trans next next-trans))
       (if (set-empty? fronteer+)
-          (list complete+ trans+)
-          (build-graph fronteer+ complete+ trans+)))
-    (match-define (list nodes trans) (build-graph (set init) (hash))) 
-    (list init nodes trans calls returns finals))
+          trans+
+          (build-graph fronteer+ trans+)))
+    (define trans (build-graph (set init) (hash))) 
+    (list init trans calls returns finals))
   (define (make-subgraph-li li)
     (define include-states (hash-ref li>states li (set)))
     (define return-states (hash-ref li>returns li (set)))
@@ -564,6 +564,27 @@
        (list trans+ out-trans+ calls+ returns+))
      (list (hash)(hash)(set)(set))
      (set->list include-states)))
+  #;(cons (get-li init)
+          (foldl (lambda(c t)
+                   (match-define (list trans subs) t)
+                   (match-define (list s-init s-trans calls returns finals) (make-subgraph-follow c))
+                   (define new-trans
+                     (hash-union
+                      (for/hash ([c calls])
+                        (values c `(call)))
+                      (for/hash ([r returns])
+                        (values r `(return)))
+                      (for/hash ([f finals])
+                        (values f `(stop)))
+                      #:combine (lambda(a b) `(call-and-return))))
+                   (define trans+
+                     (hash-union (hash-set trans c new-trans) (for/hash ([f finals])
+                                                                (values f (hash)))
+                                 #:combine (lambda(a b)a)))
+                   (define subs+ (hash-set subs c (list s-init s-trans)))
+                   (list trans+ subs+))
+                 (list (hash)(hash))
+                 (hash-keys all-calls)))
   (foldl (lambda(c t)
            (match-define (list calls returns subs) t)
            (match-define (list trans out-trans s-calls s-returns) (make-subgraph-li c))
