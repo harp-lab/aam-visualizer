@@ -55,21 +55,26 @@
   (define (n->sym node) (string->symbol (~a (hash-ref node>id node))))
   (define (make-edge data)
     (match data
-      [`(call) (hash)]
-      [`(call-and-return) (hash)]
-      [`(return) (hash 'line-style "dotted")]
-      [`(stop) (hash 'line-style "dotted")]
+      [`(call) (hash 'style (hash 'line-style "solid"))]
+      [`(call-and-return) (hash 'style (hash 'line-style "solid"))]
+      [`(return) (hash 'style (hash 'line-style "solid"))]
+      [`(stop) (hash 'style (hash 'line-style "solid"))]
       
-      [`(return-out) (hash 'line-style "dotted")]
-      [`(halt) (hash 'line-style "dotted")]
-      [`(stuck) (hash 'line-style "dotted")]
-      [`(call-out) (hash 'line-style "dotted")]
+      [`(return-out ,li)
+       (hash
+        'style (hash'line-style "dashed")
+        'calls (list (symbol->string (n->sym li))))]
+      [`(halt) (hash 'style (hash 'line-style "solid"))]
+      [`(stuck) (hash 'style (hash 'line-style "solid"))]
+      [`(call-out ,li)
+       (hash
+        'style (hash 'line-style "dashed")
+        'calls (list (symbol->string (n->sym li))))]
       [`(call-return ,lis)
        (hash
-        'line-style "dotted"
-        'calls (set-map lis (lambda(n)(symbol->string (n->sym n))))
-        'call (symbol->string (n->sym (set-first lis))))]
-      [`(step) (hash)]))
+        'style (hash 'line-style "dashed")
+        'calls (set-map lis (lambda(n)(symbol->string (n->sym n)))))]
+      [`(step) (hash 'style (hash 'line-style "solid"))]))
   (define (func-node n trans)
     (define id (n->sym n))
     (match n
