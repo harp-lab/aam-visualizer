@@ -481,7 +481,7 @@
                       (match li
                         [(list _ _)
                          (set-add! returns li)
-                         (cons `(return ,li) `(return-out))]
+                         (cons `(return ,li) `(return-out, li))]
                         ['halt
                          (set-add! finals 'halt)
                          (cons state `(halt))]
@@ -500,7 +500,7 @@
                             (define returns (hash-ref all-returns k (set)))
                             (if (set-empty? returns)
                                 (list (set-add stop
-                                               (cons `(no-return ,li) `(call-out))) go)
+                                               (cons `(no-return ,li) `(call-out, li))) go)
                                 (list stop (cons
                                             (set-union returns (car go))
                                             (set-union (set li) (cdr go)))))]
