@@ -10,8 +10,10 @@ body {
 
 .CodeMirror {
   height: 100%;
-
+  .mark {
+    padding-right: 0.5em;
+  }
   .selected {
-    background-color: #f4d03f
+    background-color: #f4d03f;
   }
 }

@@ -34,6 +34,7 @@ class Project extends Component {
     this.saveCode = this.saveCode.bind(this);
     this.processCode = this.processCode.bind(this);
     this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
+    this.selectNode = this.selectNode.bind(this);
   }
   saveLocalCode(code) {
     const project = this.props.project;
@@ -139,33 +140,34 @@ class Project extends Component {
           const subGraphId = project.subGraphId;
           const subGraph = project.graphs[subGraphId];
 
+          const selectMainNode = nodeId => {
+            if (nodeId) {
+              const project = this.props.project;
+
+              // reset selected
+              subGraph.resetSelected();
+
+              // reset highlighted
+              this.setState({ highlightedNodeIds: undefined });
+
+              // change subgraph
+              const detail = project.graphs[mainGraphId].nodes[nodeId].detail;
+              project.subGraphId = detail;
+
+              this.selectNode(mainGraphId, nodeId);
+              this.props.onSave(project);
+            }
+          }
           const mainGraphElement = (
             <Pane height='50%'>
               <Graph
                 projectId={ this.props.id }
-                graphId={ 'main' }
+                graphId={ mainGraphId }
                 data={ mainGraph.export() }
                 positions={ mainGraph.metadata.positions }
                 selectedNode={ mainGraph.metadata.selectedNode }
                 highlighted={ this.state.highlightedNodeIds }
-                onNodeSelect={ nodeId => {
-                  if (nodeId) {
-                    const project = this.props.project;
-
-                    // reset selected
-                    subGraph.resetSelected();
-
-                    // reset highlighted
-                    this.setState({ highlightedNodeIds: undefined });
-
-                    // change subgraph
-                    const detail = project.graphs['main'].nodes[nodeId].detail;
-                    project.subGraphId = detail;
-
-                    this.selectNode('main', nodeId);
-                    this.props.onSave(project);
-                  }
-                } }
+                onNodeSelect={ selectMainNode }
                 onSave={ this.saveGraphMetadata } />
             </Pane>
           );
@@ -216,12 +218,20 @@ class Project extends Component {
           const marks = {};
           for (const [id, node] of Object.entries(mainGraph.nodes)) {
             if (node.start && node.end)
-              marks[id] = { start: node.start, end: node.end };
+              marks[id] = {
+                start: node.start,
+                end: node.end,
+                graphId: mainGraphId
+              };
           }
           if (subGraph) {
             for (const [id, node] of Object.entries(subGraph.nodes)) {
               if (node.start && node.end)
-                marks[id] = { start: node.start, end: node.end };
+                marks[id] = {
+                  start: node.start,
+                  end: node.end,
+                  graphId: subGraphId
+                };
             }
           }
           const editorElement = (
@@ -231,8 +241,13 @@ class Project extends Component {
                 type={ subGraphId }
                 data={ project.code }
                 marks={ marks }
-                selected={ (subGraph && subGraph.metadata.selectedNode) }
-                onNodeSelect={ nodeId => this.selectNode(subGraphId, nodeId) } />
+                selected={ subGraph.metadata.selectedNode }
+                onNodeSelect={ (graphId, nodeId) => {
+                  if (graphId == mainGraphId)
+                    selectMainNode(nodeId);
+                  else
+                    this.selectNode(graphId, nodeId);
+                } } />
             </Pane>
           );
 
