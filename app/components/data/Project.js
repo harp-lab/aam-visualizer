@@ -23,7 +23,7 @@ class Project {
   importGraphs(graphs) {
     for (const [id, data] of Object.entries(graphs)) {
       switch (id) {
-        case 'main':
+        case 'funcs':
           this.graphs[id] = new SummaryGraph(data);
           break;
         default:
@@ -40,10 +40,20 @@ class Project {
       }
     }
 
-    this.mainGraphId = 'main';
-    const mainGraph = this.graphs[this.mainGraphId];
-    const selectedNode = mainGraph.metadata.selectedNode;
-    this.subGraphId = mainGraph.nodes[selectedNode].detail;
+    this.mainGraphId = 'funcs';
+  }
+
+  get mainGraph() { return this.graphs[this.mainGraphId]; }
+  get subGraph() { return this.graphs[this.subGraphId]; }
+  get subGraphId() {
+    const graph = this.mainGraph;
+    const nodeId = graph.metadata.selectedNode;
+    let graphId;
+    if (nodeId)
+      graphId = graph.nodes[nodeId].detail
+    else
+      graphId = undefined;
+    return graphId;
   }
 }
 

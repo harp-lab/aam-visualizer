@@ -15,33 +15,6 @@ const VIEWS = {
   project: 'project'
 };
 
-class NewProjectButton extends Component {
-  render() {
-    return <Button
-      onClick={ (event) => {
-        event.stopPropagation();
-        this.props.onClick();
-      } }
-      color='inherit'
-      variant='outlined'>
-      new project
-    </Button>;
-  }
-}
-
-class ProjectListButton extends Component {
-  render() {
-    return <Button
-      onClick={ (event) => {
-        event.stopPropagation();
-        this.props.onClick();
-      } }
-      color='inherit'>
-      project list
-    </Button>;
-  }
-}
-
 class App extends Component {
   constructor(props) {
     super(props);
@@ -231,6 +204,33 @@ class App extends Component {
         { view }
       </div>
     );
+  }
+}
+
+class NewProjectButton extends Component {
+  render() {
+    return <Button
+      onClick={ (event) => {
+        event.stopPropagation();
+        this.props.onClick();
+      } }
+      color='inherit'
+      variant='outlined'>
+      new project
+    </Button>;
+  }
+}
+
+class ProjectListButton extends Component {
+  render() {
+    return <Button
+      onClick={ (event) => {
+        event.stopPropagation();
+        this.props.onClick();
+      } }
+      color='inherit'>
+      project list
+    </Button>;
   }
 }
 

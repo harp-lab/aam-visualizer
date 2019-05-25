@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
-import Menu from './Menu';
+import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import Toolbar from '@material-ui/core/Toolbar';
 import codemirror from 'codemirror/lib/codemirror';
 import 'codemirror/mode/scheme/scheme';
 
@@ -7,12 +10,19 @@ class Editor extends Component {
   constructor(props) {
     super(props);
 
+    let processOptions;
+    if (this.props.processOptions) {
+      const analysis = this.props.processOptions.analysis[0];
+      processOptions = { analysis };
+    }
+    this.state = { processOptions };
+
     this.process = this.process.bind(this);
   }
   set value(data) { this.cm.getDoc().setValue(data); }
   get value() { return this.cm.getDoc().getValue(); }
   save() { this.props.onSave(this.value); }
-  process() { this.props.onProcess(this.value); }
+  process() { this.props.onProcess(this.value, this.state.processOptions); }
   refresh() {
     this.value = this.props.data;
     if (this.props.marks){
@@ -99,9 +109,32 @@ class Editor extends Component {
       this.save();
   }
   render() {
-    const editorButtons = [
-      { label: 'process', onClick: this.process }
-    ];
+    let editMenu;
+    if (this.props.edit) {
+      const processOptions = this.props.processOptions;
+      const analysisOptions = processOptions.analysis;
+      const analysisMenuItems = analysisOptions.map(option => {
+        return <MenuItem key={ option } value={ option }>{ option }</MenuItem>
+      });
+      editMenu = (
+        <Toolbar>
+          <Select
+            value={ this.state.processOptions.analysis }
+            onChange={ event => {
+              console.log(event);
+              const analysis = event.target.value;
+              this.setState(state => {
+                const processOptions = state.processOptions;
+                processOptions.analysis = analysis;
+                return { processOptions };
+              });
+            } }>
+            { analysisMenuItems }
+          </Select>
+          <ProcessButton onClick={ this.process }/>
+        </Toolbar>
+      );
+    }
     return (
       <div style={ { 
         display: 'flex',
@@ -110,9 +143,22 @@ class Editor extends Component {
         <div
           ref={ ref => this.cmRef = ref }
           style={ { height: '100%' } } />
-        { this.props.edit && <Menu data={ editorButtons }/> }
+        { editMenu }
       </div>
     );
+  }
+}
+
+class ProcessButton extends Component {
+  render() {
+    return <Button
+      onClick={ (event) => {
+        this.props.onClick();
+      } }
+      color='inherit'
+      variant='outlined'>
+      process
+    </Button>;
   }
 }
 

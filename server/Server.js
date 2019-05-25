@@ -124,11 +124,20 @@ class Server
             }
             else if (query.process !== undefined)
             {
-              let proj = this.getProject(projId);
-              this.processProject(projId);
-              
-              res.writeHead(200, Consts.HEADERS);
-              res.end();
+              let dataString = '';
+              req.on('data', chunk => {
+                dataString += chunk.toString();
+              });
+              req.on('end', () => {
+                let proj = this.getProject(projId);
+                const data = JSON.parse(dataString);
+                proj.analysis = data.analysis;
+
+                this.processProject(projId);
+                
+                res.writeHead(200, Consts.HEADERS);
+                res.end();
+              })
             }
             else
               this.invalidReq(res, 400, req.method, 'invalid query');
@@ -377,6 +386,7 @@ class Server
         output.name = proj.getName();
         output.code = proj.getCode();
         output.status = proj.getStatus();
+        output.analysis = proj.analysis;
         break;
     }
     

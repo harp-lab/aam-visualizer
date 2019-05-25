@@ -34,8 +34,9 @@
 
 ; ENGINE
 (log LOG_TYPE_ENGINE (format "processing \"~a\"" (file-name-from-path input-file-path)))
-(define proj-id (hash-ref proj-hash 'id))
 (define code-string (hash-ref proj-hash 'code))
+(define analysis (hash-ref proj-hash 'analysis))
+
 
 ; lexer
 (define code-toks (lex code-string))
@@ -53,6 +54,7 @@
   (function-graphs analysis-states analysis-groupings data-tables))
 
 ; write output json
+(log LOG_TYPE_ENGINE (format "finished ~a analysis" analysis))
 (define out-hash
   (hash-set* proj-hash
     'status "done"
@@ -63,7 +65,7 @@
         'start code-astStart)
       'states (hash
         'graph state-graph)
-      'main func-graph
+      'funcs func-graph
     ) func-detail-graphs)))
 
 (define out
