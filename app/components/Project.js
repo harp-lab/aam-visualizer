@@ -135,9 +135,9 @@ class Project extends Component {
           .map(([graphId, graph]) => {
             return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
           });
-          const selectedGraphId = project.mainGraphId;
-          const selectedSubGraphId = project.subGraphId;
-          const subGraph = project.graphs[selectedSubGraphId];
+          const mainGraphId = project.mainGraphId;
+          const subGraphId = project.subGraphId;
+          const subGraph = project.graphs[subGraphId];
 
           const mainGraphElement = (
             <Pane height='50%'>
@@ -176,20 +176,20 @@ class Project extends Component {
               <Pane height='50%'>
                 <Graph
                   projectId={ this.props.id }
-                  graphId={ selectedSubGraphId }
+                  graphId={ subGraphId }
                   data={ subGraph.export() }
                   positions={ subGraph.metadata.positions }
                   selectedNode={ subGraph.metadata.selectedNode }
                   selectedEdge={ subGraph.metadata.selectedEdge }
-                  onNodeSelect={ nodeId => this.selectNode(selectedSubGraphId, nodeId) }
+                  onNodeSelect={ nodeId => this.selectNode(subGraphId, nodeId) }
                   onEdgeSelect={ edgeId => {
                       const edge = subGraph.edges[edgeId];
                       if (!edgeId || edge.calls)
-                        this.selectEdge(selectedSubGraphId, edgeId);
+                        this.selectEdge(subGraphId, edgeId);
                   } }
                   onSave={ this.saveGraphMetadata } />
                 <Select
-                  value={ selectedSubGraphId }
+                  value={ subGraphId }
                   onChange={ event => {
                     const project = this.props.project;
                     project.subGraphId = event.target.value;
@@ -228,17 +228,17 @@ class Project extends Component {
             <Pane height='50%'>
               <Editor
                 id={ this.props.id }
-                type={ selectedSubGraphId }
+                type={ subGraphId }
                 data={ project.code }
                 marks={ marks }
                 selected={ (subGraph && subGraph.metadata.selectedNode) }
-                onNodeSelect={ nodeId => this.selectSubNode(selectedSubGraphId, nodeId) } />
+                onNodeSelect={ nodeId => this.selectNode(subGraphId, nodeId) } />
             </Pane>
           );
 
           const propViewerElement = (
             <Pane height='50%'>
-              <PropViewer data={ (project.graphs[selectedGraphId] && project.graphs[selectedGraphId].nodes[subGraph.metadata.selectedNode]) } />
+              <PropViewer data={ subGraph.nodes[subGraph.metadata.selectedNode] } />
             </Pane>
           );
 
