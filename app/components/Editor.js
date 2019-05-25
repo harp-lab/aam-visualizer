@@ -121,7 +121,6 @@ class Editor extends Component {
           <Select
             value={ this.state.processOptions.analysis }
             onChange={ event => {
-              console.log(event);
               const analysis = event.target.value;
               this.setState(state => {
                 const processOptions = state.processOptions;

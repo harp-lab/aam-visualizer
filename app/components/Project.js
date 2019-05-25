@@ -59,7 +59,6 @@ class Project extends Component {
     }
   }
   async processCode(code, options) {
-    console.log(options);
     await this.saveCode(code);
     return fetch(`/api/project?id=${this.props.id}&process`, {
       method: 'POST',
