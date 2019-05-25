@@ -7,6 +7,10 @@ class AbstractGraph {
     this.metadata = {};
 
     this.import(data.graph);
+    this.start = data.start;
+    this.metadata = {
+      selectedNode: this.start
+    };
   }
 
 
@@ -34,6 +38,10 @@ class AbstractGraph {
       data.push(edge.export(id));
     }
     return data;
+  }
+  resetSelected() {
+    this.metadata.selectedNode = this.start;
+    this.metadata.selectedEdge = undefined;
   }
 }
 

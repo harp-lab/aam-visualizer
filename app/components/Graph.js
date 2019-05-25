@@ -40,12 +40,19 @@ const config = {
     {
       selector: '.highlighted',
       style: {
-        'background-color': 'yellow'
+        'background-color': '#fff9a0'
+      }
+    },
+    {
+      selector: element => {
+        return element.hasClass('highlighted') && element.selected();
+      },
+      style: {
+        'background-color': '#fef024'
       }
     }
   ],
-  headless: true,
-  wheelSensitivity: 1
+  headless: true
 };
 
 class Graph extends Component {
@@ -56,24 +63,47 @@ class Graph extends Component {
     this.cy = cytoscape(config);
     this.highlight();
 
-    this.cy.on('select', 'node', event => {
-      const nodeId = event.target.id();
-      if (this.eventsEnabled) { this.props.onNodeSelect(nodeId); }
-    });
-    this.cy.on('unselect', 'node', event => {
-      if (this.eventsEnabled) { this.props.onNodeSelect(undefined); }
-    });
-    if (this.props.onEdgeSelect) {
-      this.cy.on('select', 'edge', event => {
-        const edgeId = event.target.id();
-        if (this.eventsEnabled) { this.props.onEdgeSelect(edgeId); }
-      });
-      this.cy.on('unselect', 'edge', event => {
-        if (this.eventsEnabled) { this.props.onEdgeSelect(undefined); }
-      });
-    }
+    this.initNodeEvents();
+    this.initEdgeEvents();
     this.eventsEnabled = false;
   }
+  initNodeEvents() {
+    this.cy.on('select', 'node', event => {
+      const node = event.target;
+      if (this.eventsEnabled)
+        this.props.onNodeSelect(node.id());
+    });
+    this.cy.on('unselect', 'node', event => {
+      const node = event.target;
+      if (this.eventsEnabled) {
+        // disable node unselect if 'selectedNode' prop defined
+        if (this.props.selectedNode)
+          node.select();
+        else
+          this.props.onNodeSelect(undefined);
+      }
+    });
+  }
+  initEdgeEvents() {
+    if (this.props.onEdgeSelect) {
+      this.cy.on('select', 'edge', event => {
+        const edge = event.target;
+        if (this.eventsEnabled) {
+          event.target.unselect();
+          this.props.onEdgeSelect(edge.id());
+        }
+      });
+      this.cy.on('unselect', 'edge', event => {
+        if (this.eventsEnabled) {
+          this.props.onEdgeSelect(undefined);
+        }
+      });
+    } else {
+      // disable edge select if 'onEdgeSelect' func defined
+      this.cy.on('select', 'edge', event => event.target.unselect());
+    }
+  }
+
   position() {
     if (this.props.positions) {
       this.cy.nodes().positions((element, index) => {
@@ -83,6 +113,23 @@ class Graph extends Component {
     }
     else
       this.cy.layout({ name: 'cose', directed: true }).run();
+  }
+  select() {
+    this.eventsEnabled = false;
+
+    this.cy.batch(() => {
+      // select nodes
+      this.cy.nodes().unselect();
+      if (this.props.selectedNode)
+        this.cy.$(`#${this.props.selectedNode}`).select();
+  
+      // select edges
+      this.cy.edges().unselect();
+      if (this.props.selectedEdge)
+        this.cy.$(`#${this.props.selectedEdge}`).select();
+    });
+
+    this.eventsEnabled = true;
   }
   highlight() {
     const highlighted = this.props.highlighted;
@@ -111,6 +158,7 @@ class Graph extends Component {
 
     this.cy.mount(this.cyRef);
     this.position();
+    this.select();
     this.cy.resize();
     this.eventsEnabled = true;
   }
@@ -123,14 +171,8 @@ class Graph extends Component {
       this.cy.add(this.props.data);
       this.position();
     }
-
-    this.eventsEnabled = false;
-    if (this.props.selected) {
-      this.cy.$(`#${prevProps.selected}`).unselect();
-      this.cy.$(`#${this.props.selected}`).select();
-    }
-    this.eventsEnabled = true;
-
+    
+    this.select();
     this.highlight();
 
     const bounds = this.cyRef.getBoundingClientRect();
@@ -148,8 +190,8 @@ class Graph extends Component {
   }
   render() {
     return <div
-        style={ style }
-        ref={ (ref) => this.cyRef = ref } />;
+      style={ style }
+      ref={ (ref) => this.cyRef = ref } />;
   }
 }
 

@@ -61,7 +61,6 @@ class Editor extends Component {
 
         // highlight bookmarks in range
         marks = doc.findMarks(mark.start, mark.end);
-        console.log(marks);
         marks.forEach(mark => {
           if (mark.type == 'bookmark')
             mark.widgetNode.classList.add('selected');
@@ -83,6 +82,7 @@ class Editor extends Component {
 
     this.cm = codemirror(this.cmRef, cmConfig);
     this.refresh();
+    this.selectMark();
   }
   componentDidUpdate(prevProps) {
     const dataUpdate = this.props.data !== prevProps.data;

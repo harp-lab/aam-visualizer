@@ -39,6 +39,11 @@ class Project {
           break;
       }
     }
+
+    this.mainGraphId = 'main';
+    const mainGraph = this.graphs[this.mainGraphId];
+    const selectedNode = mainGraph.metadata.selectedNode;
+    this.subGraphId = mainGraph.nodes[selectedNode].detail;
   }
 }
 
