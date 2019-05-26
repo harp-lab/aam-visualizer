@@ -219,7 +219,7 @@ class Project extends Component {
     }
     
     const menuItems = Object.entries(project.graphs)
-    //.filter(([graphId, graph]) => graphId !== 'main')
+    .filter(([graphId, graph]) => !graph.hasOwnProperty('subGraphType'))
     .map(([graphId, graph]) => {
       return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
     });

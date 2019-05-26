@@ -8,6 +8,8 @@ class AbstractGraph {
 
     this.import(data.graph);
     this.start = data.start;
+    if (data.subGraphType)
+      this.subGraphType = data.subGraphType;
     this.metadata = {
       selectedNode: this.start
     };

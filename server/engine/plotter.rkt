@@ -128,6 +128,7 @@
                           (values (n->sym s)
                                   (hash
                                    'type "state"
+                                   'subGraphType "funcs"
                                    'start (symbol->string (n->sym s-init))
                                    'graph (for/hash ([n (hash-keys s-trans)])
                                             (values (n->sym n) (detail-node n (hash-ref s-trans n))))))))
