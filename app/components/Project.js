@@ -102,9 +102,9 @@ class Project extends Component {
     this.saveGraphMetadata(graphId, { selectedNode });
   }
   selectMainNode (nodeId) {
-    if (nodeId) {
+    const project = this.props.project;
+    if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
       // reset selected
-      const project = this.props.project;
       const subGraph = project.subGraph;
       if (subGraph) { subGraph.resetSelected(); }
 
