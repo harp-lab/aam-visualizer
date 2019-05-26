@@ -15,6 +15,85 @@ import DialogActions from '@material-ui/core/DialogActions';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
+class ProjectList extends Component {
+  constructor(props) {
+    super(props);
+
+    const rename = false;
+    this.state = { rename }
+
+    this.rename = this.rename.bind(this);
+    this.closeRenameDialog = this.closeRenameDialog.bind(this);
+  }
+  openRenameDialog(projectId) {
+    const selectedProjectId = projectId;
+    const rename = true;
+    this.setState({ selectedProjectId, rename });
+  }
+  closeRenameDialog() {
+    const selectedProjectId = undefined;
+    const rename = false;
+    this.setState({ selectedProjectId, rename });
+  }
+  rename(projectId, name) {
+    // save local
+    const project = this.props.data[projectId];
+    project.name = name;
+    this.props.onSave(projectId, project);
+
+    // save server
+    return fetch(`/api/project?id=${projectId}&save`, {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    });
+  }
+
+  render() {
+    const projectList = Object.entries(this.props.data).map(([id, project]) => {
+      return (
+        <ListItem
+          button
+          key={ id }
+          onClick={ () => this.props.onClick(id) }
+          align='flex-start'>
+          <ListItemText style={ { flex: '0 0 10em' } }>{ id }</ListItemText>
+          <ListItemText>{ (project.name || 'unnamed') }</ListItemText>
+          <ListItemText style={ { flex: '0 0 10em' } }>{ project.status }</ListItemText>
+          <ListItemSecondaryAction>
+            <ProjectMenu
+              onRename={ () => this.openRenameDialog(id) }
+              onFork={ () => this.props.onFork(id) } />
+            <IconButton onClick={ () => this.props.onDelete(id) }>
+              <DeleteIcon />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+      );
+    });
+
+    let dialog;
+    const id = this.state.selectedProjectId;
+    const project = this.props.data[id];
+    if (id) {
+      if (this.state.rename) {
+        dialog = <RenameDialog
+          open
+          id={ id }
+          name={ project.name }
+          onSave={ this.rename }
+          onClose={ this.closeRenameDialog } />;
+      }
+    }
+    
+    return (
+      <React.Fragment>
+        <List>{ projectList }</List>
+        { dialog }
+      </React.Fragment>
+    );
+  }
+}
+
 class ProjectMenu extends Component {
   constructor(props) {
     super(props);
@@ -94,85 +173,6 @@ class RenameDialog extends Component {
         </Button>
       </DialogActions>
     </Dialog>);
-  }
-}
-
-class ProjectList extends Component {
-  constructor(props) {
-    super(props);
-
-    const rename = false;
-    this.state = { rename }
-
-    this.rename = this.rename.bind(this);
-    this.closeRenameDialog = this.closeRenameDialog.bind(this);
-  }
-  openRenameDialog(projectId) {
-    const selectedProjectId = projectId;
-    const rename = true;
-    this.setState({ selectedProjectId, rename });
-  }
-  closeRenameDialog() {
-    const selectedProjectId = undefined;
-    const rename = false;
-    this.setState({ selectedProjectId, rename });
-  }
-  rename(projectId, name) {
-    // save local
-    const project = this.props.data[projectId];
-    project.name = name;
-    this.props.onSave(projectId, project);
-
-    // save server
-    return fetch(`/api/project?id=${projectId}&save`, {
-      method: 'POST',
-      body: JSON.stringify({ name })
-    });
-  }
-
-  render() {
-    const projectList = Object.entries(this.props.data).map(([id, project]) => {
-      return (
-        <ListItem
-          button
-          key={ id }
-          onClick={ () => this.props.onClick(id) }
-          align='flex-start'>
-          <ListItemText style={ { flex: '0 0 10em' } }>{ id }</ListItemText>
-          <ListItemText>{ (project.name || 'unnamed') }</ListItemText>
-          <ListItemText style={ { flex: '0 0 10em' } }>{ project.status }</ListItemText>
-          <ListItemSecondaryAction>
-            <ProjectMenu
-              onRename={ () => this.openRenameDialog(id) }
-              onFork={ () => this.props.onFork(id) } />
-            <IconButton onClick={ () => this.props.onDelete(id) }>
-              <DeleteIcon />
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
-      );
-    });
-
-    let dialog;
-    const id = this.state.selectedProjectId;
-    const project = this.props.data[id];
-    if (id) {
-      if (this.state.rename) {
-        dialog = <RenameDialog
-          open
-          id={ id }
-          name={ project.name }
-          onSave={ this.rename }
-          onClose={ this.closeRenameDialog } />;
-      }
-    }
-    
-    return (
-      <React.Fragment>
-        <List>{ projectList }</List>
-        { dialog }
-      </React.Fragment>
-    );
   }
 }
 

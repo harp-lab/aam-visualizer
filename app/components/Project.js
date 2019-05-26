@@ -154,7 +154,10 @@ class Project extends Component {
           view = this.renderVisual();
         break;
       case 'error':
-        view = <Editor data={ project.code }/>;
+        view = <Editor
+          data={ project.code }
+          error
+          errorContent={ ' TODO ' } />;
         break;
     };
     return view;

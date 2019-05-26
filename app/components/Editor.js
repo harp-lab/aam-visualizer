@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -109,8 +110,11 @@ class Editor extends Component {
       this.save();
   }
   render() {
+    let infoElement;
     let editMenu;
     if (this.props.edit) {
+      infoElement = <Typography>Input code for analysis</Typography>;
+
       const processOptions = this.props.processOptions;
       const analysisOptions = processOptions.analysis;
       const analysisMenuItems = analysisOptions.map(option => {
@@ -134,11 +138,26 @@ class Editor extends Component {
         </Toolbar>
       );
     }
+    if (this.props.error) {
+      infoElement = (
+        <React.Fragment>
+          <Typography
+            variant='h3'>
+            Analysis error
+          </Typography>
+          <Typography>
+            { this.props.errorContent }
+          </Typography>
+        </React.Fragment>
+      );
+    }
+
     return (
       <div style={ { 
         display: 'flex',
         flexDirection: 'column',
         height: '100%' } }>
+        { infoElement }
         <div
           ref={ ref => this.cmRef = ref }
           style={ { height: '100%' } } />
@@ -151,7 +170,7 @@ class Editor extends Component {
 class ProcessButton extends Component {
   render() {
     return <Button
-      onClick={ (event) => {
+      onClick={ event => {
         this.props.onClick();
       } }
       color='inherit'
