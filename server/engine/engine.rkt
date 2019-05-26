@@ -45,6 +45,7 @@
 (define-values (code-ast code-astStart) (parse code-toks))
 
 ; analyzer
+(log LOG_TYPE_ENGINE "analyzing")
 (match-define (list initial-state analysis-states data-tables) (analyze code-ast code-astStart))
 (define analysis-groupings (regroup-by-call initial-state analysis-states data-tables))
 
