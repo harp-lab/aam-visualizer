@@ -1,80 +1,97 @@
-const http = require('http');
-const url = require('url');
+const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
-const util = require('util');
 const child_process = require('child_process');
-
 const Consts = require('./Consts.js');
 const G = require('./Global.js');
 const Project = require('./Project.js');
 
-class Server
-{
-  constructor()
-  {
+class Server {
+  constructor() {
     this.projects = {};
     this.initData();
     this.initServer();
     this.initWatcher();
   }
-  initServer()
-  {
-    this.server = http.createServer((req, res) =>
-    {
-      G.log(Consts.LOG_TYPE_HTTP, `${req.method} ${req.url}`);
-      let parts = url.parse(req.url, true);
-      switch (parts.pathname)
-      {
-        case '/api/project':
-          this.handleProjectReq(req, res);
+  initServer() {
+    const app = express();
+    const port = 8086;
+    
+    app.use(express.json());
+    app.use(express.static(path.join(__dirname, '../build')));
+    
+    app.get('/api/all', (req, res) => {
+      res.json(this.getProjectList())
+        .status(200)
+        .end();
+    });
+    app.get('/api/create', (req, res) => {
+      const projectId = this.createProject();
+      res.json({ id: projectId })
+        .status(201)
+        .end();
+    });
+    
+    const projectRouter = express.Router({ mergeParams: true });
+    projectRouter.get('/:id/code', (req, res) => {
+      const projectId = req.params.id;
+      const project = this.projects[projectId];
+      res.json({ id: projectId, code: project.code })
+        .status(200)
+        .end();
+    });
+    projectRouter.get('/:id/data', (req, res) => {
+      const projectId = req.params.id;
+      const project = this.projects[projectId];
+      switch (project.status) {
+        case project.STATUSES.done:
+        case project.STATUSES.error:
+          res.json({
+            id: projectId,
+            graphs: project.getGraphs(),
+            code: project.code,
+            status: project.status
+          })
+            .status(200)
+            .end();
+          break;
+        case project.STATUSES.process:
+          res.status(204).end();
           break;
         default:
-          let filePath = './build' + parts.path;
-          if (filePath == './build/')
-            filePath = './build/index.html';
-          let ext = String(path.extname(filePath)).toLowerCase();
-          let mimeTypes =
-          {
-            '.html': 'text/html',
-            '.js':'text/javascript',
-            '.css': 'text/css'
-          };
-          let contentType = mimeTypes[ext] || 'application/octet-stream';
-          fs.readFile(filePath, (error, content) =>
-          {
-            if (error)
-            {
-              if (error.code == 'ENOENT')
-                this.invalidReq(res, 404, 'GET', parts.path);
-              else
-              {
-                G.log(Consts.LOG_TYPE_HTTP, `500 ${parts.path}`);
-                res.writeHead(500, Consts.HEADERS);
-                res.end();
-              }
-            }
-            else
-            {
-              let newHeaders = Object.assign(Consts.HEADERS, {'Content-Type': contentType});
-              res.writeHead(200, newHeaders);
-              res.end(content);
-            }
-          });
+          res.status(412).end();
           break;
       }
     });
-    
-    this.server.listen(Consts.PORT, Consts.HOSTNAME, () => 
-    G.log(Consts.LOG_TYPE_INIT, `server running (http://${Consts.HOSTNAME}:${Consts.PORT})`));
-  }
-  initWatcher()
-  {
-    this.watcher = child_process.spawn('racket', [`${Consts.ENGINE_DIR}/watcher.rkt`], 
-    {
-      cwd: Consts.ENGINE_DIR,
+    projectRouter.put('/:id/save', (req, res) => {
+      const projectId = req.params.id;
+      const data = req.body;
+      this.saveProject(projectId, data);
+      res.status(202).end();
+    });
+    projectRouter.put('/:id/process', (req, res) => {
+      const projectId = req.params.id;
+      const project = this.projects[projectId];
+      const options = req.body;
+      project.analysis = options.analysis;
+      this.processProject(projectId);
+      res.status(200).end();
+    });
+    projectRouter.put('/:id/delete', (req, res) => {
+      this.deleteProject(req.params.id);
+      res.status(205).end();
     });
     
+    app.use('/api/projects', projectRouter);
+    
+    app.listen(port, () => console.log(`aam visualizer server listening on port ${port}`));
+  }
+  initWatcher() {
+    const args = [`${Consts.ENGINE_DIR}/watcher.rkt`];
+    const options = { cwd: Consts.ENGINE_DIR };
+    this.watcher = child_process.spawn('racket', args, options);
+    
+    // pipe console output
     this.watcher.stdout.setEncoding('utf8');
     this.watcher.stdout.on('data', (data) => {
       console.log(data.trim());
@@ -90,221 +107,61 @@ class Server
     });
     G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
   }
-  
-  // request handlers
-  handleProjectReq(req, res)
-  {
-    let parts = url.parse(req.url, true);
-    let query = parts.query;
-    let projId = query.id;
-    
-    if (projId !== undefined)
-    {
-      if (this.isProject(projId))
-      {
-        let proj = this.getProject(projId);
-        switch (req.method)
-        {
-          case 'POST':
-            if (query.save !== undefined)
-            {
-              let dataString = '';
-              req.on('data', chunk =>
-              {
-                dataString += chunk.toString();
-              });
-              req.on('end', () =>
-              {
-                let data = JSON.parse(dataString);
-                this.saveProject(projId, data);
-                
-                res.writeHead(202, Consts.HEADERS);
-                res.end();
-              });
-            }
-            else if (query.process !== undefined)
-            {
-              let dataString = '';
-              req.on('data', chunk => {
-                dataString += chunk.toString();
-              });
-              req.on('end', () => {
-                let proj = this.getProject(projId);
-                const data = JSON.parse(dataString);
-                proj.analysis = data.analysis;
 
-                this.processProject(projId);
-                
-                res.writeHead(200, Consts.HEADERS);
-                res.end();
-              })
-            }
-            else
-              this.invalidReq(res, 400, req.method, 'invalid query');
-            break;
-          case 'GET':
-            if (query.code !== undefined)
-            {
-              let code = proj.getCode();
-              let newHeaders = Object.assign(Consts.HEADERS, {'Content-Type': 'application/json'});
-              res.writeHead(200, newHeaders);
-              res.end(JSON.stringify({id: projId, code: code}));
-            }
-            else if (query.data !== undefined)
-            {
-              switch (proj.getStatus())
-              {
-                case proj.STATUSES.done:
-                case proj.STATUSES.error:
-                  let code = proj.getCode();
-                  let status = proj.getStatus();
-                  let newHeaders = Object.assign(Consts.HEADERS, {'Content-Type': 'application/json'});
-                  res.writeHead(200, newHeaders);
-                  res.end(JSON.stringify(
-                  {
-                    id: projId,
-                    graphs: proj.getGraphs(),
-                    code: code,
-                    status: status
-                  }));
-                  break;
-                case proj.STATUSES.process:
-                  res.writeHead(204, Consts.HEADERS);
-                  res.end();
-                  break;
-                default:
-                  res.writeHead(412, Consts.HEADERS);
-                  res.end();
-                  break;
-              }
-            }
-            else
-              this.invalidReq(res, 400, req.method, 'invalid query');
-            break;
-          case 'OPTIONS':
-            let newHeaders = Object.assign(Consts.HEADERS, {'Access-Control-Allow-Methods': 'OPTIONS, POST, GET, DELETE'});
-            res.writeHead(200, newHeaders);
-            res.end();
-            break;
-          case 'DELETE':
-            this.deleteProject(projId);
-            res.writeHead(205, Consts.HEADERS);
-            res.end();
-            break;
-          default:
-            this.invalidReq(res, 405, req.method, req.url)
-            break;
-        }
-      }
-      else
-        this.invalidReq(res, 404, req.method, `project ${projId} not found`);
-    }
-    else
-      switch (req.method)
-      {
-        case 'GET':
-          if (query.create !== undefined)
-          {
-            let newProjId = this.createProject();
-            let newHeaders = Object.assign(Consts.HEADERS, {'Content-Type': 'application/json'});
-            res.writeHead(201, newHeaders);
-            res.end(JSON.stringify({id: newProjId}));
-          }
-          else if (query.all !== undefined)
-          {
-            let newHeaders = Object.assign(Consts.HEADERS, {'Content-Type': 'application/json'});
-            res.writeHead(200, newHeaders);
-            res.end(JSON.stringify(this.getProjectList()));
-          }
-          else
-            this.invalidReq(res, 400, req.method, 'invalid query');
-          break;
-        default:
-          this.invalidReq(res, 405, req.method, req.url);
-          break;
-      }
+  createProject() {
+    const projectId = `${Date.now()}`;
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - creating`);
+    this.projects[projectId] = new Project();
+    return projectId;
   }
-  handleReq(req, res, reqPath, reqMethod, reqQuery, func)
-  {
-    let parts = url.parse(req.url, true);
-    let query = parts.query;
-    
-    if (parts.path == reqPath && req.method == reqMethod && query[reqQuery] !== undefined)
-      func();
+  addProject(projectId) {
+    let project = new Project();
+    this.projects[projectId] = project;
+    return project;
   }
-  invalidReq(res, statusCode, reqMethod, desc = '')
-  {
-    let content = `${statusCode} bad ${reqMethod} request`;
-    if (desc !== '')
-      content += ` - ${desc}`;
-    G.log(Consts.LOG_TYPE_HTTP, content);
-    res.writeHead(statusCode, Consts.HEADERS);
-    res.end();
-  }
-  
-  // project handlers
-  createProject()
-  {
-    let projId = `${Date.now()}`;
-    G.log(Consts.LOG_TYPE_PROJ, `${projId} - creating`);
-    this.addProject(projId);
-    return projId;
-  }
-  addProject(projId)
-  {
-    let proj = new Project();
-    this.projects[projId] = proj;
-    return proj;
-  }
-  saveProject(projId, data)
-  {
-    G.log(Consts.LOG_TYPE_PROJ, `${projId} - saving`);
-    let proj  = this.getProject(projId);
-    let name = data.name;
-    let code = data.code;
-    switch (proj.getStatus())
-    {
-      case proj.STATUSES.empty:
-      case proj.STATUSES.edit:
+  saveProject(projectId, data) {
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - saving`);
+    const project  = this.getProject(projectId);
+    const name = data.name;
+    const code = data.code;
+    switch (project.status) {
+      case project.STATUSES.empty:
+      case project.STATUSES.edit:
         if (code !== undefined)
-          proj.importCode(code);
+          project.importCode(code);
       default:
         if (name !== undefined)
-          proj.setName(name);
-        this.writeProject(projId);
+          project.setName(name);
+        this.writeProject(projectId);
         break;
     }
   }
-  deleteProject(projId)
-  {
-    G.log(Consts.LOG_TYPE_PROJ, `${projId} - deleting`);
-    delete this.projects[projId];
-    fs.remove(`${Consts.SAVE_DIR}/${projId}`);
-    fs.remove(`${Consts.INPUT_DIR}/${projId}`);
-    fs.remove(`${Consts.OUTPUT_DIR}/${projId}`);
+  deleteProject(projectId) {
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - deleting`);
+    delete this.projects[projectId];
+    fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
+    fs.remove(`${Consts.INPUT_DIR}/${projectId}`);
+    fs.remove(`${Consts.OUTPUT_DIR}/${projectId}`);
   }
-  processProject(projId)
-  {
-    G.log(Consts.LOG_TYPE_PROJ, `${projId} - submitting`);
-    let proj = this.getProject(projId);
-    switch (proj.getStatus())
-    {
-      case proj.STATUSES.empty:
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - cannot process empty project`);
+  processProject(projectId) {
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - submitting`);
+    const project = this.getProject(projectId);
+    switch (project.status) {
+      case project.STATUSES.empty:
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - cannot process empty project`);
         break;
-      case proj.STATUSES.edit:
-        proj.setStatus(proj.STATUSES.process);
-        this.writeProject(projId, Consts.INPUT_DIR);
-        fs.remove(`${Consts.SAVE_DIR}/${projId}`);
-        this.checkProject(projId);
+      case project.STATUSES.edit:
+        project.setStatus(project.STATUSES.process);
+        this.writeProject(projectId, Consts.INPUT_DIR);
+        fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
+        this.checkProject(projectId);
         break;
       default:
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - immutable`);
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - immutable`);
         break;
     }
   }
-  checkProject(projId)
-  {
+  checkProject(projId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projId} - checking processing status`);
     this.readProject(Consts.OUTPUT_DIR, projId, (projId) =>
     {
@@ -405,7 +262,7 @@ class Server
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - already imported`);
       else
       {
-        let proj = this.addProject(projId);
+        this.projects[projId] = new Project();
         this.readProject(dirPath, projId, projFunc);
       }
     });
