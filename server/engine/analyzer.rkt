@@ -308,15 +308,26 @@
      (set `(clo ,xs ,e ,rho))]))
 
 (define (lookupk kappa sigmak)
-  (match kappa
-    ['halt (set 'halt)]
-    [(cons `(frame . ,_) _)(set kappa)]
-    [else (match (hash-ref sigmak kappa 'notfound)
-            ['notfound (set 'notfound)]
-            [ks
-             (foldl (lambda (k fs) (set-union fs (lookupk k sigmak)))
-                    (set)
-                    (set->list ks))])]))
+  (define (look fronteer complete)
+    (define next (set-first fronteer))
+    (define complete+ (set-add complete next))
+    (define fronteer+more
+      (set-union (set-rest fronteer)
+       (match next
+         ['halt (set)]
+         [(cons `(frame . ,_) _) (set)]
+         [`(notfound ,_)(set)]
+         [addr (hash-ref sigmak addr (set `(notfound addr)))])))
+    (define fronteer+ (set-subtract fronteer+more complete+))
+    (if (set-empty? fronteer+)
+                    (foldl (lambda(k fs)
+                             (match k
+                               ['halt (set-add fs k)]
+                               [(cons `(frame . ,_) _) (set-add fs k)]
+                               [`(notfound ,_) (set-add fs k)]
+                               [addr fs])) (set) (set->list complete+))
+                    (look fronteer+ complete+)))
+  (look (set kappa) (set)))
 
 (define (atomic? ae)
   (match ae
@@ -355,7 +366,7 @@
           (for/set ([kont (lookupk kappa sigmak)])
             (match kont
               ['halt `(halt ,dn ,rho)]
-              ['notfound `(notfound-k ,i ,kappa)]
+              [`(notfound ,addr) `(notfound-k ,addr ,i ,kappa)]
               [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
                (define new-i (tick2 i i+ state))
                (if (empty? es)
