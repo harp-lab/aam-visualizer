@@ -87,7 +87,10 @@ class ProjectList extends Component {
     
     return (
       <React.Fragment>
-        <List>{ projectList }</List>
+        <List
+          style={ { overflowY: 'auto' } }>
+          { projectList }
+        </List>
         { dialog }
       </React.Fragment>
     );

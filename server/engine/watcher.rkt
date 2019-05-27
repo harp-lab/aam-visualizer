@@ -32,6 +32,10 @@
       (lambda (file)
         (file-or-directory-modify-seconds (build-path input-dir file)))
       files))
+  (define (promise-delete-file file-path)
+    (if (file-exists? file-path)
+      (promise-delete-file)
+      'deleted))
   
   (cond
     [(null? files)
@@ -49,9 +53,11 @@
           (log LOG_TYPE_WATCHER (format "~a - engine failed" file))
           (mark-error input-path output-path)])
       
-      (log LOG_TYPE_WATCHER (format "~a - removing input" file))
+      (log LOG_TYPE_WATCHER (format "~a - deleting input" file))
       (delete-file input-path)
+      (promise-delete-file input-path)
       ])
+  
   (watcher))
 
 (watcher)
