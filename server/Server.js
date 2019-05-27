@@ -121,7 +121,7 @@ class Server {
   }
   saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - saving`);
-    const project  = this.getProject(projectId);
+    const project  = this.projects[projectId];
     const name = data.name;
     const code = data.code;
     switch (project.status) {
@@ -145,7 +145,7 @@ class Server {
   }
   processProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - submitting`);
-    const project = this.getProject(projectId);
+    const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.empty:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - cannot process empty project`);
@@ -161,54 +161,39 @@ class Server {
         break;
     }
   }
-  checkProject(projId) {
-    G.log(Consts.LOG_TYPE_PROJ, `${projId} - checking processing status`);
-    this.readProject(Consts.OUTPUT_DIR, projId, (projId) =>
-    {
-      let proj = this.getProject(projId);
-      switch (proj.getStatus())
-      {
-        case proj.STATUSES.process:
-          G.log(Consts.LOG_TYPE_PROJ, `${projId} - processing`)
-          setTimeout(() => this.checkProject(projId), 1000);
+  checkProject(projectId) {
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - checking processing status`);
+    this.readProject(Consts.OUTPUT_DIR, projectId, projectId => {
+      const project = this.projects[projectId];
+      switch (project.status) {
+        case project.STATUSES.process:
+          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - processing`)
+          setTimeout(() => this.checkProject(projectId), 1000);
           break;
-        case proj.STATUSES.done:
-          G.log(Consts.LOG_TYPE_PROJ, `${projId} - done`);
+        case project.STATUSES.done:
+          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - done`);
           break;
         default:
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - invalid status to check`);
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status to check`);
           break;
       }
     });
   }
-  getProject(projId)
-  {
-    return this.projects[projId];
-  }
-  isProject(projId)
-  {
-    return this.projects[projId] !== undefined;
-  }
-  getProjectList()
-  {
-    let list = {};
-    for (let projId in this.projects)
-    {
-      let proj = this.getProject(projId);
-      list[projId] =
-      {
-        status: proj.getStatus(),
-        name: proj.getName()
-      };
+  getProjectList() {
+    const list = {};
+    for (const [id, project] of Object.entries(this.projects)) {
+      const project = this.projects[id];
+      list[id] = {
+        status: project.status,
+        name: project.name
+      }
     }
     return list;
   }
   
   // file system handlers
-  initData(func)
-  {
-    if (Consts.INIT_DATA)
-    {
+  initData() {
+    if (Consts.INIT_DATA) {
       G.log(Consts.LOG_TYPE_INIT, 'clearing data');
       fs.removeSync(Consts.DATA_DIR);
     }
@@ -217,96 +202,77 @@ class Server {
     fs.ensureDirSync(Consts.INPUT_DIR);
     fs.ensureDirSync(Consts.SAVE_DIR);
     this.readProjectDir(Consts.OUTPUT_DIR);
-    this.readProjectDir(Consts.INPUT_DIR, (projId) =>
-    {
-      this.checkProject(projId);
+    this.readProjectDir(Consts.INPUT_DIR, projectId => {
+      this.checkProject(projectId);
     });
     this.readProjectDir(Consts.SAVE_DIR);
   }
-  writeProject(projId, dirPath)
+  writeProject(projectId, dirPath)
   {
-    let proj = this.getProject(projId);
+    const project = this.projects[projectId];
     // if no new dirPath, get set dirPath
     if (dirPath == undefined)
-      dirPath = proj.getDirPath();
+      dirPath = project.getDirPath();
     else
-      proj.setDirPath(dirPath);
+      project.setDirPath(dirPath);
     
-    let filePath = `${dirPath}/${projId}`;
-    let output = {};
-    switch (proj.getStatus())
-    {
-      case proj.STATUSES.done:
-        output.graphs = proj.getGraphs();
+    const filePath = `${dirPath}/${projectId}`;
+    const output = {};
+    switch (project.status) {
+      case project.STATUSES.done:
+        output.graphs = project.graphs;
       default:
-        output.id = projId;
-        output.name = proj.getName();
-        output.code = proj.getCode();
-        output.status = proj.getStatus();
-        output.analysis = proj.analysis;
+        output.id = projectId;
+        output.name = project.name;
+        output.code = project.code;
+        output.status = project.status;
+        output.analysis = project.analysis;
         break;
     }
     
-    fs.writeFile(filePath, JSON.stringify(output), 'utf8', (error) =>
-    {
-      if (error)
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - write failed`);
+    fs.writeFile(filePath, JSON.stringify(output), 'utf8', err => {
+      if (err)
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - write failed`);
     });
   }
-  readProjectDir(dirPath, projFunc = (projId)=>{})
-  {
-    let projList = fs.readdirSync(dirPath);
-    projList.forEach((projId) =>
-    {
-      if (this.isProject(projId))
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - already imported`);
-      else
-      {
-        this.projects[projId] = new Project();
-        this.readProject(dirPath, projId, projFunc);
+  readProjectDir(dirPath, callback = projectId => {}) {
+    const fileList = fs.readdirSync(dirPath);
+    fileList.forEach(projectId => {
+      const project = this.projects[projectId];
+      if (project)
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - already imported`);
+      else {
+        this.projects[projectId] = new Project();
+        this.readProject(dirPath, projectId, callback);
       }
     });
   }
-  readProject(dirPath, projId, projFunc = (projId)=>{})
-  {
-    let proj = this.getProject(projId);
-    fs.readFile(`${dirPath}/${projId}`,
-    {
-      encoding: 'utf-8'
-    }, (error, dataString) =>
-    {
-      if (error)
-      {
-        if (error.code == 'ENOENT')
-        {
-          G.log(Consts.LOG_TYPE_PROJ, `${projId} - not found`);
-          projFunc(projId);
-        }
-        else
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - read failed`);
-      }
-      else
-      {
-        let data = JSON.parse(dataString);
-        if (data.id == projId)
-        {
-          proj.setDirPath(dirPath);
-          proj.setName(data.name);
-          proj.setStatus(proj.STATUSES.edit);
-          proj.importCode(data.code);
-          if (data.graphs && Object.entries(data.graphs).length > 0)
-          {
-            proj.setStatus(proj.STATUSES.process);
-            proj.importGraphs(data.graphs);
+  readProject(dirPath, projectId, callback = projectId => {}) {
+    const project = this.projects[projectId];
+    fs.readFile(`${dirPath}/${projectId}`, { encoding: 'utf-8' }, (error, dataString) => {
+      if (error) {
+        if (error.code == 'ENOENT') {
+          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
+          callback(projectId);
+        } else
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read failed`);
+      } else {
+        const data = JSON.parse(dataString);
+        if (data.id == projectId) {
+          project.setDirPath(dirPath);
+          project.setName(data.name);
+          project.setStatus(project.STATUSES.edit);
+          project.importCode(data.code);
+          if (data.graphs && Object.entries(data.graphs).length > 0) {
+            project.setStatus(project.STATUSES.process);
+            project.importGraphs(data.graphs);
           }
-          proj.setStatus(data.status);
-          projFunc(projId);
-        }
-        else
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projId} - data id (${data.id}) mismatch`);
+          project.setStatus(data.status);
+          callback(projectId);
+        } else
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - data id (${data.id}) mismatch`);
       }
-    }
-    );
+    });
   }
 }
 
