@@ -43,7 +43,7 @@ class App extends Component {
     this.requestAllProjects();
   }
   requestAllProjects() {
-    return fetch('/api/project?all', { method: 'GET' })
+    return fetch('/api/all', { method: 'GET' })
     .then(response => {
       switch (response.status) {
         case 200:
@@ -77,7 +77,7 @@ class App extends Component {
     });
   }
   createProject() {
-    return fetch('/api/project?create', { method: 'GET' })
+    return fetch('/api/create', { method: 'GET' })
     .then(response => response.json())
     .then(data => {
       const projectId = data.id;
@@ -92,7 +92,7 @@ class App extends Component {
     });
   }
   deleteProject(projectId) {
-    return fetch(`/api/project?id=${projectId}`, { method: 'DELETE' })
+    return fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' })
     .then(this.setState((state, props) => {
       const selectedProjectId = undefined;
       const projects = state.projects;
@@ -121,7 +121,7 @@ class App extends Component {
   }
 
   getProjectCode(projectId) {
-    return fetch(`/api/project?id=${projectId}&code`, { method: 'GET' })
+    return fetch(`/api/projects/${projectId}/code`, { method: 'GET' })
     .then((response) => response.json())
     .then((data) => {
       const project = this.state.projects[projectId];

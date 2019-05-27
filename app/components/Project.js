@@ -52,16 +52,18 @@ class Project extends Component {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
         this.saveLocalCode(code);
-        return fetch(`/api/project?id=${this.props.id}&save`, {
-          method: 'POST',
+        return fetch(`/api/projects/${this.props.id}/save`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
         });
     }
   }
   async processCode(code, options) {
     await this.saveCode(code);
-    return fetch(`/api/project?id=${this.props.id}&process`, {
-      method: 'POST',
+    return fetch(`/api/projects/${this.props.id}/process`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
     })
     .then(() => {
@@ -72,7 +74,7 @@ class Project extends Component {
     });
   }
   getGraphs() {
-    return fetch(`/api/project?id=${this.props.id}&data`, { method: 'GET' })
+    return fetch(`/api/projects/${this.props.id}/data`, { method: 'GET' })
     .then((response) => {
       switch (response.status) {
         case 200:
