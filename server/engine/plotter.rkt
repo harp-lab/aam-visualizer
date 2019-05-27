@@ -57,7 +57,7 @@
     (match data
       [`(call) (hash 'style (hash 'line-style "solid"))]
       [`(call-and-return) (hash 'style (hash 'line-style "solid"))]
-      [`(return) (hash 'style (hash 'line-style "solid"))]
+      [`(return) (hash 'style (hash 'line-style "dashed"))]
       [`(stop) (hash 'style (hash 'line-style "solid"))]
       
       [`(return-out ,li)
