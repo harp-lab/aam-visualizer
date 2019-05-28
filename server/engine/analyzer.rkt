@@ -363,7 +363,7 @@
        ['notfound `(,(set `(notfound ,ae ,rho ,i ,kappa)) ,sigma ,sigmak)]
        [dn
         (define new-states
-          (for/set ([kont (lookupk kappa sigmak)])
+          (for/set ([kont (hash-ref sigmak kappa `(notfound ,kappa))])
             (match kont
               ['halt `(halt ,dn ,rho)]
               [`(notfound ,addr) `(notfound-k ,addr ,i ,kappa)]
@@ -371,7 +371,8 @@
                (define new-i (tick2 i i+ state))
                (if (empty? es)
                    `(inner ,cat ,e (,@ds ,dn) ,e0s ,new-i ,kappa+)
-                   `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+)))])))
+                   `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+)))]
+              [addr `(eval ,ae ,rho ,(tick i state) ,addr)])))
         `(,new-states ,sigma ,sigmak)])]
     [`(eval ,(ast/loc `(,e0 . ,es) _ _ _) ,rho ,i ,kappa)
      (define e (cadr state))
