@@ -19,8 +19,8 @@
     ['inner
      (hash
       'id id
-      'form (format "inner-~a" (cadr state))
-      'data (~a(only-syntax (caddr state)))
+      'form (~a (cadr state))
+      'data (~a (only-syntax (caddr state)))
       'start (loc-start (caddr state))
       'end (loc-end (caddr state)))]
     [(? symbol? other)
