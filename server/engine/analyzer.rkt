@@ -465,7 +465,9 @@
   (define all-returns
     (foldl (lambda (s returns)
              (match s
-               [`(eval (? atomic? _) ,_ ,_ ,k)
+               [(or
+                 `(eval (? atomic? _) ,_ ,_ ,k)
+                 `(inner return ,_ ,_ ,_ ,_ ,k))
                 (store-include returns k (hash-ref state>state-trans s))]
                [else returns]))
            (hash)
@@ -483,20 +485,23 @@
           [(? set? (not (? set-empty?)))
            (define next-states (apply set-union (set-map next s->trans)))
            (match (set-first next)
-             [`(eval ,(? atomic? _) ,_ ,_ ,(not `((frame . ,_) . ,_)))
+             [(or
+               `(eval ,(? atomic?) ,_ ,_ ,(not `((frame . ,_) . ,_)))
+               `(inner return ,_ ,_ ,_ ,_ ,(not `((frame . ,_) . ,_))))
               (make-immutable-hash
-               (set-map next-states (lambda (state)
-                      (define li (get-li state))
-                      (match li
-                        [(list _ _)
-                         (set-add! returns li)
-                         (cons `(return ,li) `(return-out, li))]
-                        ['halt
-                         (set-add! finals 'halt)
-                         (cons state `(halt))]
-                        [else
-                         (set-add! finals 'stuck)
-                         (cons state `(stuck))]))))]
+               (set-map next-states
+                        (lambda (state)
+                          (define li (get-li state))
+                          (match li
+                            [(list _ _)
+                             (set-add! returns li)
+                             (cons `(return ,li) `(return-out, li))]
+                            ['halt
+                             (set-add! finals 'halt)
+                             (cons state `(halt))]
+                            [else
+                             (set-add! finals 'stuck)
+                             (cons state `(stuck))]))))]
              [`(inner apply . ,_)
               (match-define (list stop go)
                 (foldl (lambda(s rs)
