@@ -21,6 +21,12 @@
                                                 [addr (format "~a->..."
                                                               (only-syntax (car addr)))]))))]))
 
+(define (print-val v)
+  (match v
+    [`(clo ,xs ,e ,rho)
+     (match-define (list l _) (get-li e))
+     (~a l)]))
+
 (define (state-node id state sk)
   (match (car state)
     ['eval
@@ -29,19 +35,27 @@
       'form "eval"
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
-      'data (print-k (get-kappa state) sk))];(~a (only-syntax (cadr state))))]
+      'data (format "syntax: ~a\nkont: ~a"
+                    (~a (only-syntax (cadr state)))
+                    (print-k (get-kappa state) sk)))]
     ['inner
      (hash
       'id id
       'form (~a (cadr state))
-      'data (print-k (get-kappa state) sk);(~a (only-syntax (caddr state)))
       'start (loc-start (caddr state))
-      'end (loc-end (caddr state)))]
+      'end (loc-end (caddr state))
+      'data (format "syntax: ~a\nkont: ~a"
+                    (~a (only-syntax (caddr state)))
+                    (print-k (get-kappa state) sk)))]
+    ['halt
+     (hash
+      'id id
+      'form "halt"
+      'data (format "results: ~a" (set-map (cadr state) print-val)))]
     [(? symbol? other)
      (hash
       'id id
-      'form (symbol->string other)
-      'data "")]))
+      'form (symbol->string other))]))
 
 (define (full-state-graph states tables)
   (match-define `(,id>lambda ,store ,kstore) tables)
@@ -92,10 +106,11 @@
   (define (func-node n trans)
     (define id (n->sym n))
     (match n
-      [(? symbol?)
+      [`(halt ,d)
        (hash
         'id (symbol->string id)
-        'form (symbol->string n)
+        'form "halt"
+        'data (format "results: ~a" (set-map d print-val))
         'children (hash))]
       [(list l i)
        (define syntax (hash-ref id>lambda l))
@@ -103,13 +118,18 @@
         'id (symbol->string id)
         'form (~a l)
         'detail (symbol->string id)
-        'data (~a (only-syntax syntax))
+        'syntax (~a (only-syntax syntax))
         'start (loc-start syntax)
         'end (loc-end syntax)
         'instr (~a i)
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
-                            (make-edge (hash-ref trans child)))))]))
+                            (make-edge (hash-ref trans child)))))]
+      [`(,form .,_)
+       (hash
+        'id (symbol->string id)
+        'form (symbol->string form)
+        'children (hash))]))
   (define (detail-node n trans)
     (define id (n->sym n))
     (match n
@@ -118,7 +138,7 @@
        (hash
         'id (symbol->string id)
         'form (~a form)
-        'data (~a (only-syntax syntax))
+        'syntax (~a (only-syntax syntax))
         'start (loc-start syntax)
         'end (loc-end syntax)
         'instr (~a i)

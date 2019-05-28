@@ -346,6 +346,7 @@
 
 (define (get-li state)
   (match state
+    [(ast/loc _ _ _ l) (list l '())]
     [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)(list l i)]
     [`(inner ,_ ,(ast/loc _ _ _ l) ,_ ,_ ,i ,_)(list l i)]
     [else (car state)]))
@@ -511,10 +512,10 @@
                              (set-add! returns li)
                              (cons `(exit ,li) `(return-out, li))]
                             ['halt
-                             (set-add! finals 'halt)
+                             (set-add! finals state)
                              (cons state `(halt))]
                             [else
-                             (set-add! finals 'stuck)
+                             (set-add! finals state)
                              (cons state `(stuck))]))))]
              [`(inner apply . ,_)
               (match-define (list stop go)
@@ -533,7 +534,7 @@
                                             (set-union returns (car go))
                                             (set-union (set li) (cdr go)))))]
                            [else
-                            (set-add! finals 'stuck)
+                            (set-add! finals s)
                             (list (set-add stop (cons s `(stuck))) go)]))
                        (list (set) (cons (set)(set)))
                        (set->list next-states)))
