@@ -380,7 +380,22 @@
      (define new-state
        `(eval ,e0 ,rho ,new-i ,(cons `(frame apply ,e () ,es () ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
-    [`(inner ,(or 'apply 'let) ,_ (,d . ,ds) () ,i ,kappa)
+    [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
+     (match-define `(clo ,xs ,e ,rho) (set-first d))
+     (define i+ (tick i state))
+     (define ais (map (lambda (xi) (list xi i+)) xs))
+     (define rho+
+       (foldl (lambda (xi ai r)
+                (hash-set r xi ai))
+              rho
+              xs ais))
+     (define sigma-new
+       (foldl (lambda (ai di s)
+                (store-include s ai di))
+              sigma
+              ais ds))
+     `(,(set `(eval ,e ,rho+ ,i+ ,kappa)) ,sigma-new ,sigmak)]
+    [`(inner apply ,_ (,d . ,ds) () ,i ,kappa)
        (foldl (lambda (clo acc)
                 (match-define `(,states ,sigma+ ,sigmak+) acc)
                 (match-define `(clo ,xs ,e ,rho) clo)
