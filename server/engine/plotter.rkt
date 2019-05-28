@@ -11,7 +11,15 @@
   (match k
     ['halt "halt"]
     [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
-    [addr (format "~a->~a" (only-syntax (car addr)) (set-map (hash-ref sigmak addr)(lambda(k)(print-k k sigmak))))]))
+    [addr
+     (format "~a->~a"
+             (only-syntax (car addr))
+             (set-map (hash-ref sigmak addr)(lambda(k)
+                                              (match k
+                                                ['halt "halt"]
+                                                [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
+                                                [addr (format "~a->..."
+                                                              (only-syntax (car addr)))]))))]))
 
 (define (state-node id state sk)
   (match (car state)
@@ -47,7 +55,7 @@
         'children (hash-ref state-tran (hash-ref state-ids s))))))
   (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define state-tran (for/hash ([s states])
-                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore))
+                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore id>lambda))
                        (values (hash-ref state-ids s) (for/hash ([tr st-tr])
                                                         (values (string->symbol(~a (hash-ref state-ids tr)))(hash))))))
   (state-gen states state-ids state-tran))

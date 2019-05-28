@@ -65,6 +65,11 @@
       (conv-list syn-ast)
       syn-ast))
 
+(define (top-expr id>lambda)
+  (define top (hash-ref id>lambda 'top))
+  (define lam (ast/loc-ast top))
+  (match lam [`(lambda ,_ ,e) e]))
+
 (define (get-loc item)
   (define start (hash-ref item 'start `(0 0)))
   (define end (hash-ref item 'end `(0 0)))
@@ -351,7 +356,7 @@
     [`(inner ,_ ,_ ,_ ,_ ,_ ,k) k]
     [else (car state)]))
 
-(define (step-state state sigma sigmak)
+(define (step-state state sigma sigmak id>lambda)
   (match state
     [`(eval ,(ast/loc `(let ([,xs ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -373,7 +378,11 @@
                  (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
             [addr
              (for/set ([kont (hash-ref sigmak addr)])
-               `(inner return ,ae ,dn () ,(tick i state) ,kont))]))
+               (define e+ (match kont
+                            ['halt (top-expr id>lambda)]
+                            [(cons `(frame ,_ ,e . ,_) _) e]
+                            [addr (car addr)]))
+               `(inner return ,e+ ,dn () ,(tick i state) ,kont))]))
         `(,new-states ,sigma ,sigmak)])]
     [`(eval ,(ast/loc `(,e0 . ,es) _ _ _) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -392,7 +401,11 @@
               (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,d) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
          [addr
           (for/set ([kont (hash-ref sigmak addr)])
-            `(inner return ,ae ,d () ,(tick i state) ,kont))]))
+            (define e+ (match kont
+                            ['halt (top-expr id>lambda)]
+                            [(cons `(frame ,_ ,e . ,_) _) e]
+                            [addr (car addr)]))
+            `(inner return ,e+ ,d () ,(tick i state) ,kont))]))
      `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))
@@ -430,12 +443,12 @@
               (set->list d))]
     [else `(,(set) ,sigma ,sigmak)]))
 
-(define (explore-state init)
+(define (explore-state init id>lambda)
   (define (explore fronteer complete sigma sigmak)
     (define next (set-first fronteer))
     ;(pretty-print next)(display "\n")
     (define c-new (set-add complete next))
-    (match-define `(,states-new ,sigma-new ,sigmak-new) (step-state next sigma sigmak))
+    (match-define `(,states-new ,sigma-new ,sigmak-new) (step-state next sigma sigmak id>lambda))
     (define f+ (set-union (set-rest fronteer) states-new))
     (define f-new (set-subtract f+ c-new))
     (if (and (equal? sigma sigma-new) (equal? sigmak sigmak-new))
@@ -448,7 +461,7 @@
 (define (regroup-by-call init states data-tables)
   (match-define (list id>lambda sigma sigmak) data-tables)
   (define state>state-trans (for/hash ([s states])
-                              (match-define (list trans _ _) (step-state s sigma sigmak))
+                              (match-define (list trans _ _) (step-state s sigma sigmak id>lambda))
                               (values s trans)))
   (define all-calls
     (foldl (lambda (s calls)
@@ -496,7 +509,7 @@
                           (match li
                             [(list _ _)
                              (set-add! returns li)
-                             (cons `(return ,li) `(return-out, li))]
+                             (cons `(exit ,li) `(return-out, li))]
                             ['halt
                              (set-add! finals 'halt)
                              (cons state `(halt))]
@@ -566,18 +579,18 @@
 (define (analyze json-ast start-token)
   (match-define `(,ast ,id>lambda) (make-ast json-ast (string->symbol start-token)))
   (define init `(eval ,ast ,(hash) () halt))
-  (match-define `(,states ,sigma ,sigmak) (explore-state init))
+  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda))
   (list init states (list id>lambda sigma sigmak)))
 
 (define (analyze-syn syn)
   (match-define `(,init ,id>lambda)(inject syn))
-  (match-define `(,states ,sigma ,sigmak) (explore-state init))
+  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda))
   (list init states (list id>lambda sigma sigmak)))
 
 (define (explore data)
   (display "explored expression:\n")(show-syntax data)(display "\n")
   (match-define `(,initial-state ,id>lambda)(inject data))
-  (define sg-results (explore-state initial-state))
+  (define sg-results (explore-state initial-state id>lambda))
   (match-define (list states sigma sigmak) sg-results)
   (define tables (list id>lambda sigma sigmak))
   (match-define (list calls returns subs) (regroup-by-call initial-state states tables))
