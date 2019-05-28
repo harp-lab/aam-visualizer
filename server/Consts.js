@@ -1,21 +1,9 @@
-const path = require('path');
-
 exports.ENV = process.env.NODE_ENV || 'production';
-let HEADERS, INIT_DATA;
+let INIT_DATA;
 if (exports.ENV == 'development')
-{
-  HEADERS =
-  {
-    'Access-Control-Allow-Origin': '*'
-  };
   INIT_DATA = false;
-}
 else
-{
-  HEADERS = {};
   INIT_DATA = false;
-}
-exports.HEADERS = HEADERS;
 exports.INIT_DATA = INIT_DATA;
 
 exports.HOSTNAME = '127.0.0.1';
