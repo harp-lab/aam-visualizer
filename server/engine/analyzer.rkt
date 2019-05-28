@@ -11,6 +11,7 @@
  loc-start
  loc-end
  get-li
+ get-kappa
  only-syntax)
 
 (define newsym_counter 0)
@@ -466,7 +467,7 @@
     (foldl (lambda (s returns)
              (match s
                [(or
-                 `(eval (? atomic? _) ,_ ,_ ,k)
+                 `(eval ,(? atomic? _) ,_ ,_ ,k)
                  `(inner return ,_ ,_ ,_ ,_ ,k))
                 (store-include returns k (hash-ref state>state-trans s))]
                [else returns]))

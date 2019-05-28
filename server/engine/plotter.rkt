@@ -7,7 +7,13 @@
 
 (provide full-state-graph function-graphs)
 
-(define (state-node id state)
+(define (print-k k sigmak)
+  (match k
+    ['halt "halt"]
+    [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
+    [addr (format "~a->~a" (only-syntax (car addr)) (set-map (hash-ref sigmak addr)(lambda(k)(print-k k sigmak))))]))
+
+(define (state-node id state sk)
   (match (car state)
     ['eval
      (hash
@@ -15,12 +21,12 @@
       'form "eval"
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
-      'data (~a (only-syntax (cadr state))))]
+      'data (print-k (get-kappa state) sk))];(~a (only-syntax (cadr state))))]
     ['inner
      (hash
       'id id
       'form (~a (cadr state))
-      'data (~a (only-syntax (caddr state)))
+      'data (print-k (get-kappa state) sk);(~a (only-syntax (caddr state)))
       'start (loc-start (caddr state))
       'end (loc-end (caddr state)))]
     [(? symbol? other)
@@ -37,7 +43,7 @@
        (string->symbol (number->string
                         (hash-ref state-ids s)))
        (hash-set
-        (state-node (hash-ref state-ids s) s)
+        (state-node (hash-ref state-ids s) s kstore)
         'children (hash-ref state-tran (hash-ref state-ids s))))))
   (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define state-tran (for/hash ([s states])
@@ -113,7 +119,7 @@
                             (make-edge (hash-ref trans child)))))]
       [states
        (define s (if (set? states) (set-first states) states))
-       (hash-set* (state-node (symbol->string id) s)
+       (hash-set* (state-node (symbol->string id) s kstore)
                   'instr (~a (match (get-li s)[(list l i) i][end end]))
                   'children (for/hash([child (hash-keys trans)])
                               (values (n->sym child)
