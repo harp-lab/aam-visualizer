@@ -363,16 +363,16 @@
        ['notfound `(,(set `(notfound ,ae ,rho ,i ,kappa)) ,sigma ,sigmak)]
        [dn
         (define new-states
-          (for/set ([kont (hash-ref sigmak kappa `(notfound ,kappa))])
-            (match kont
-              ['halt `(halt ,dn ,rho)]
-              [`(notfound ,addr) `(notfound-k ,addr ,i ,kappa)]
-              [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
-               (define new-i (tick2 i i+ state))
-               (if (empty? es)
-                   `(inner ,cat ,e (,@ds ,dn) ,e0s ,new-i ,kappa+)
-                   `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+)))]
-              [addr `(eval ,ae ,rho ,(tick i state) ,addr)])))
+          (match kappa
+            ['halt (set `(halt ,dn))]
+            [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
+             (define new-i (tick2 i i+ state))
+             (if (empty? es)
+                 (set `(inner ,cat ,e (,@ds ,dn) ,e0s ,new-i ,kappa+))
+                 (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
+            [addr
+             (for/set ([kont (hash-ref sigmak addr)])
+               `(inner return ,ae ,dn () ,(tick i state) ,kont))]))
         `(,new-states ,sigma ,sigmak)])]
     [`(eval ,(ast/loc `(,e0 . ,es) _ _ _) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -380,6 +380,19 @@
      (define new-state
        `(eval ,e0 ,rho ,new-i ,(cons `(frame apply ,e () ,es () ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
+    [`(inner return ,ae ,d ,_ ,i ,kappa)
+     (define new-states
+       (match kappa
+         ['halt (set `(halt ,d))]
+         [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
+          (define new-i (tick2 i i+ state))
+          (if (empty? es)
+              (set `(inner ,cat ,e (,@ds ,d) ,e0s ,new-i ,kappa+))
+              (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,d) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
+         [addr
+          (for/set ([kont (hash-ref sigmak addr)])
+            `(inner return ,ae ,d () ,(tick i state) ,kont))]))
+     `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))
      (define i+ (tick i state))
@@ -414,7 +427,7 @@
                 `(,(set-add states `(eval ,e ,rho+ ,i+ ,ak)) ,sigma-new ,sigmak-new))
               `(,(set) ,sigma ,sigmak)
               (set->list d))]
-    [else `(,(set state) ,sigma ,sigmak)]))
+    [else `(,(set) ,sigma ,sigmak)]))
 
 (define (explore-state init)
   (define (explore fronteer complete sigma sigmak)
