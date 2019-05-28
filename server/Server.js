@@ -20,6 +20,15 @@ class Server {
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '../build')));
     
+    // logging
+    app.all('*', (req, res, next) => {
+      const path = req.path;
+      const method = req.method;
+      G.log(Consts.LOG_TYPE_HTTP, `${path} ${method}`);
+      res.on('finish', () => G.log(Consts.LOG_TYPE_HTTP, `${path} ${method} ${res.statusCode}`));
+      next();
+    });
+
     app.get('/api/all', (req, res) => {
       res.json(this.getProjectList())
         .status(200)
@@ -32,15 +41,23 @@ class Server {
         .end();
     });
     
+    // handle project requests
     const projectRouter = express.Router({ mergeParams: true });
-    projectRouter.get('/:id/code', (req, res) => {
+    projectRouter.all('*', (req, res, next) => {
+      const projectId = req.params.id;
+      if (this.projects[projectId])
+        next();
+      else
+        res.status(404).end();
+    });
+    projectRouter.get('/code', (req, res) => {
       const projectId = req.params.id;
       const project = this.projects[projectId];
       res.json({ id: projectId, code: project.code })
         .status(200)
         .end();
     });
-    projectRouter.get('/:id/data', (req, res) => {
+    projectRouter.get('/data', (req, res) => {
       const projectId = req.params.id;
       const project = this.projects[projectId];
       switch (project.status) {
@@ -48,7 +65,7 @@ class Server {
         case project.STATUSES.error:
           res.json({
             id: projectId,
-            graphs: project.getGraphs(),
+            graphs: project.graphs,
             code: project.code,
             status: project.status
           })
@@ -63,28 +80,35 @@ class Server {
           break;
       }
     });
-    projectRouter.put('/:id/save', (req, res) => {
+    projectRouter.put('/save', (req, res) => {
       const projectId = req.params.id;
       const data = req.body;
       this.saveProject(projectId, data);
       res.status(202).end();
     });
-    projectRouter.put('/:id/process', (req, res) => {
+    projectRouter.put('/process', (req, res) => {
       const projectId = req.params.id;
       const project = this.projects[projectId];
-      const options = req.body;
-      project.analysis = options.analysis;
-      this.processProject(projectId);
-      res.status(200).end();
+      switch (project.status) {
+        case project.STATUSES.edit:
+          const options = req.body;
+          project.analysis = options.analysis;
+          this.processProject(projectId);
+          res.status(200).end();
+          break;
+        default:
+          res.status(412).end();
+          break;
+      }
     });
-    projectRouter.put('/:id/delete', (req, res) => {
+    projectRouter.put('/delete', (req, res) => {
       this.deleteProject(req.params.id);
       res.status(205).end();
     });
     
-    app.use('/api/projects', projectRouter);
+    app.use('/api/projects/:id', projectRouter);
     
-    app.listen(port, () => console.log(`aam visualizer server listening on port ${port}`));
+    app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${port}`));
   }
   initWatcher() {
     const args = [`${Consts.ENGINE_DIR}/watcher.rkt`];
@@ -93,15 +117,14 @@ class Server {
     
     // pipe console output
     this.watcher.stdout.setEncoding('utf8');
-    this.watcher.stdout.on('data', (data) => {
+    this.watcher.stdout.on('data', data => {
       console.log(data.trim());
     });
     this.watcher.stderr.setEncoding('utf8');
-    this.watcher.stderr.on('data', (data) => {
-      let output = data.trim();
-      G.log(Consts.LOG_TYPE_WATCHER, `ERROR: ${output}`);
+    this.watcher.stderr.on('data', data => {
+      G.log(Consts.LOG_TYPE_WATCHER, `ERROR: ${data.trim()}`);
     });
-    this.watcher.on('close', (code) => {
+    this.watcher.on('close', code => {
       G.log(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
     });
@@ -114,11 +137,6 @@ class Server {
     this.projects[projectId] = new Project();
     return projectId;
   }
-  addProject(projectId) {
-    let project = new Project();
-    this.projects[projectId] = project;
-    return project;
-  }
   saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - saving`);
     const project  = this.projects[projectId];
@@ -129,29 +147,29 @@ class Server {
       case project.STATUSES.edit:
         if (code !== undefined)
           project.importCode(code);
+        this.writeProject(projectId);
       default:
         if (name !== undefined)
-          project.setName(name);
+          project.name = name;
         this.writeProject(projectId);
         break;
     }
   }
   deleteProject(projectId) {
-    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - deleting`);
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - delete`);
+    const project = this.projects[projectId];
+    fs.remove(`${project.dirPath}/${projectId}`);
     delete this.projects[projectId];
-    fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
-    fs.remove(`${Consts.INPUT_DIR}/${projectId}`);
-    fs.remove(`${Consts.OUTPUT_DIR}/${projectId}`);
   }
   processProject(projectId) {
-    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - submitting`);
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - process`);
     const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.empty:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - cannot process empty project`);
         break;
       case project.STATUSES.edit:
-        project.setStatus(project.STATUSES.process);
+        project.status = project.STATUSES.process;
         this.writeProject(projectId, Consts.INPUT_DIR);
         fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
         this.checkProject(projectId);
@@ -162,19 +180,18 @@ class Server {
     }
   }
   checkProject(projectId) {
-    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - checking processing status`);
     this.readProject(Consts.OUTPUT_DIR, projectId, projectId => {
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.process:
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - processing`)
+          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: process`)
           setTimeout(() => this.checkProject(projectId), 1000);
           break;
         case project.STATUSES.done:
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - done`);
+          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: done`);
           break;
         default:
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status to check`);
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status check`);
           break;
       }
     });
@@ -194,45 +211,35 @@ class Server {
   // file system handlers
   initData() {
     if (Consts.INIT_DATA) {
-      G.log(Consts.LOG_TYPE_INIT, 'clearing data');
+      G.log(Consts.LOG_TYPE_INIT, 'clear data');
       fs.removeSync(Consts.DATA_DIR);
     }
-    G.log(Consts.LOG_TYPE_INIT, 'initializing data');
+
+    // ensure data directories
+    G.log(Consts.LOG_TYPE_INIT, 'ensure directories');
     fs.ensureDirSync(Consts.OUTPUT_DIR);
     fs.ensureDirSync(Consts.INPUT_DIR);
     fs.ensureDirSync(Consts.SAVE_DIR);
+
+    // read data directories
+    G.log(Consts.LOG_TYPE_INIT, 'read data');
     this.readProjectDir(Consts.OUTPUT_DIR);
-    this.readProjectDir(Consts.INPUT_DIR, projectId => {
-      this.checkProject(projectId);
-    });
+    this.readProjectDir(Consts.INPUT_DIR, projectId => this.checkProject(projectId));
     this.readProjectDir(Consts.SAVE_DIR);
   }
-  writeProject(projectId, dirPath)
-  {
+  writeProject(projectId, dirPath) {
     const project = this.projects[projectId];
     // if no new dirPath, get set dirPath
     if (dirPath == undefined)
-      dirPath = project.getDirPath();
+      dirPath = project.dirPath;
     else
-      project.setDirPath(dirPath);
+      project.dirPath = dirPath;
     
     const filePath = `${dirPath}/${projectId}`;
-    const output = {};
-    switch (project.status) {
-      case project.STATUSES.done:
-        output.graphs = project.graphs;
-      default:
-        output.id = projectId;
-        output.name = project.name;
-        output.code = project.code;
-        output.status = project.status;
-        output.analysis = project.analysis;
-        break;
-    }
-    
+    const output = project.export(projectId);
     fs.writeFile(filePath, JSON.stringify(output), 'utf8', err => {
       if (err)
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - write failed`);
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - write fail`);
     });
   }
   readProjectDir(dirPath, callback = projectId => {}) {
@@ -240,7 +247,7 @@ class Server {
     fileList.forEach(projectId => {
       const project = this.projects[projectId];
       if (project)
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - already imported`);
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - import duplicate`);
       else {
         this.projects[projectId] = new Project();
         this.readProject(dirPath, projectId, callback);
@@ -255,19 +262,18 @@ class Server {
           G.log(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
           callback(projectId);
         } else
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read failed`);
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail`);
       } else {
         const data = JSON.parse(dataString);
         if (data.id == projectId) {
-          project.setDirPath(dirPath);
-          project.setName(data.name);
-          project.setStatus(project.STATUSES.edit);
+          project.dirPath = dirPath;
+          project.name = data.name;
           project.importCode(data.code);
-          if (data.graphs && Object.entries(data.graphs).length > 0) {
-            project.setStatus(project.STATUSES.process);
+          if (data.graphs) {
+            project.status = project.STATUSES.process;
             project.importGraphs(data.graphs);
           }
-          project.setStatus(data.status);
+          project.status = data.status;
           callback(projectId);
         } else
           G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - data id (${data.id}) mismatch`);
