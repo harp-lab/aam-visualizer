@@ -18,6 +18,7 @@ class Project {
     switch (this.status) {
       case this.STATUSES.empty:
       case this.STATUSES.edit:
+      case this.STATUSES.process:
         this.code = code;
         if (code == "")
           this.status = this.STATUSES.empty;

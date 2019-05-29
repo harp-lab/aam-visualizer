@@ -1,1 +1,1 @@
-{"id":"1558886332256","name":"","code":"(let ((a b)) a)","status":"process","analysis":"0-cfa"}
+{"id":"1558886332256","name":"","code":"(lambda (x) x)","status":"process","analysis":"0-cfa"}
