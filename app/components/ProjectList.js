@@ -42,8 +42,9 @@ class ProjectList extends Component {
     this.props.onSave(projectId, project);
 
     // save server
-    return fetch(`/api/project?id=${projectId}&save`, {
-      method: 'POST',
+    return fetch(`/api/projects/${projectId}/save`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
     });
   }
@@ -143,7 +144,7 @@ class RenameDialog extends Component {
   constructor(props) {
     super(props);
 
-    const name = this.props.name;
+    const name = (this.props.name || '');
     this.state = { name };
 
     this.changeName = this.changeName.bind(this);
