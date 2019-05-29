@@ -335,7 +335,7 @@ class Project extends Component {
 
     // change editor if subgraph defined
     const subGraphId = project.subGraphId;
-    if (project.subGraphId) {
+    if (subGraphId) {
       const subGraph = project.subGraph;
 
       // include subgraph marks

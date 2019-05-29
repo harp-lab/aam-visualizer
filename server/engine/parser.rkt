@@ -35,8 +35,8 @@
         tok)
       (error (format "expected token \"~a\"" e))))
   
-  #;(define (prim? e)
-    (member e '("define" "if" "quote" "begin")))
+  (define (prim? e)
+    (member e '("begin" "lambda" "define" "if" "quote")))
   (define (x? e)
     (regexp-match-exact? #px"[\\w]+" e))
   (define (b? e)
@@ -49,13 +49,18 @@
       #f))
   
   (define (addBegin)
-    (set! toks (append `(,(tokize "(" '(0 0) '()) ,(tokize "begin" '() '())) toks `(,(tokize ")" '() (tok-end (last toks)))))))
+    (set! toks (append `(,(tokize "(" '(0 0) '(0 0)) ,(tokize "begin" '(0 0) '(0 0))) toks `(,(tokize ")" '(0 0) (tok-end (last toks)))))))
   (define (parseP)
     (define start (tok-start (expect (peek-e 0))))
     (define s (parseS))
     (define end (tok-end (expect (peek-e 0))))
     (define id (hashsym 's))
-    (hash-set! ast id (hash-union (hash 's-expr s 'start start 'end end) (process s)))
+    (define processed-hash
+      (hash-union
+        (hash 's-expr s 'start start 'end end)
+        (process s)
+        #:combine/key (lambda (k v1 v2) v2)))
+    (hash-set! ast id processed-hash)
     (tokize (~a id) start end))
   (define (parseS)
     (define e (peek-e 0))
@@ -74,6 +79,8 @@
     (define id (hashsym 'a))
     (define form
       (cond
+        [(prim? a)
+          (hash)]
         [(x? a)
           (hash 'form "variable" 'data a)]
         [(b? a)
@@ -126,7 +133,7 @@
             (define children
               (for/hash ([tok body-tok-lst])
                 (values (string->symbol (tok-s tok)) (hash))))
-            (hash 'form form 'children children)]
+            (hash 'form form 'children children 'start 'null 'end 'null)]
           [else (hash)])]
       [_
         (hash)]
