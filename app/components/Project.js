@@ -182,7 +182,7 @@ class Project extends Component {
     }
     const propViewerElement = (
       <Pane height='50%'>
-        <PropViewer data={ element } />
+        <PropViewer data={ element.data } />
       </Pane>
     );
 
