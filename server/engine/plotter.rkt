@@ -35,9 +35,13 @@
       'form "eval"
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
-      'data (format "syntax: ~a\nkont: ~a"
+      'data (hash
+             'syntax (~a (only-syntax (cadr state)))
+             'kont (print-k (get-kappa state) sk)))]
+
+      #;(format "syntax: ~a\nkont: ~a"
                     (~a (only-syntax (cadr state)))
-                    (print-k (get-kappa state) sk)))]
+                    (print-k (get-kappa state) sk))
     ['inner
      (hash
       'id id
