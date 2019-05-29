@@ -54,16 +54,20 @@
       loc))
 
 (define (only-syntax ast)
-  (define syn-ast (ast/loc-ast ast))
-  (define (conv-list l)
-    (map (lambda (i)
-           (match i
-             [(? ast/loc? i) (only-syntax i)]
-             [(? list? l+)(conv-list l+)]
-             [else i])) l))  
-  (if (list? syn-ast)
-      (conv-list syn-ast)
-      syn-ast))
+  (match ast
+    [(ast/loc syn-ast _ _ _)
+     (define (conv-list l)
+       (map (lambda (i)
+              (match i
+                [(? ast/loc? i) (only-syntax i)]
+                [(? list? l+)(conv-list l+)]
+                [else i])) l))  
+     (if (list? syn-ast)
+         (conv-list syn-ast)
+         syn-ast)]
+    [`(eval ,ast . ,_) (only-syntax ast)]
+    [`(inner ,_ ,ast . ,_) (only-syntax ast)]
+    [`(,form . ,_) form]))
 
 (define (top-expr id>lambda)
   (define top (hash-ref id>lambda 'top))

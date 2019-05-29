@@ -36,26 +36,25 @@
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
       'data (hash
-             'syntax (~a (only-syntax (cadr state)))
+             'syntax (~a (only-syntax state))
+             'instrumentation (~a (cadr (get-li state)))
              'kont (print-k (get-kappa state) sk)))]
-
-      #;(format "syntax: ~a\nkont: ~a"
-                    (~a (only-syntax (cadr state)))
-                    (print-k (get-kappa state) sk))
     ['inner
      (hash
       'id id
       'form (~a (cadr state))
       'start (loc-start (caddr state))
       'end (loc-end (caddr state))
-      'data (format "syntax: ~a\nkont: ~a"
-                    (~a (only-syntax (caddr state)))
-                    (print-k (get-kappa state) sk)))]
+      'data (hash
+             'syntax (~a (only-syntax state))
+             'instrumentation (~a (cadr (get-li state)))
+             'kont (print-k (get-kappa state) sk)))]
     ['halt
      (hash
       'id id
       'form "halt"
-      'data (format "results: ~a" (set-map (cadr state) print-val)))]
+      'data (hash
+             'results (set-map (cadr state) print-val)))]
     [(? symbol? other)
      (hash
       'id id
@@ -114,7 +113,7 @@
        (hash
         'id (symbol->string id)
         'form "halt"
-        'data (format "results: ~a" (set-map d print-val))
+        'data (hash 'results (set-map d print-val))
         'children (hash))]
       [(list l i)
        (define syntax (hash-ref id>lambda l))
@@ -122,10 +121,11 @@
         'id (symbol->string id)
         'form (~a l)
         'detail (symbol->string id)
-        'syntax (~a (only-syntax syntax))
         'start (loc-start syntax)
         'end (loc-end syntax)
-        'instr (~a i)
+        'data (hash
+               'syntax (~a (only-syntax syntax))
+               'instr (~a i))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]
@@ -142,20 +142,29 @@
        (hash
         'id (symbol->string id)
         'form (~a form)
-        'syntax (~a (only-syntax syntax))
         'start (loc-start syntax)
         'end (loc-end syntax)
-        'instr (~a i)
+        'data (hash
+               'function-syntax (~a (only-syntax syntax))
+               'function-instr (~a i))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]
       [states
        (define s (if (set? states) (set-first states) states))
-       (hash-set* (state-node (symbol->string id) s kstore)
-                  'instr (~a (match (get-li s)[(list l i) i][end end]))
-                  'children (for/hash([child (hash-keys trans)])
-                              (values (n->sym child)
-                                      (make-edge (hash-ref trans child)))))]))
+       (define instr (lambda(s)(match (get-li s)[(list l i) i][end end])))
+       (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) k][k (print-k k kstore)])))
+       (match s
+         [`(halt . ,_) (state-node (symbol->string id) s kstore)]
+         [else
+          (hash-set* (state-node (symbol->string id) s kstore)
+                     'data (hash
+                            'syntax (only-syntax s)
+                            'instrumentation (if (set? states)(set-map states instr)(instr s))
+                            'kont (if (set? states)(set-map states kont)(kont s)))
+                     'children (for/hash([child (hash-keys trans)])
+                                 (values (n->sym child)
+                                         (make-edge (hash-ref trans child)))))])]))
   (define func-graph (hash
                       'type "state"
                       'start (symbol->string (n->sym init))
