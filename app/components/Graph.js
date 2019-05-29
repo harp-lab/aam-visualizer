@@ -53,9 +53,7 @@ const config = {
     }
   ],
   headless: true,
-  minZoom: 1e-1,
-  maxZoom: 1e1,
-  wheelSensitivity: 0.1
+  userZoomingEnabled: false
 };
 
 class Graph extends Component {
