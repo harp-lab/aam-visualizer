@@ -152,14 +152,14 @@
                             (make-edge (hash-ref trans child)))))]
       [states
        (define s (if (set? states) (set-first states) states))
-       (define instr (lambda(s)(match (get-li s)[(list l i) i][end end])))
-       (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) k][k (print-k k kstore)])))
+       (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
+       (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
        (match s
          [`(halt . ,_) (state-node (symbol->string id) s kstore)]
          [else
           (hash-set* (state-node (symbol->string id) s kstore)
                      'data (hash
-                            'syntax (only-syntax s)
+                            'syntax (if (set? states)(set-map states (lambda(s)(~a (only-syntax s))))(~a (only-syntax s)))
                             'instrumentation (if (set? states)(set-map states instr)(instr s))
                             'kont (if (set? states)(set-map states kont)(kont s)))
                      'children (for/hash([child (hash-keys trans)])
