@@ -346,8 +346,12 @@
     [else #f]))
 
 (define (cfa count)
-  (define (tick i state) i)
-  (define (tick2 i fi state) i)
+  (define (tick i lid state)
+    (define size (min count (+ 1 (length i))))
+    (match state
+      [`(inner apply . ,_) (take (cons lid i) size)]
+      [else i]))
+  (define (tick2 i fi state) (cons i fi))
   (list tick tick2))
 
 (define (get-li state)
@@ -368,7 +372,7 @@
   (match state
     [`(eval ,(ast/loc `(let ([,xs ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
      (define e (cadr state))
-     (define new-i (tick i state))
+     (define new-i (tick i lid state))
      (define new-state
        `(eval ,(car es) ,rho ,new-i ,(cons `(frame let ,e (,(set `(clo ,xs ,e_b ,rho))) ,(cdr es) () ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
@@ -380,21 +384,21 @@
           (match kappa
             ['halt (set `(halt ,dn))]
             [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
-             (define new-i (tick2 i i+ state))
+             (match-define (cons new-i new-fi) (tick2 i i+ state))
              (if (empty? es)
                  (set `(inner ,cat ,e (,@ds ,dn) ,e0s ,new-i ,kappa+))
-                 (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
+                 (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-fi) kappa+))))]
             [addr
              (for/set ([kont (hash-ref sigmak addr)])
                (define e+ (match kont
                             ['halt (top-expr id>lambda)]
                             [(cons `(frame ,_ ,e . ,_) _) e]
                             [addr (car addr)]))
-               `(inner return ,e+ ,dn () ,(tick i state) ,kont))]))
+               `(inner return ,e+ ,dn () ,(tick i (ast/loc-lambda-id e+) state) ,kont))]))
         `(,new-states ,sigma ,sigmak)])]
-    [`(eval ,(ast/loc `(,e0 . ,es) _ _ _) ,rho ,i ,kappa)
+    [`(eval ,(ast/loc `(,e0 . ,es) _ _ l) ,rho ,i ,kappa)
      (define e (cadr state))
-     (define new-i (tick i state))
+     (define new-i (tick i l state))
      (define new-state
        `(eval ,e0 ,rho ,new-i ,(cons `(frame apply ,e () ,es () ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
@@ -403,21 +407,21 @@
        (match kappa
          ['halt (set `(halt ,d))]
          [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
-          (define new-i (tick2 i i+ state))
+          (match-define (cons new-i new-fi) (tick2 i i+ state))
           (if (empty? es)
               (set `(inner ,cat ,e (,@ds ,d) ,e0s ,new-i ,kappa+))
-              (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,d) ,(cdr es) ,e0s ,rhok ,new-i) kappa+))))]
+              (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,d) ,(cdr es) ,e0s ,rhok ,new-fi) kappa+))))]
          [addr
           (for/set ([kont (hash-ref sigmak addr)])
             (define e+ (match kont
                             ['halt (top-expr id>lambda)]
                             [(cons `(frame ,_ ,e . ,_) _) e]
                             [addr (car addr)]))
-            `(inner return ,e+ ,d () ,(tick i state) ,kont))]))
+            `(inner return ,e+ ,d () ,(tick i (ast/loc-lambda-id e+) state) ,kont))]))
      `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))
-     (define i+ (tick i state))
+     (define i+ (tick i (ast/loc-lambda-id e) state))
      (define ais (map (lambda (xi) (list xi i+)) xs))
      (define rho+
        (foldl (lambda (xi ai r)
@@ -434,7 +438,7 @@
        (foldl (lambda (clo acc)
                 (match-define `(,states ,sigma+ ,sigmak+) acc)
                 (match-define `(clo ,xs ,e ,rho) clo)
-                (define i+ (tick i state))
+                (define i+ (tick i (ast/loc-lambda-id e) state))
                 (define ais (map (lambda (xi) (list xi i+)) xs))
                 (define rho+ (foldl (lambda (xi ai r)
                                       (hash-set r xi ai))
@@ -471,13 +475,16 @@
   (define state>state-trans (for/hash ([s states])
                               (match-define (list trans _ _) (step-state s sigma sigmak instr id>lambda))
                               (values s trans)))
-  (define all-calls
+  (define all-entries
     (foldl (lambda (s calls)
              (match s
-               [`(inner apply . ,_)
+               [(or
+                 `(eval ,(? atomic? _) . ,_)
+                 `(inner return . ,_)
+                 `(inner apply . ,_))
                 (foldl (lambda(t c)
-                         (match t
-                           [`(eval ,(ast/loc _ _ _ l) ,_ ,i ,_)
+                         (match (get-li t)
+                           [(list l i)
                             (store-include c (list l i)(set t))]
                            [else c]))
                        calls (set->list (hash-ref state>state-trans s)))]
@@ -499,7 +506,7 @@
     (define returns (mutable-set))
     (define finals (mutable-set))
     (define (s->trans s) (hash-ref state>state-trans s (set)))
-    (define init (hash-ref all-calls li))
+    (define init (hash-ref all-entries li))
     (define (build-graph fronteer trans)
       (define next (set-first fronteer))
       (define next-trans
@@ -578,7 +585,7 @@
                    (define subs+ (hash-set subs c (list s-init s-trans)))
                    (list trans+ subs+))
                  (list (hash)(hash))
-                 (hash-keys all-calls))))
+                 (hash-keys all-entries))))
 
 (define (instrument analysis-version)
   (match analysis-version
