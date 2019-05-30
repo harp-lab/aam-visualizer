@@ -12,14 +12,13 @@
     ['halt "halt"]
     [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
     [addr
-     (format "~a->~a"
-             (only-syntax (car addr))
-             (set-map (hash-ref sigmak addr)(lambda(k)
-                                              (match k
-                                                ['halt "halt"]
-                                                [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
-                                                [addr (format "~a->..."
-                                                              (only-syntax (car addr)))]))))]))
+     (format "~a->~a" (car addr)
+             (set-map (hash-ref sigmak addr)
+                      (lambda(k)
+                        (match k
+                          ['halt "halt"]
+                          [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
+                          [addr (format "~a->..." (car addr))]))))]))
 
 (define (print-val v)
   (match v
