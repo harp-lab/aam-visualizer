@@ -35,6 +35,7 @@
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
       'data (hash
+             'label (format "~a - eval" id)
              'syntax (~a (only-syntax state))
              'instrumentation (~a (cadr (get-li state)))
              'kont (print-k (get-kappa state) sk)))]
@@ -45,6 +46,7 @@
       'start (loc-start (caddr state))
       'end (loc-end (caddr state))
       'data (hash
+             'label (format "~a - ~a" id (cadr state))
              'syntax (~a (only-syntax state))
              'instrumentation (~a (cadr (get-li state)))
              'kont (print-k (get-kappa state) sk)))]
@@ -53,11 +55,14 @@
       'id id
       'form "halt"
       'data (hash
+             'label (format "~a - halt" id)
              'results (set-map (cadr state) print-val)))]
     [(? symbol? other)
      (hash
       'id id
-      'form (symbol->string other))]))
+      'form (symbol->string other)
+      'data (hash
+             'label (format "~a - ~a" id other)))]))
 
 (define (full-state-graph states tables)
   (match-define `(,id>lambda ,instr ,store ,kstore) tables)
@@ -112,12 +117,13 @@
        (hash
         'id (symbol->string id)
         'form "halt"
-        'data (hash 'results (set-map d print-val))
+        'data (hash 'label (format "~a - halt" id) 'results (set-map d print-val))
         'children (hash))]
       [`(,form .,_)
        (hash
         'id (symbol->string id)
         'form (symbol->string form)
+        'data (hash 'label (format "~a - ~a" id form))
         'children (hash))]
       [lid
        (define syntax (hash-ref id>lambda lid))
@@ -128,6 +134,7 @@
         'start (loc-start syntax)
         'end (loc-end syntax)
         'data (hash
+               'label (format "~a - ~a" id lid)
                'syntax (~a (only-syntax syntax)))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
@@ -144,6 +151,7 @@
         'start (loc-start syntax)
         'end (loc-end syntax)
         'data (hash
+               'label (format "~a - ~a" id (car n))
                'to-syntax (~a (only-syntax syntax)))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
@@ -155,8 +163,10 @@
        (match s
          [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s kstore)]
          [else
-          (hash-set* (state-node (symbol->string id) s kstore)
+          (define base (state-node (symbol->string id) s kstore))
+          (hash-set* base
                      'data (hash
+                            'label (format "~a - ~a" id (hash-ref base 'form))
                             'syntax (if (set? states)(set-map states (lambda(s)(~a (only-syntax s))))(~a (only-syntax s)))
                             'instrumentation (if (set? states)(set-map states instr)(instr s))
                             'kont (if (set? states)(set-map states kont)(kont s)))
