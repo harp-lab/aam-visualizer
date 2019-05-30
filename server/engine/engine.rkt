@@ -50,6 +50,7 @@
 (define analysis-groupings (regroup-by-call initial-state analysis-states data-tables))
 
 ; output
+(log LOG_TYPE_ENGINE "plotting")
 (define state-graph (full-state-graph analysis-states data-tables))
 (match-define (list func-graph func-detail-graphs)
   (function-graphs analysis-states analysis-groupings data-tables))

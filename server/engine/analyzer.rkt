@@ -475,21 +475,18 @@
   (define state>state-trans (for/hash ([s states])
                               (match-define (list trans _ _) (step-state s sigma sigmak instr id>lambda))
                               (values s trans)))
-  (define all-entries
+  (define all-calls
     (foldl (lambda (s calls)
              (match s
-               [(or
-                 `(eval ,(? atomic? _) . ,_)
-                 `(inner return . ,_)
-                 `(inner apply . ,_))
+               [`(inner apply . ,_)
                 (foldl (lambda(t c)
-                         (match (get-li t)
-                           [(list l i)
-                            (store-include c (list l i)(set t))]
+                         (match t
+                           [`(eval ,(ast/loc _ _ _ l) . ,_)
+                            (store-include c l (set t))]
                            [else c]))
                        calls (set->list (hash-ref state>state-trans s)))]
                [else calls]))
-           (hash (get-li init) (set init))
+           (hash (car (get-li init)) (set init))
            (set->list states)))
   (define all-returns
     (foldl (lambda (s returns)
@@ -501,12 +498,12 @@
                [else returns]))
            (hash)
            (set->list states)))
-  (define (make-subgraph li)
+  (define (make-subgraph lid)
     (define calls (mutable-set))
     (define returns (mutable-set))
     (define finals (mutable-set))
     (define (s->trans s) (hash-ref state>state-trans s (set)))
-    (define init (hash-ref all-entries li))
+    (define init (hash-ref all-calls lid))
     (define (build-graph fronteer trans)
       (define next (set-first fronteer))
       (define next-trans
@@ -522,9 +519,9 @@
                         (lambda (state)
                           (define li (get-li state))
                           (match li
-                            [(list _ _)
-                             (set-add! returns li)
-                             (cons `(exit ,li) `(return-out, li))]
+                            [(list lid _)
+                             (set-add! returns lid)
+                             (cons `(exit ,lid) `(return-out, lid))]
                             ['halt
                              (set-add! finals state)
                              (cons state `(halt))]
@@ -538,15 +535,15 @@
                          (define li (get-li s))
                          (define k (get-kappa s))
                          (match li
-                           [(list _ _)
-                            (set-add! calls li)
+                           [(list lid _)
+                            (set-add! calls lid)
                             (define returns (hash-ref all-returns k (set)))
                             (if (set-empty? returns)
                                 (list (set-add stop
-                                               (cons `(no-return ,li) `(call-out, li))) go)
+                                               (cons `(no-return ,lid) `(call-out, lid))) go)
                                 (list stop (cons
                                             (set-union returns (car go))
-                                            (set-union (set li) (cdr go)))))]
+                                            (set-union (set lid) (cdr go)))))]
                            [else
                             (set-add! finals s)
                             (list (set-add stop (cons s `(stuck))) go)]))
@@ -565,7 +562,7 @@
           (build-graph fronteer+ trans+)))
     (define trans (build-graph (set init) (hash))) 
     (list init trans calls returns finals))
-  (cons (get-li init)
+  (cons (car (get-li init))
           (foldl (lambda(c t)
                    (match-define (list trans subs) t)
                    (match-define (list s-init s-trans calls returns finals) (make-subgraph c))
@@ -585,7 +582,7 @@
                    (define subs+ (hash-set subs c (list s-init s-trans)))
                    (list trans+ subs+))
                  (list (hash)(hash))
-                 (hash-keys all-entries))))
+                 (hash-keys all-calls))))
 
 (define (instrument analysis-version)
   (match analysis-version

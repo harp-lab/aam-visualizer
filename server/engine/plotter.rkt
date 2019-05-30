@@ -91,20 +91,20 @@
       [`(return) (hash 'style (hash 'line-style "dashed"))]
       [`(stop) (hash 'style (hash 'line-style "solid"))]
       
-      [`(return-out ,li)
+      [`(return-out ,lid)
        (hash
         'style (hash'line-style "dashed")
-        'calls (list (symbol->string (n->sym li))))]
+        'calls (list (symbol->string (n->sym lid))))]
       [`(halt) (hash 'style (hash 'line-style "solid"))]
       [`(stuck) (hash 'style (hash 'line-style "solid"))]
-      [`(call-out ,li)
+      [`(call-out ,lid)
        (hash
         'style (hash 'line-style "dashed")
-        'calls (list (symbol->string (n->sym li))))]
-      [`(call-return ,lis)
+        'calls (list (symbol->string (n->sym lid))))]
+      [`(call-return ,lids)
        (hash
         'style (hash 'line-style "dashed")
-        'calls (set-map lis (lambda(n)(symbol->string (n->sym n)))))]
+        'calls (set-map lids (lambda(n)(symbol->string (n->sym n)))))]
       [`(step) (hash 'style (hash 'line-style "solid"))]))
   (define (func-node n trans)
     (define id (n->sym n))
@@ -115,38 +115,37 @@
         'form "halt"
         'data (hash 'results (set-map d print-val))
         'children (hash))]
-      [(list l i)
-       (define syntax (hash-ref id>lambda l))
-       (hash
-        'id (symbol->string id)
-        'form (~a l)
-        'detail (symbol->string id)
-        'start (loc-start syntax)
-        'end (loc-end syntax)
-        'data (hash
-               'syntax (~a (only-syntax syntax))
-               'instr (~a i))
-        'children (for/hash([child (hash-keys trans)])
-                    (values (n->sym child)
-                            (make-edge (hash-ref trans child)))))]
       [`(,form .,_)
        (hash
         'id (symbol->string id)
         'form (symbol->string form)
-        'children (hash))]))
-  (define (detail-node n trans)
-    (define id (n->sym n))
-    (match n
-      [`(,form ,(list l i))
-       (define syntax (hash-ref id>lambda l))
+        'children (hash))]
+      [lid
+       (define syntax (hash-ref id>lambda lid))
        (hash
         'id (symbol->string id)
-        'form (~a form)
+        'form (~a lid)
+        'detail (symbol->string id)
         'start (loc-start syntax)
         'end (loc-end syntax)
         'data (hash
-               'function-syntax (~a (only-syntax syntax))
-               'function-instr (~a i))
+               'syntax (~a (only-syntax syntax)))
+        'children (for/hash([child (hash-keys trans)])
+                    (values (n->sym child)
+                            (make-edge (hash-ref trans child)))))]))
+  (define (detail-node n trans)
+    (define id (n->sym n))
+    (match n
+      [`(halt . ,_) (state-node (symbol->string id) n kstore)]
+      [`(,(or 'exit 'no-return) ,lid)
+       (define syntax (hash-ref id>lambda lid))
+       (hash
+        'id (symbol->string id)
+        'form (~a (car n))
+        'start (loc-start syntax)
+        'end (loc-end syntax)
+        'data (hash
+               'to-syntax (~a (only-syntax syntax)))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]
@@ -155,7 +154,7 @@
        (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
        (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
        (match s
-         [`(halt . ,_) (state-node (symbol->string id) s kstore)]
+         [`(,_ . ,_) (state-node (symbol->string id) s kstore)]
          [else
           (hash-set* (state-node (symbol->string id) s kstore)
                      'data (hash
