@@ -61,7 +61,7 @@
       'form (symbol->string other))]))
 
 (define (full-state-graph states tables)
-  (match-define `(,id>lambda ,store ,kstore) tables)
+  (match-define `(,id>lambda ,instr ,store ,kstore) tables)
   (define (state-gen states state-ids state-tran)
     (for/hash ([s states])
       (values
@@ -72,13 +72,13 @@
         'children (hash-ref state-tran (hash-ref state-ids s))))))
   (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define state-tran (for/hash ([s states])
-                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore id>lambda))
+                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
                        (values (hash-ref state-ids s) (for/hash ([tr st-tr])
                                                         (values (string->symbol(~a (hash-ref state-ids tr)))(hash))))))
   (state-gen states state-ids state-tran))
 
 (define (function-graphs _ groupings tables)
-  (match-define (list id>lambda store kstore) tables)
+  (match-define (list id>lambda insrt store kstore) tables)
   (match-define (list init trans subs) groupings)
   (define all-nodes (list->set (apply append (hash-keys trans)
                            (map (lambda(sv)(hash-keys (cadr sv))) (hash-values subs)))))

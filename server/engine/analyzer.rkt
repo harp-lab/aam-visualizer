@@ -345,8 +345,10 @@
     [(ast/loc (? symbol? _) _ _ _) #t]
     [else #f]))
 
-(define (tick i state) i)
-(define (tick2 i fi state) fi)
+(define (cfa count)
+  (define (tick i state) i)
+  (define (tick2 i fi state) i)
+  (list tick tick2))
 
 (define (get-li state)
   (match state
@@ -361,7 +363,8 @@
     [`(inner ,_ ,_ ,_ ,_ ,_ ,k) k]
     [else (car state)]))
 
-(define (step-state state sigma sigmak id>lambda)
+(define (step-state state sigma sigmak instr id>lambda)
+  (match-define (list tick tick2) instr)
   (match state
     [`(eval ,(ast/loc `(let ([,xs ,es]...) ,e_b) _ _ lid) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -448,12 +451,12 @@
               (set->list d))]
     [else `(,(set) ,sigma ,sigmak)]))
 
-(define (explore-state init id>lambda)
+(define (explore-state init id>lambda instr)
   (define (explore fronteer complete sigma sigmak)
     (define next (set-first fronteer))
     ;(pretty-print next)(display "\n")
     (define c-new (set-add complete next))
-    (match-define `(,states-new ,sigma-new ,sigmak-new) (step-state next sigma sigmak id>lambda))
+    (match-define `(,states-new ,sigma-new ,sigmak-new) (step-state next sigma sigmak instr id>lambda))
     (define f+ (set-union (set-rest fronteer) states-new))
     (define f-new (set-subtract f+ c-new))
     (if (and (equal? sigma sigma-new) (equal? sigmak sigmak-new))
@@ -464,9 +467,9 @@
   (explore (set init)(set)(hash)(hash)))
 
 (define (regroup-by-call init states data-tables)
-  (match-define (list id>lambda sigma sigmak) data-tables)
+  (match-define (list id>lambda instr sigma sigmak) data-tables)
   (define state>state-trans (for/hash ([s states])
-                              (match-define (list trans _ _) (step-state s sigma sigmak id>lambda))
+                              (match-define (list trans _ _) (step-state s sigma sigmak instr id>lambda))
                               (values s trans)))
   (define all-calls
     (foldl (lambda (s calls)
@@ -577,27 +580,34 @@
                  (list (hash)(hash))
                  (hash-keys all-calls))))
 
+(define (instrument analysis-version)
+  (match analysis-version
+    ["0-cfa" (cfa 0)]
+    ["1-cfa" (cfa 1)]
+    ["2-cfa" (cfa 2)]))
+
 (define (inject data)
   (match-define `(,ast ,ids) (build-ast data))
   (list `(eval ,ast ,(hash) () halt) ids))
 
-(define (analyze json-ast start-token)
+(define (analyze json-ast start-token version)
+  (define instr (instrument version))
   (match-define `(,ast ,id>lambda) (make-ast json-ast (string->symbol start-token)))
   (define init `(eval ,ast ,(hash) () halt))
-  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda))
-  (list init states (list id>lambda sigma sigmak)))
+  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda instr))
+  (list init states (list id>lambda instr sigma sigmak)))
 
-(define (analyze-syn syn)
+(define (analyze-syn syn [instr (cfa 0)])
   (match-define `(,init ,id>lambda)(inject syn))
-  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda))
+  (match-define `(,states ,sigma ,sigmak) (explore-state init id>lambda instr))
   (list init states (list id>lambda sigma sigmak)))
 
-(define (explore data)
+(define (explore instr data)
   (display "explored expression:\n")(show-syntax data)(display "\n")
   (match-define `(,initial-state ,id>lambda)(inject data))
-  (define sg-results (explore-state initial-state id>lambda))
+  (define sg-results (explore-state initial-state id>lambda instr))
   (match-define (list states sigma sigmak) sg-results)
-  (define tables (list id>lambda sigma sigmak))
+  (define tables (list id>lambda instr sigma sigmak))
   (match-define (list calls returns subs) (regroup-by-call initial-state states tables))
   (print-explore sg-results)
   (display "\ncalls:\n")
@@ -607,10 +617,10 @@
   ;(display "\nsubs:\n")
   ;(pretty-print subs))
 
-(define (ex1) (explore `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
-(define (ex2) (explore `(let ([a ((lambda (x) (let ([a (x x)]) a))(lambda (x) (let ([a (x x)]) a)))]) a)))
-(define (ex3) (explore `((lambda (x) (x x))(lambda (x) (x x)))))
-(define (ex5) (explore `((((lambda (x) (lambda (y) (lambda (z) (((x x) y) z))))(lambda (a) (lambda (b) (lambda (c) (((b a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((c a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((a a) b) c)))))))
-(define (ex6) (explore `((lambda (x y z) (x x y z))(lambda (a b c) (b a b c))(lambda (a b c) (c a b c))(lambda (a b c) (a a b c)))))
+(define (ex1) (explore (cfa 0) `(let ([z ((lambda (y) y) (lambda (x) x))]) z)))
+(define (ex2) (explore (cfa 0) `(let ([a ((lambda (x) (let ([a (x x)]) a))(lambda (x) (let ([a (x x)]) a)))]) a)))
+(define (ex3) (explore (cfa 0) `((lambda (x) (x x))(lambda (x) (x x)))))
+(define (ex5) (explore (cfa 0) `((((lambda (x) (lambda (y) (lambda (z) (((x x) y) z))))(lambda (a) (lambda (b) (lambda (c) (((b a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((c a) b) c)))))(lambda (a) (lambda (b) (lambda (c) (((a a) b) c)))))))
+(define (ex6) (explore (cfa 0) `((lambda (x y z) (x x y z))(lambda (a b c) (b a b c))(lambda (a b c) (c a b c))(lambda (a b c) (a a b c)))))
 ;stuck states: free vars
-(define (ex4) (explore `(let ([a ((let ([b (x x)]) (let ([z b]) b)) (let ([c (z a)]) c))]) a)))
+(define (ex4) (explore (cfa 0) `(let ([a ((let ([b (x x)]) (let ([z b]) b)) (let ([c (z a)]) c))]) a)))
