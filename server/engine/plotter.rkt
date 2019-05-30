@@ -154,7 +154,7 @@
        (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
        (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
        (match s
-         [`(,_ . ,_) (state-node (symbol->string id) s kstore)]
+         [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s kstore)]
          [else
           (hash-set* (state-node (symbol->string id) s kstore)
                      'data (hash
