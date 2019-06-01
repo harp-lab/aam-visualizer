@@ -197,7 +197,8 @@ class Server {
       const project = this.projects[id];
       list[id] = {
         status: project.status,
-        name: project.name
+        name: project.name,
+        analysis: project.analysis
       }
     }
     return list;
@@ -263,6 +264,7 @@ class Server {
         if (data.id == projectId) {
           project.dirPath = dirPath;
           project.name = data.name;
+          project.analysis = data.analysis;
           project.importCode(data.code);
           if (data.graphs) {
             project.status = project.STATUSES.process;

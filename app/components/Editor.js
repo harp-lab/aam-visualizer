@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -34,14 +36,24 @@ class Editor extends Component {
   renderMarks() {
     const doc = this.cm.getDoc();
     for (const [id, mark] of Object.entries(this.props.marks)) {
-      const element = document.createElement('sup');
-      element.style.cssText = 'cursor: pointer';
-      element.classList.add('mark');
-      element.textContent = id;
-      element.addEventListener('click', event => {
+      // create container
+      const container = document.createElement('div');
+      container.style.cssText = 'display: inline;';
+      container.addEventListener('click', event => {
         this.props.onNodeSelect(mark.graphId, id);
       });
-      doc.setBookmark(mark.end, { widget: element, insertLeft: true });
+
+      // create react text
+      const reactElement = (
+        <Typography
+          variant='caption'
+          display='inline'
+          classes={{ root: 'mark' }}>
+          { id }
+        </Typography>);
+      ReactDOM.render(reactElement, container);
+      
+      doc.setBookmark(mark.end, { widget: container, insertLeft: true });
     }
   }
   selectMark() {
@@ -122,18 +134,21 @@ class Editor extends Component {
       });
       editMenu = (
         <Toolbar>
-          <Select
-            value={ this.state.processOptions.analysis }
-            onChange={ event => {
-              const analysis = event.target.value;
-              this.setState(state => {
-                const processOptions = state.processOptions;
-                processOptions.analysis = analysis;
-                return { processOptions };
-              });
-            } }>
-            { analysisMenuItems }
-          </Select>
+          <div style={{ flex: '1 1 auto' }}>
+            <InputLabel>Analysis</InputLabel>
+            <Select
+              value={ this.state.processOptions.analysis }
+              onChange={ event => {
+                const analysis = event.target.value;
+                this.setState(state => {
+                  const processOptions = state.processOptions;
+                  processOptions.analysis = analysis;
+                  return { processOptions };
+                });
+              } }>
+              { analysisMenuItems }
+            </Select>
+          </div>
           <ProcessButton onClick={ this.process }/>
         </Toolbar>
       );
@@ -173,8 +188,8 @@ class ProcessButton extends Component {
       onClick={ event => {
         this.props.onClick();
       } }
-      color='inherit'
-      variant='outlined'>
+      variant='contained'
+      color='secondary'>
       process
     </Button>;
   }

@@ -58,8 +58,15 @@ class ProjectList extends Component {
           onClick={ () => this.props.onClick(id) }
           align='flex-start'>
           <ListItemText style={ { flex: '0 0 10em' } }>{ id }</ListItemText>
-          <ListItemText>{ (project.name || 'unnamed') }</ListItemText>
+          <ListItemText
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+            { (project.name || 'unnamed') }
+          </ListItemText>
           <ListItemText style={ { flex: '0 0 10em' } }>{ project.status }</ListItemText>
+          <ListItemText style={{ flex: '0 0 10em' }}>{ project.analysis }</ListItemText>
           <ListItemSecondaryAction>
             <ProjectMenu
               onRename={ () => this.openRenameDialog(id) }

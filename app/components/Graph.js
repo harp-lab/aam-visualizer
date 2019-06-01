@@ -29,6 +29,10 @@ const config = {
       }
     },
     {
+      selector: 'node:selected',
+      style: { 'background-color': '#3f51b5' }
+    },
+    {
       selector: 'edge',
       style: {
         'label': 'data(label)',
@@ -38,18 +42,18 @@ const config = {
       }
     },
     {
+      selector: 'edge:selected',
+      style: { 'line-color': '#3f51b5' }
+    },
+    {
       selector: '.highlighted',
-      style: {
-        'background-color': '#fff9a0'
-      }
+      style: { 'background-color': '#fff59d' }
     },
     {
       selector: element => {
         return element.hasClass('highlighted') && element.selected();
       },
-      style: {
-        'background-color': '#fef024'
-      }
+      style: { 'background-color': '#ffeb3b' }
     }
   ],
   headless: true,

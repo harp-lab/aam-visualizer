@@ -62,6 +62,7 @@ class App extends Component {
                 project.name = projectData.name;
                 if (project.status == project.STATUSES.process)
                   refresh = true;
+                project.analysis = projectData.analysis;
               }
               if (refresh)
                 setTimeout(this.requestAllProjects, 5000);
@@ -154,7 +155,7 @@ class App extends Component {
   }
 
   render() {
-    let title, view;
+    let title, buttons, view;
     const selectedProjectId = this.state.selectedProjectId;
 
     switch (this.state.view) {
@@ -168,6 +169,8 @@ class App extends Component {
             onSave={ this.saveLocalProject }
             onFork = { this.forkProject }
             onDelete={ this.deleteProject } />;
+        
+        buttons = <NewProjectButton onClick={ this.createProject } />;
         break;
       case VIEWS.project:
         const project = this.selectedProject;
@@ -177,6 +180,8 @@ class App extends Component {
           project = { this.selectedProject }
           onSave={ project => this.saveLocalProject(selectedProjectId, project) }
           getCode={ () => this.getProjectCode(selectedProjectId) } />
+        
+        buttons = <ForkProjectButton onClick={ () => this.forkProject(selectedProjectId) } />;
         break;
     }
 
@@ -188,22 +193,36 @@ class App extends Component {
         overflow: 'hidden' }}>
         <AppBar position='static'>
           <Toolbar>
-            <ProjectListButton onClick={ this.deselectProject } />
+            <ProjectListButton onClick={ this.deselectProject }/>
             <Typography
-              variant='title'
+              variant='h6'
               color='inherit'
               style={ {
                 flex: '1 1 auto',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
                 textAlign: 'center'
               } }>
               { title }
             </Typography>
-            <NewProjectButton onClick={ this.createProject } />
+            { buttons }
           </Toolbar>
         </AppBar>
         { view }
-      </div>
-    );
+      </div>);
+  }
+}
+
+class ProjectListButton extends Component {
+  render() {
+    return <Button
+      onClick={ (event) => {
+        event.stopPropagation();
+        this.props.onClick();
+      } }
+      color='inherit'>
+      project list
+    </Button>;
   }
 }
 
@@ -221,16 +240,16 @@ class NewProjectButton extends Component {
   }
 }
 
-class ProjectListButton extends Component {
+class ForkProjectButton extends Component {
   render() {
     return <Button
-      onClick={ (event) => {
-        event.stopPropagation();
+      onClick={ event => {
         this.props.onClick();
       } }
-      color='inherit'>
-      project list
-    </Button>;
+      color='inherit'
+      variant='outlined'>
+      fork project
+    </Button>
   }
 }
 
