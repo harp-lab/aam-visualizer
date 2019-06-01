@@ -63,12 +63,7 @@ class Server {
       switch (project.status) {
         case project.STATUSES.done:
         case project.STATUSES.error:
-          res.json({
-            id: projectId,
-            graphs: project.graphs,
-            code: project.code,
-            status: project.status
-          })
+          res.json(project.export(projectId))
             .status(200)
             .end();
           break;
@@ -274,6 +269,7 @@ class Server {
             project.importGraphs(data.graphs);
           }
           project.status = data.status;
+          project.store = data.store;
           callback(projectId);
         } else
           G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - data id (${data.id}) mismatch`);

@@ -47,6 +47,7 @@ class Project {
       status: this.status,
       code: this.code,
       graphs: this.graphs,
+      store: this.store,
       name: this.name,
       analysis: this.analysis
     }

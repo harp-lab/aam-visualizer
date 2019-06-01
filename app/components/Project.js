@@ -84,6 +84,7 @@ class Project extends Component {
             project.status = data.status;
             project.code = data.code;
             project.importGraphs(data.graphs);
+            project.store = data.store;
             this.props.onSave(project);
           })
         case 204:
@@ -182,7 +183,7 @@ class Project extends Component {
     }
     const propViewerElement = (
       <Pane height='50%'>
-        <PropViewer data={ (element && element.data) } />
+        <PropViewer data={ element } store={ this.props.project.store } />
       </Pane>
     );
 

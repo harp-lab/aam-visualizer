@@ -5,6 +5,7 @@ class Pane extends Component {
   render() {
     const height = this.props.height;
     const width = this.props.width;
+    const overflow = this.props.overflow;
 
     const children = React.Children.map(this.props.children, children => {
       const heightProps = (height ? { height } : {});
@@ -17,7 +18,7 @@ class Pane extends Component {
       flexDirection: 'column',
       height: height ? height : '100%',
       width: width ? width : '100%',
-      overflow: 'hidden'
+      overflow: overflow ? overflow : 'hidden'
     }};
 
     return <div style={ style }>{ children }</div>;
