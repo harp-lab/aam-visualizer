@@ -83,8 +83,10 @@ class Project extends Component {
             const project = this.props.project;
             project.status = data.status;
             project.code = data.code;
-            project.importGraphs(data.graphs);
-            project.store = data.store;
+            if (project.status == project.STATUSES.done) {
+              project.importGraphs(data.graphs);
+              project.store = data.store;
+            }
             this.props.onSave(project);
           })
         case 204:
@@ -167,7 +169,6 @@ class Project extends Component {
   }
   renderVisual() {
     const project = this.props.project;
-    const mainGraphId = project.mainGraphId;
     const mainGraph = project.mainGraph;
 
     const graphElement = this.renderGraph();
