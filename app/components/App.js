@@ -3,6 +3,9 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
 import Loading from './Loading.js';
 import ProjectList from './ProjectList';
 import Project from './Project';
@@ -22,14 +25,12 @@ class App extends Component {
     const load = false;
     const view = VIEWS.list;
     const title = undefined;
+    const snackbarQueue = [];
     const selectedProjectId = undefined;
     const projects = {};
     this.state = {
-      load,
-      view,
-      title,
-      selectedProjectId,
-      projects
+      load, view, title, snackbarQueue,
+      selectedProjectId, projects
     };
 
     this.getProjectList = this.getProjectList.bind(this);
@@ -40,15 +41,18 @@ class App extends Component {
     this.deleteProject = this.deleteProject.bind(this);
 
     this.saveLocalProject = this.saveLocalProject.bind(this);
+
+    this.queueSnackbar = this.queueSnackbar.bind(this);
+    this.nextSnackbar = this.nextSnackbar.bind(this);
     this.getProjectList();
   }
 
   // api requests
   async getProjectList() {
-    const response = await fetch('/api/all', { method: 'GET' });
-    switch (response.status) {
+    const res = await fetch('/api/all', { method: 'GET' });
+    switch (res.status) {
       case 200:
-        const data = await response.json();
+        const data = await res.json();
         this.setState(state => {
           const projects = state.projects;
 
@@ -84,8 +88,8 @@ class App extends Component {
     }
   }
   async createProject() {
-    const response = await fetch('/api/create', { method: 'GET' });
-    const data = await response.json();
+    const res = await fetch('/api/create', { method: 'GET' });
+    const data = await res.json();
 
     const projectId = data.id;
     const view = VIEWS.list;
@@ -99,8 +103,8 @@ class App extends Component {
     return projectId;
   }
   async deleteProject(projectId) {
-    const response = await fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' });
-    switch (response.status) {
+    const res = await fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' });
+    switch (res.status) {
       case 205:
         this.setState(state => {
           // delete project
@@ -116,7 +120,7 @@ class App extends Component {
         })
         break;
       case 404:
-        //TODO notify delete error
+        this.queueSnackbar(`Project ${projectId} delete request failed`);
         break;
     }
   }
@@ -176,6 +180,21 @@ class App extends Component {
     });
   }
 
+  queueSnackbar(message) {
+    this.setState(state => {
+      const snackbarQueue = state.snackbarQueue;
+      snackbarQueue.push(message);
+      return { snackbarQueue };
+    });
+  }
+  nextSnackbar() {
+    this.setState(state => {
+      const snackbarQueue = state.snackbarQueue;
+      snackbarQueue.shift();
+      return { snackbarQueue };
+    });
+  }
+
   render() {
     let title, buttons, view;
     const selectedProjectId = this.state.selectedProjectId;
@@ -201,6 +220,7 @@ class App extends Component {
           id={ selectedProjectId }
           project = { this.selectedProject }
           onSave={ project => this.saveLocalProject(selectedProjectId, project) }
+          onNotify={ this.queueSnackbar }
           getCode={ () => this.getProjectCode(selectedProjectId) } />
         
         buttons = <ForkProjectButton onClick={ () => this.forkProject(selectedProjectId) } />;
@@ -231,6 +251,9 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         { view }
+        <NotifySnackbar
+          queue={ this.state.snackbarQueue }
+          onClose={ this.nextSnackbar } />
       </div>);
   }
 }
@@ -271,7 +294,37 @@ class ForkProjectButton extends Component {
       color='inherit'
       variant='outlined'>
       fork project
-    </Button>
+    </Button>;
+  }
+}
+
+class NotifySnackbar extends Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClose = this.handleClose.bind(this);
+  }
+  handleClose(event, reason) {
+    if (reason !== 'clickaway')
+      this.props.onClose();
+  }
+  render() {
+    const message = this.props.queue[0];
+    const onClose = this.props.onClose;
+    return <Snackbar
+      open={ Boolean(message) }
+      onClose={ this.handleClose }
+      action={[
+        <IconButton
+          key='close'
+          onClick={onClose}
+          color='inherit' >
+          <CloseIcon />
+        </IconButton>
+      ]}
+      autoHideDuration={ 20000 }
+      message={ message }
+      anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }} />;
   }
 }
 

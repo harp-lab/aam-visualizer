@@ -35,14 +35,14 @@ class ProjectList extends Component {
     const rename = false;
     this.setState({ selectedProjectId, rename });
   }
-  rename(projectId, name) {
+  async rename(projectId, name) {
     // save local
     const project = this.props.data[projectId];
     project.name = name;
     this.props.onSave(projectId, project);
 
     // save server
-    return fetch(`/api/projects/${projectId}/save`, {
+    await fetch(`/api/projects/${projectId}/save`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })

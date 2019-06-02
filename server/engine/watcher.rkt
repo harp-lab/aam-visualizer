@@ -11,7 +11,7 @@
 (define data-dir (build-path 'up "data"))
 (define input-dir (build-path data-dir "input"))
 (define output-dir (build-path data-dir "output"))
-(define scan-interval 10)
+(define scan-interval 1)
 
 (define (mark-error input-path output-path)
   (define in (open-input-file input-path))

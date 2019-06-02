@@ -16,7 +16,7 @@ class Project extends Component {
     const project = this.props.project;
     const highlightedNodeIds = undefined;
     this.state = {
-      highlightedNodeIds
+      highlightedNodeIds,
     };
 
     switch (project.status) {
@@ -46,13 +46,13 @@ class Project extends Component {
     project.code = code;
     this.props.onSave(project);
   }
-  saveCode(code) {
+  async saveCode(code) {
     const project = this.props.project;
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
         this.saveLocalCode(code);
-        return fetch(`/api/projects/${this.props.id}/save`, {
+        await fetch(`/api/projects/${this.props.id}/save`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
@@ -61,39 +61,44 @@ class Project extends Component {
   }
   async processCode(code, options) {
     await this.saveCode(code);
-    return fetch(`/api/projects/${this.props.id}/process`, {
+    const res = await fetch(`/api/projects/${this.props.id}/process`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
-    })
-    .then(() => {
-      const project = this.props.project;
-      project.status = project.STATUSES.process;
-      this.props.onSave(project);
-      setTimeout(() => this.getGraphs(), 5000);
     });
+    switch (res.status) {
+      case 200:
+        const project = this.props.project;
+        project.status = project.STATUSES.process;
+        this.props.onSave(project);
+        setTimeout(() => this.getGraphs(), 5000);
+        break;
+      case 412:
+        this.props.onNotify('Project process request rejected');
+        break;
+    }
   }
-  getGraphs() {
-    return fetch(`/api/projects/${this.props.id}/data`, { method: 'GET' })
-    .then((response) => {
-      switch (response.status) {
-        case 200:
-          return response.json()
-          .then((data) => {
-            const project = this.props.project;
-            project.status = data.status;
-            project.code = data.code;
-            if (project.status == project.STATUSES.done) {
-              project.importGraphs(data.graphs);
-              project.store = data.store;
-            }
-            this.props.onSave(project);
-          })
-        case 204:
-          setTimeout(() => this.getGraphs(), 5000);
-          break;
-      }
-    });
+  async getGraphs() {
+    const res = await fetch(`/api/projects/${this.props.id}/data`, { method: 'GET' });
+    switch (res.status) {
+      case 200:
+        const data = await res.json();
+        const project = this.props.project;
+        project.status = data.status;
+        project.code = data.code;
+        if (project.status == project.STATUSES.done) {
+          project.importGraphs(data.graphs);
+          project.store = data.store;
+        }
+        this.props.onSave(project);
+        break;
+      case 204:
+        setTimeout(() => this.getGraphs(), 5000);
+        break;
+      case 412:
+        this.props.onNotify('Project data request rejected');
+        break;
+    }
   }
   saveGraphMetadata(graphId, metadata) {
     const project = this.props.project;
@@ -105,8 +110,14 @@ class Project extends Component {
   selectNode(graphId, nodeId) {
     const selectedNode = nodeId;
     this.saveGraphMetadata(graphId, { selectedNode });
+    // TODO
+    this.addHistory();
   }
-  selectMainNode (nodeId) {
+  unselectNode(graphId, nodeId) {
+    const selectedNode = undefined;
+    this.saveGraphMetadata(graphId, { selectedNode });
+  }
+  selectMainNode(nodeId) {
     const project = this.props.project;
     if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
       // reset selected
@@ -131,6 +142,21 @@ class Project extends Component {
     if (edge)
       highlightedNodeIds = edge.calls;
     this.setState({ highlightedNodeIds });
+  }
+  addHistory() {
+    const project = this.props.project;
+    const graphId = project.mainGraphId;
+
+    const metadata = project.mainGraph.metadata;
+    if (!metadata.history)
+      metadata.history = [];
+    const data = {
+      mainNodeId: project.mainGraph.metadata.selectedNode,
+      subNodeId: (project.subGraph && project.subGraph.metadata.selectedNode)
+    };
+    metadata.history.push(data);
+
+    this.saveGraphMetadata(graphId, { history: metadata.history });
   }
 
   render() {
@@ -168,25 +194,9 @@ class Project extends Component {
     return view;
   }
   renderVisual() {
-    const project = this.props.project;
-    const mainGraph = project.mainGraph;
-
     const graphElement = this.renderGraph();
     const editorElement = this.renderEditor();
-
-    let element = mainGraph.nodes[mainGraph.metadata.selectedNode];
-    // changes if subgraph defined
-    const subGraphId = project.subGraphId;
-    if (subGraphId) {
-      // view subgraph node props
-      const subGraph = project.subGraph;
-      element = subGraph.nodes[subGraph.metadata.selectedNode];
-    }
-    const propViewerElement = (
-      <Pane height='50%'>
-        <PropViewer data={ element } store={ this.props.project.store } />
-      </Pane>
-    );
+    const propViewerElement =this.renderPropViewer();
 
     return (
       <SplitPane vertical>
@@ -218,6 +228,7 @@ class Project extends Component {
           positions={ mainGraph.metadata.positions }
           selectedNode={ mainGraph.metadata.selectedNode }
           onNodeSelect={ nodeId => this.selectNode(mainGraphId, nodeId) }
+          onNodeUnselect={ nodeId => this.unselectNode(mainGraphId, nodeId) }
           onSave={ this.saveGraphMetadata } />;
         break;
     }
@@ -258,9 +269,9 @@ class Project extends Component {
           selectedNode={ mainGraph.metadata.selectedNode }
           highlighted={ this.state.highlightedNodeIds }
           onNodeSelect={ this.selectMainNode }
+          onNodeUnselect={ nodeId => this.selectMainNode(undefined) }
           onSave={ this.saveGraphMetadata } />
-      </Pane>
-    );
+      </Pane>);
 
     // render subgraph
     let subGraphElement;
@@ -277,6 +288,7 @@ class Project extends Component {
             selectedNode={ subGraph.metadata.selectedNode }
             selectedEdge={ subGraph.metadata.selectedEdge }
             onNodeSelect={ nodeId => this.selectNode(subGraphId, nodeId) }
+            onNodeUnselect={ nodeId => this.unselectNode(subGraphid, nodeId) }
             onEdgeSelect={ edgeId => {
                 const edge = subGraph.edges[edgeId];
                 if (!edgeId || edge.calls)
@@ -370,6 +382,23 @@ class Project extends Component {
     }
 
     return editorElement;
+  }
+  renderPropViewer() {
+    const project = this.props.project;
+    const mainGraph = project.mainGraph;
+
+    let element = mainGraph.nodes[mainGraph.metadata.selectedNode];
+    // changes if subgraph defined
+    const subGraphId = project.subGraphId;
+    if (subGraphId) {
+      // view subgraph node props
+      const subGraph = project.subGraph;
+      element = subGraph.nodes[subGraph.metadata.selectedNode];
+    }
+    return (
+      <Pane height='50%'>
+        <PropViewer data={ element } store={ this.props.project.store } />
+      </Pane>);
   }
 }
 

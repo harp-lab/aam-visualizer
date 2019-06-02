@@ -82,10 +82,13 @@ class Graph extends Component {
       const node = event.target;
       if (this.eventsEnabled) {
         // disable node unselect if 'selectedNode' prop defined
-        if (this.props.selectedNode)
+        if (this.props.selectedNode) {
+          this.eventsEnabled = false;
           node.select();
+          this.eventsEnabled = true;
+        }
         else
-          this.props.onNodeSelect(undefined);
+          this.props.onNodeUnselect(node.id());
       }
     });
   }
