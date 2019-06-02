@@ -9,14 +9,13 @@ const Project = require('./Project.js');
 class Server {
   constructor() {
     this.projects = {};
+
     this.initData();
     this.initServer();
     this.initWatcher();
   }
   initServer() {
     const app = express();
-    const port = 8086;
-    
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '../build')));
     
@@ -103,7 +102,7 @@ class Server {
     
     app.use('/api/projects/:id', projectRouter);
     
-    app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${port}`));
+    app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
   initWatcher() {
     const args = [`${Consts.ENGINE_DIR}/watcher.rkt`];
@@ -140,11 +139,10 @@ class Server {
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        if (code !== undefined)
+        if (code)
           project.importCode(code);
-        this.writeProject(projectId);
       default:
-        if (name !== undefined)
+        if (name)
           project.name = name;
         this.writeProject(projectId);
         break;
@@ -194,7 +192,6 @@ class Server {
   getProjectList() {
     const list = {};
     for (const [id, project] of Object.entries(this.projects)) {
-      const project = this.projects[id];
       list[id] = {
         status: project.status,
         name: project.name,

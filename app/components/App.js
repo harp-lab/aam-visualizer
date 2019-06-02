@@ -32,7 +32,7 @@ class App extends Component {
       projects
     };
 
-    this.requestAllProjects = this.requestAllProjects.bind(this);
+    this.getProjectList = this.getProjectList.bind(this);
     this.selectProject = this.selectProject.bind(this);
     this.deselectProject = this.deselectProject.bind(this);
     this.createProject = this.createProject.bind(this);
@@ -40,68 +40,88 @@ class App extends Component {
     this.deleteProject = this.deleteProject.bind(this);
 
     this.saveLocalProject = this.saveLocalProject.bind(this);
-    this.requestAllProjects();
+    this.getProjectList();
   }
-  requestAllProjects() {
-    return fetch('/api/all', { method: 'GET' })
-    .then(response => {
-      switch (response.status) {
-        case 200:
-          return response.json()
-          .then(data => {
-            this.setState(state => {
-              const projects = state.projects;
-              let refresh = false;
-              for (const [projectId, projectData] of Object.entries(data)) {
-                let project = projects[projectId];
-                if (!project) {
-                  project = new ProjectData();
-                  projects[projectId] = project;
-                }
-                project.status = projectData.status;
-                project.name = projectData.name;
-                if (project.status == project.STATUSES.process)
-                  refresh = true;
-                project.analysis = projectData.analysis;
-              }
-              if (refresh)
-                setTimeout(this.requestAllProjects, 5000);
-              const load = false;
-              return { load, projects };
-            });
-          });
-        default:
-          this.setState({ load: true });
-          setTimeout(this.requestAllProjects, 1000);
-          break;
-      }
-    });
+
+  // api requests
+  async getProjectList() {
+    const response = await fetch('/api/all', { method: 'GET' });
+    switch (response.status) {
+      case 200:
+        const data = await response.json();
+        this.setState(state => {
+          const projects = state.projects;
+
+          let refresh = false;
+          for (const [id, metadata] of Object.entries(data)) {
+            let project = projects[id];
+
+            // create project
+            if (!project) {
+              project = new ProjectData();
+              projects[id] = project;
+            }
+
+            project.status = metadata.status;
+            project.name = metadata.name;
+            project.analysis = metadata.analysis;
+
+            if (project.status == project.STATUSES.process)
+              refresh = true;
+          }
+
+          // refresh list
+          if (refresh)
+            setTimeout(this.getProjectList, 5000);
+          const load = false;
+          return { load, projects };
+        });
+        break;
+      default:
+        this.setState({ load: true });
+        setTimeout(this.getProjectList, 1000);
+        break;
+    }
   }
-  createProject() {
-    return fetch('/api/create', { method: 'GET' })
-    .then(response => response.json())
-    .then(data => {
-      const projectId = data.id;
-      const view = VIEWS.list;
-      const selectedProjectId = undefined;
-      this.setState((state, props) => {
-        const projects = state.projects;
-        projects[projectId] = new ProjectData();
-        return { view, selectedProjectId, projects };
-      });
-      return projectId;
-    });
-  }
-  deleteProject(projectId) {
-    return fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' })
-    .then(this.setState((state, props) => {
-      const selectedProjectId = undefined;
+  async createProject() {
+    const response = await fetch('/api/create', { method: 'GET' });
+    const data = await response.json();
+
+    const projectId = data.id;
+    const view = VIEWS.list;
+    const selectedProjectId = undefined;
+    this.setState(state => {
       const projects = state.projects;
-      delete projects[projectId];
-      return { selectedProjectId, projects }
-    }));
+      projects[projectId] = new ProjectData();
+      return { view, selectedProjectId, projects };
+    });
+
+    return projectId;
+  }
+  async deleteProject(projectId) {
+    const response = await fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' });
+    switch (response.status) {
+      case 205:
+        this.setState(state => {
+          // delete project
+          const projects = state.projects;
+          delete projects[projectId];
+  
+          // clear selected project id
+          let selectedProjectId = state.selectedProjectId;
+          if (selectedProjectId == projectId)
+            selectedProjectId = undefined;
+  
+          return { selectedProjectId, projects }
+        })
+        break;
+      case 404:
+        //TODO notify delete error
+        break;
+    }
   }
   async forkProject(projectId) {
+    // get project code
     const status = this.state.projects[projectId].status;
     switch (status) {
       case 'empty':
@@ -110,6 +130,8 @@ class App extends Component {
         await this.getProjectCode(projectId);
         break;
     }
+
+    // fork project
     const forkProjectId = await this.createProject();
     this.setState(state => {
       const projects = state.projects;
@@ -118,17 +140,17 @@ class App extends Component {
       forkProject.code = project.code;
       return { projects };
     });
+
+    // select fork project
     this.selectProject(forkProjectId);
   }
+  async getProjectCode(projectId) {
+    const response = await fetch(`/api/projects/${projectId}/code`, { method: 'GET' });
+    const data = await response.json();
 
-  getProjectCode(projectId) {
-    return fetch(`/api/projects/${projectId}/code`, { method: 'GET' })
-    .then((response) => response.json())
-    .then((data) => {
-      const project = this.state.projects[projectId];
-      project.code = data.code;
-      this.saveLocalProject(projectId, project);
-    });
+    const project = this.state.projects[projectId];
+    project.code = data.code;
+    this.saveLocalProject(projectId, project);
   }
 
   get selectedProject() { return this.state.projects[this.state.selectedProjectId]; }
@@ -139,7 +161,7 @@ class App extends Component {
     });
   }
   deselectProject(projectId) {
-    this.setState((state, proj) => {
+    this.setState(state => {
       return {
         view: VIEWS.list,
         selectedProjectId: undefined
