@@ -52,7 +52,7 @@
 ; output
 (log LOG_TYPE_ENGINE "plotting")
 (define state-graph (full-state-graph analysis-states data-tables))
-(match-define (list func-graph func-detail-graphs)
+(match-define (list func-graph func-detail-graphs store)
   (function-graphs analysis-states analysis-groupings data-tables))
 
 ; write output json
@@ -60,6 +60,7 @@
 (define out-hash
   (hash-set* proj-hash
     'status "done"
+    'store store
     'graphs (hash-union (hash
       'ast-TODO (hash
         'type "ast"

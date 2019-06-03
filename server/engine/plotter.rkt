@@ -26,14 +26,19 @@
      (match-define (list l _) (get-li e))
      (~a l)]))
 
-(define (state-node id state sk)
+(define (state-node id state a->sym sk)
   (match (car state)
     ['eval
+     (define rho (caddr state))
      (hash
       'id id
       'form "eval"
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
+      'env (for/hash ([v (hash-keys rho)])
+             (define addr (hash-ref rho v))
+             (values (string->symbol (~a (only-syntax v)))
+                     (hash 'instr (~a(cadr addr)) 'store (symbol->string(a->sym addr)))))
       'data (hash
              'label (format "~a - eval" id)
              'syntax (~a (only-syntax state))
@@ -72,13 +77,15 @@
 
 (define (full-state-graph states tables)
   (match-define `(,id>lambda ,instr ,store ,kstore) tables)
+  (define addr>id (for/hash([a (hash-keys store)][id (range (hash-count store))])(values a id)))
+  (define (a->sym addr) (string->symbol (~a (hash-ref addr>id addr))))
   (define (state-gen states state-ids state-tran)
     (for/hash ([s states])
       (values
        (string->symbol (number->string
                         (hash-ref state-ids s)))
        (hash-set
-        (state-node (hash-ref state-ids s) s kstore)
+        (state-node (hash-ref state-ids s) s a->sym kstore)
         'children (hash-ref state-tran (hash-ref state-ids s))))))
   (define state-ids (for/hash ([s states][id (range (set-count states))]) (values s id)))
   (define state-tran (for/hash ([s states])
@@ -94,6 +101,8 @@
                            (map (lambda(sv)(hash-keys (cadr sv))) (hash-values subs)))))
   (define node>id (for/hash ([n all-nodes][id (range (set-count all-nodes))]) (values n id)))
   (define (n->sym node) (string->symbol (~a (hash-ref node>id node))))
+  (define addr>id (for/hash([a (hash-keys store)][id (range (hash-count store))])(values a id)))
+  (define (a->sym addr) (string->symbol (~a (hash-ref addr>id addr))))
   (define (make-edge data)
     (match data
       [`(call) (hash 'style (hash 'line-style "solid"))]
@@ -149,7 +158,7 @@
   (define (detail-node n trans)
     (define id (n->sym n))
     (match n
-      [`(halt . ,_) (state-node (symbol->string id) n kstore)]
+      [`(halt . ,_) (state-node (symbol->string id) n a->sym kstore)]
       [`(,(or 'exit 'no-return) ,lid)
        (define syntax (hash-ref id>lambda lid))
        (hash
@@ -171,9 +180,9 @@
        (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
        (define in-one (lambda(s)(list (synt s) (instr s) (kont s))))
        (match s
-         [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s kstore)]
+         [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s a->sym kstore)]
          [else
-          (define base (state-node (symbol->string id) s kstore))
+          (define base (state-node (symbol->string id) s a->sym kstore))
           (hash-set* base
                      'data (hash
                             'label (format "~a - ~a" id (hash-ref base 'form))
@@ -198,14 +207,16 @@
                                    'start (symbol->string (n->sym s-init))
                                    'graph (for/hash ([n (hash-keys s-trans)])
                                             (values (n->sym n) (detail-node n (hash-ref s-trans n))))))))
-  (list func-graph detail-graphs))
+  (define out-store (for/hash ([a (hash-keys store)])
+                      (values (a->sym a) (set-map (hash-ref store a) print-val))))
+  (list func-graph detail-graphs out-store))
   
 
 (define (test syntax)
   (match-define (list init states tables) (analyze-syn syntax))
   (define groups (regroup-by-call init states tables))
   (define state-graph (full-state-graph states tables))
-  (match-define (list func-graph func-detail-graphs)
+  (match-define (list func-graph func-detail-graphs store)
     (function-graphs 'temp groups tables))
   (display "\n\nstates:\n")
   (pretty-print state-graph)
