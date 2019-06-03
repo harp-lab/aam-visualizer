@@ -7,11 +7,11 @@ class Pane extends Component {
     const width = this.props.width;
     const overflow = this.props.overflow;
 
-    const children = React.Children.map(this.props.children, children => {
+    const children = React.Children.map(this.props.children, child => {
       const heightProps = (height ? { height } : {});
       const widthProps = (width ? { width } : {});
       const props = {...widthProps, ...heightProps};
-      return React.cloneElement(children, props);
+      return React.cloneElement(child, props);
     });
     const style = {...this.props.style, ...{
       display: 'flex',

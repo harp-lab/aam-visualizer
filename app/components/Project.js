@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
+import Breadcrumbs from '@material-ui/core/Breadcrumbs';
+import Link from '@material-ui/core/Link';
 import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -90,6 +92,7 @@ class Project extends Component {
           project.importGraphs(data.graphs);
           project.store = data.store;
         }
+        project.analysis = data.analysis
         this.props.onSave(project);
         break;
       case 204:
@@ -194,6 +197,8 @@ class Project extends Component {
     return view;
   }
   renderVisual() {
+    const historyElement = this.renderHistory();
+    const selectElement = this.renderSelect();
     const graphElement = this.renderGraph();
     const editorElement = this.renderEditor();
     const propViewerElement =this.renderPropViewer();
@@ -201,6 +206,8 @@ class Project extends Component {
     return (
       <SplitPane vertical>
         <Pane width='50%'>
+          { selectElement }
+          { historyElement }
           { graphElement }
         </Pane>
         <Pane width='50%'>
@@ -210,6 +217,43 @@ class Project extends Component {
           </SplitPane>
         </Pane>
       </SplitPane>);
+  }
+  renderHistory() {
+    const history = this.props.project.mainGraph.metadata.history;
+    let links;
+    if (history)
+      links = history.map(data => {
+        const mainNodeId = data.mainNodeId;
+        const subNodeId = data.subNodeId;
+        let link;
+        if (subNodeId)
+          link = <Link key={ `${mainNodeId}` }>{ `${mainNodeId} - ${subNodeId}` }</Link>;
+        else
+          link = <Link key={ `${mainNodeId}` }>{ mainNodeId }</Link>;
+        return link;
+      });
+    return (
+      <Breadcrumbs>
+        <Typography>History</Typography>
+        { links }
+      </Breadcrumbs>);
+  }
+  renderSelect() {
+    const project = this.props.project;
+    const menuItems = Object.entries(project.graphs)
+    .filter(([graphId, graph]) => !graph.hasOwnProperty('subGraphType'))
+    .map(([graphId, graph]) => {
+      return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
+    });
+    return (
+      <Select
+        value={ project.mainGraphId }
+        onChange={ event => {
+          project.mainGraphId = event.target.value;
+          this.props.onSave(project);
+        } }>
+        { menuItems }
+      </Select>);
   }
   renderGraph() {
     const project = this.props.project;
@@ -232,26 +276,8 @@ class Project extends Component {
           onSave={ this.saveGraphMetadata } />;
         break;
     }
-    
-    const menuItems = Object.entries(project.graphs)
-    .filter(([graphId, graph]) => !graph.hasOwnProperty('subGraphType'))
-    .map(([graphId, graph]) => {
-      return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
-    });
 
-    return (
-      <React.Fragment>
-        <Select
-          value={ project.mainGraphId }
-          onChange={ event => {
-            project.mainGraphId = event.target.value;
-            this.props.onSave(project);
-          } }>
-          { menuItems }
-        </Select>
-        { graph }
-      </React.Fragment>
-    );
+    return graph;
   }
   renderFunctionGraph() {
     const project = this.props.project;
