@@ -382,7 +382,7 @@
        [dn
         (define new-states
           (match kappa
-            ['halt (set `(halt ,dn))]
+            ['halt (set `(halt ,dn, rho))]
             [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
              (match-define (cons new-i new-fi) (tick2 i i+ state))
              (if (empty? es)
@@ -397,7 +397,7 @@
                    [addr
                     (define lid (car addr))
                     (list lid (lbody id>lambda lid))]))
-               `(inner return ,e+ ,dn () ,(tick i lid state) ,kont))]))
+               `(inner return ,e+ ,dn (,rho) ,(tick i lid state) ,kont))]))
         `(,new-states ,sigma ,sigmak)])]
     [`(eval ,(ast/loc `(,e0 . ,es) _ _ l) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -405,10 +405,10 @@
      (define new-state
        `(eval ,e0 ,rho ,new-i ,(cons `(frame apply ,e () ,es () ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
-    [`(inner return ,ae ,d ,_ ,i ,kappa)
+    [`(inner return ,ae ,d (,rho . ,_) ,i ,kappa)
      (define new-states
        (match kappa
-         ['halt (set `(halt ,d))]
+         ['halt (set `(halt ,d ,rho))]
          [(cons `(frame ,cat ,e ,ds ,es ,e0s ,rhok ,i+) kappa+)
           (match-define (cons new-i new-fi) (tick2 i i+ state))
           (if (empty? es)
@@ -423,7 +423,7 @@
                 [addr
                  (define lid (car addr))
                  (list lid (lbody id>lambda lid))]))
-            `(inner return ,e+ ,d () ,(tick i lid state) ,kont))]))
+            `(inner return ,e+ ,d (,rho) ,(tick i lid state) ,kont))]))
      `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))

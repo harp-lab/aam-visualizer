@@ -26,19 +26,21 @@
      (match-define (list l _) (get-li e))
      (~a l)]))
 
+(define (make-env rho a->sym)
+  (for/hash ([v (hash-keys rho)])
+    (define addr (hash-ref rho v))
+    (values (string->symbol (~a (only-syntax v)))
+            (hash 'instr (~a (cadr addr)) 'store (symbol->string(a->sym addr))))))
+
 (define (state-node id state a->sym sk)
   (match (car state)
     ['eval
-     (define rho (caddr state))
      (hash
       'id id
       'form "eval"
       'start (loc-start (cadr state))
       'end (loc-end (cadr state))
-      'env (for/hash ([v (hash-keys rho)])
-             (define addr (hash-ref rho v))
-             (values (string->symbol (~a (only-syntax v)))
-                     (hash 'instr (~a(cadr addr)) 'store (symbol->string(a->sym addr)))))
+      'env (make-env (caddr state) a->sym)
       'data (hash
              'label (format "~a - eval" id)
              'syntax (~a (only-syntax state))
@@ -65,6 +67,7 @@
      (hash
       'id id
       'form "halt"
+      'env (make-env (caddr state) a->sym)
       'data (hash
              'label (format "~a - halt" id)
              'results (set-map (cadr state) print-val)))]
@@ -128,10 +131,11 @@
   (define (func-node n trans)
     (define id (n->sym n))
     (match n
-      [`(halt ,d)
+      [`(halt ,d ,rho)
        (hash
         'id (symbol->string id)
         'form "halt"
+        'env (make-env rho a->sym)
         'data (hash 'label (format "~a - halt" id)
                     'results (set-map d print-val))
         'children (hash))]
