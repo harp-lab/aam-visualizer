@@ -38,7 +38,10 @@
              'label (format "~a - eval" id)
              'syntax (~a (only-syntax state))
              'instrumentation (~a (cadr (get-li state)))
-             'kont (print-k (get-kappa state) sk)))]
+             'kont (print-k (get-kappa state) sk))
+      'states (list (list (~a (only-syntax state))
+                          (~a (cadr (get-li state)))
+                          (print-k (get-kappa state) sk))))]
     ['inner
      (hash
       'id id
@@ -49,7 +52,10 @@
              'label (format "~a - ~a" id (cadr state))
              'syntax (~a (only-syntax state))
              'instrumentation (~a (cadr (get-li state)))
-             'kont (print-k (get-kappa state) sk)))]
+             'kont (print-k (get-kappa state) sk))
+     'states (list (list (~a (only-syntax state))
+                         (~a (cadr (get-li state)))
+                         (print-k (get-kappa state) sk))))]
     ['halt
      (hash
       'id id
@@ -117,7 +123,8 @@
        (hash
         'id (symbol->string id)
         'form "halt"
-        'data (hash 'label (format "~a - halt" id) 'results (set-map d print-val))
+        'data (hash 'label (format "~a - halt" id)
+                    'results (set-map d print-val))
         'children (hash))]
       [`(,form .,_)
        (hash
@@ -153,13 +160,16 @@
         'data (hash
                'label (format "~a - ~a" id (car n))
                'to-syntax (~a (only-syntax syntax)))
+        'states (list (list (~a (only-syntax syntax))))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]
       [states
        (define s (if (set? states) (set-first states) states))
+       (define synt (lambda(s)(~a (only-syntax s))))
        (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
        (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
+       (define in-one (lambda(s)(list (synt s) (instr s) (kont s))))
        (match s
          [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s kstore)]
          [else
@@ -167,9 +177,10 @@
           (hash-set* base
                      'data (hash
                             'label (format "~a - ~a" id (hash-ref base 'form))
-                            'syntax (if (set? states)(set-map states (lambda(s)(~a (only-syntax s))))(~a (only-syntax s)))
+                            'syntax (if (set? states)(set-map states synt)(synt s))
                             'instrumentation (if (set? states)(set-map states instr)(instr s))
                             'kont (if (set? states)(set-map states kont)(kont s)))
+                     'states (if (set? states)(set-map states in-one)(list (in-one s)))
                      'children (for/hash([child (hash-keys trans)])
                                  (values (n->sym child)
                                          (make-edge (hash-ref trans child)))))])]))
