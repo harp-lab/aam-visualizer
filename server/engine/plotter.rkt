@@ -9,16 +9,17 @@
 
 (define (print-k k sigmak)
   (match k
-    ['halt "halt"]
-    [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
-    [addr
-     (format "~a->~a" (car addr)
-             (set-map (hash-ref sigmak addr)
-                      (lambda(k)
-                        (match k
-                          ['halt "halt"]
-                          [(cons `(frame ,cat . ,_) k) (format "~a::~a" cat (print-k k sigmak))]
-                          [addr (format "~a->..." (car addr))]))))]))
+    ['halt (list "halt")]
+    [(cons `(frame ,cat . ,_) k) (map (lambda(k2)(format "~a::~a" cat k2)) (print-k k sigmak))]
+    [addr (flatten
+           (set-map
+            (hash-ref sigmak addr)
+            (lambda(k)
+              (map (lambda(k2)(format "~a->~a" (car addr) k2))
+                   (match k
+                     ['halt (list "halt")]
+                     [(cons `(frame ,cat . ,_) k) (map (lambda(k2)(format "~a::~a" cat k2)) (print-k k sigmak))]
+                     [addr (list (format "~a->..." (car addr)))])))))]))
 
 (define (print-val v)
   (match v
@@ -42,10 +43,7 @@
       'end (loc-end (cadr state))
       'env (make-env (caddr state) a->sym)
       'data (hash
-             'label (format "~a - eval" id)
-             'syntax (~a (only-syntax state))
-             'instrumentation (~a (cadr (get-li state)))
-             'kont (print-k (get-kappa state) sk))
+             'label (format "~a - eval" id))
       'states (list (hash 'syntax (~a (only-syntax state))
                           'instr (~a (cadr (get-li state)))
                           'stack (print-k (get-kappa state) sk))))]
@@ -56,10 +54,7 @@
       'start (loc-start (caddr state))
       'end (loc-end (caddr state))
       'data (hash
-             'label (format "~a - ~a" id (cadr state))
-             'syntax (~a (only-syntax state))
-             'instrumentation (~a (cadr (get-li state)))
-             'kont (print-k (get-kappa state) sk))
+             'label (format "~a - ~a" id (cadr state)))
      'states (list (hash 'syntax (~a (only-syntax state))
                          'instr (~a (cadr (get-li state)))
                          'stack (print-k (get-kappa state) sk))))]
@@ -154,8 +149,7 @@
         'start (loc-start syntax)
         'end (loc-end syntax)
         'data (hash
-               'label (format "~a - ~a" id lid)
-               'syntax (~a (only-syntax syntax)))
+               'label (format "~a - ~a" id lid))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]))
@@ -173,9 +167,6 @@
         'data (hash
                'label (format "~a - ~a" id (car n))
                'to-syntax (~a (only-syntax syntax)))
-        'states (list (hash 'syntax (~a (only-syntax syntax))
-                            'instr "n/a"
-                            'stack "n/a"))
         'children (for/hash([child (hash-keys trans)])
                     (values (n->sym child)
                             (make-edge (hash-ref trans child)))))]
@@ -183,7 +174,7 @@
        (define s (if (set? states) (set-first states) states))
        (define synt (lambda(s)(~a (only-syntax s))))
        (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
-       (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (~a k)][k (print-k k kstore)])))
+       (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (list (~a k))][k (print-k k kstore)])))
        (define in-one (lambda(s)(hash 'syntax (synt s) 'instr (instr s) 'stack (kont s))))
        (match s
          [`((or 'halt 'notfound) . ,_) (state-node (symbol->string id) s a->sym kstore)]
@@ -191,10 +182,7 @@
           (define base (state-node (symbol->string id) s a->sym kstore))
           (hash-set* base
                      'data (hash
-                            'label (format "~a - ~a" id (hash-ref base 'form))
-                            'syntax (if (set? states)(set-map states synt)(synt s))
-                            'instrumentation (if (set? states)(set-map states instr)(instr s))
-                            'kont (if (set? states)(set-map states kont)(kont s)))
+                            'label (format "~a - ~a" id (hash-ref base 'form)))
                      'states (if (set? states)(set-map states in-one)(list (in-one s)))
                      'children (for/hash([child (hash-keys trans)])
                                  (values (n->sym child)
