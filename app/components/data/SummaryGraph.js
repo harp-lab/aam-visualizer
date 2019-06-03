@@ -8,6 +8,8 @@ class SummaryGraph extends AbstractGraph {
       default:
         node = new ParentNode(data.form, data.data, data.children, data.start, data.end);
         node.detail = data.detail;
+        node.env = data.env;
+        node.states = data.states;
         break;
     }
     return node;
