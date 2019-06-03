@@ -99,11 +99,16 @@ class StatesViewer extends Component {
       
       const items = this.props.data
         .map((data, index) => {
+          const stackItems = data.stack
+            .map((data, index) => {
+              return <Typography key={ index }>{ data }</Typography>;
+            });
+
           return (
             <TableRow key={ index }>
               <TableCell>{ data.syntax }</TableCell>
               <TableCell>{ data.instr }</TableCell>
-              <TableCell>{ data.stack }</TableCell>
+              <TableCell>{ stackItems }</TableCell>
             </TableRow>);
         });
   
