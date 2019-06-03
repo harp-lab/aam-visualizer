@@ -21,19 +21,23 @@ class PropViewer extends Component {
 
       const states = node.states;
       const env = node.env;
-      if (states && env)
+      const mainContent = (
+        <React.Fragment>
+          { dataElement }
+          { (states ? <StatesViewer data={ states } /> : undefined) }
+        </React.Fragment>);
+      if (env)
         element = (
           <SplitPane>
             <Pane width="50%" overflow='auto'>
-              { dataElement }
-              <StatesViewer data={ node.states } />
+              { mainContent }
             </Pane>
             <Pane width="50%" overflow='auto'>
-              <EnvViewer data={ node.env } store={ this.props.store }/>
+              <EnvViewer data={ env } store={ this.props.store }/>
             </Pane>
           </SplitPane>);
       else
-        element = dataElement;
+        element = mainContent;
     } else
       element = <Message data='No element selected'/>;
     
@@ -86,54 +90,83 @@ class DataViewer extends Component {
 
 class StatesViewer extends Component {
   render() {
-    const states = this.props.data.map(data => {
-      return (
-        <ListItem key={ data }>
-          <ListItemText>{ data[0] }</ListItemText>
-          <ListItemText>{ data[1] }</ListItemText>
-        </ListItem>);
-    });
+    let element;
+    if (this.props.data.length > 0) {
+      const labels = ['syntax', 'instr', 'stack']
+        .map(label => {
+          return <TableCell key={ label }>{ label }</TableCell>
+        });
+      
+      const items = this.props.data
+        .map((data, index) => {
+          return (
+            <TableRow key={ index }>
+              <TableCell>{ data.syntax }</TableCell>
+              <TableCell>{ data.instr }</TableCell>
+              <TableCell>{ data.stack }</TableCell>
+            </TableRow>);
+        });
+  
+      element = (
+        <React.Fragment>
+          <Typography variant='h5' align='center'>States</Typography>
+          <Table size='small'>
+            <TableHead>
+              <TableRow>{ labels }</TableRow>
+            </TableHead>
+            <TableBody>
+              { items }
+            </TableBody>
+          </Table>
+        </React.Fragment>);
+    } else
+      element = <Typography variant='h6'>No states</Typography>;
 
-    return <List>{ states }</List>;
+    return element;
   }
 }
 
 class EnvViewer extends Component {
   render() {
-    const envLabels = ['var', 'instr', 'addr', 'store']
-      .map(label => {
-        return <TableCell key={ label }>{ label }</TableCell>
-      })
+    let element;
+    if (Object.keys(this.props.data).length > 0) {
+      const labels = ['var', 'instr', 'store']
+        .map(label => {
+          return <TableCell key={ label }>{ label }</TableCell>
+        });
+      
+      const items = Object.entries(this.props.data)
+        .map(([id, data]) => {
+          // get store value
+          const storeItems = this.props.store[data.store]
+            .map(data => {
+              return <Typography key={ data }>{ data }</Typography>;
+            });
+  
+          return (
+            <TableRow key={ id }>
+              <TableCell>{ id }</TableCell>
+              <TableCell>{ data.instr }</TableCell>
+              <TableCell>{ storeItems }</TableCell>
+            </TableRow>);
+        });
+      
+      element = (
+        <React.Fragment>
+          <Typography variant='h5' align='center'>Environment</Typography>
+          <Table size='small'>
+            <TableHead>
+              <TableRow>{ labels }</TableRow>
+            </TableHead>
+            <TableBody>
+              { items }
+            </TableBody>
+          </Table>
+        </React.Fragment>);
+    }
+    else
+      element = <Message data='Empty environment'/>;
     
-    const envItems = Object.entries(this.props.data)
-      .map(([id, data]) => {
-        // get store value
-        const storeItems = this.props.store[data.store]
-          .map(data => {
-            return <Typography key={ data }>{ data }</Typography>;
-          });
-
-        return (
-          <TableRow key={ id }>
-            <TableCell>{ id }</TableCell>
-            <TableCell>{ data.instr }</TableCell>
-            <TableCell>{ data.store }</TableCell>
-            <TableCell>{ storeItems }</TableCell>
-          </TableRow>);
-      });
-    const element = (
-      <React.Fragment>
-        <Typography variant='h5' align='center'>Environment</Typography>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>{ envLabels }</TableRow>
-          </TableHead>
-          <TableBody>
-            { envItems }
-          </TableBody>
-        </Table>
-      </React.Fragment>);
-
     return element;
   }
 }

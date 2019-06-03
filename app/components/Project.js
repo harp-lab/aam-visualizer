@@ -422,7 +422,7 @@ class Project extends Component {
       element = subGraph.nodes[subGraph.metadata.selectedNode];
     }
     return (
-      <Pane height='50%'>
+      <Pane height='50%' overflow='auto'>
         <PropViewer data={ element } store={ this.props.project.store } />
       </Pane>);
   }
