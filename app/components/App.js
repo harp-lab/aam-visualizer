@@ -6,6 +6,8 @@ import Typography from '@material-ui/core/Typography';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+import ThemeProvider from '@material-ui/styles/ThemeProvider';
+import Theme from './Theme';
 import Loading from './Loading.js';
 import ProjectList from './ProjectList';
 import Project from './Project';
@@ -227,34 +229,49 @@ class App extends Component {
         break;
     }
 
+    let message;
+    if (process.env.NODE_ENV == 'development')
+      message = (
+        <Typography
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            backgroundColor: Theme.palette.warning,
+            color: Theme.palette.common.white
+          }}>
+          Development Server
+        </Typography>);
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden' }}>
-        <AppBar position='static'>
-          <Toolbar>
-            <ProjectListButton onClick={ this.deselectProject }/>
-            <Typography
-              variant='h6'
-              color='inherit'
-              style={ {
-                flex: '1 1 auto',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                textAlign: 'center'
-              } }>
-              { title }
-            </Typography>
-            { buttons }
-          </Toolbar>
-        </AppBar>
-        { view }
-        <NotifySnackbar
-          queue={ this.state.snackbarQueue }
-          onClose={ this.nextSnackbar } />
-      </div>);
+      <ThemeProvider theme={ Theme }>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden' }}>
+          { message }
+          <AppBar position='static'>
+            <Toolbar>
+              <ProjectListButton onClick={ this.deselectProject }/>
+              <Typography
+                variant='h6'
+                color='inherit'
+                style={ {
+                  flex: '1 1 auto',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  textAlign: 'center'
+                } }>
+                { title }
+              </Typography>
+              { buttons }
+            </Toolbar>
+          </AppBar>
+          { view }
+          <NotifySnackbar
+            queue={ this.state.snackbarQueue }
+            onClose={ this.nextSnackbar } />
+        </div>
+      </ThemeProvider>);
   }
 }
 
