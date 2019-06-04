@@ -74,7 +74,7 @@
              'label (format "~a - ~a" id other)))]))
 
 (define (full-state-graph states tables)
-  (match-define `(,id>lambda ,instr ,store ,kstore) tables)
+  (match-define (list store kstore instr id>lambda) tables)
   (define addr>id (for/hash([a (hash-keys store)][id (range (hash-count store))])(values a id)))
   (define (a->sym addr) (string->symbol (~a (hash-ref addr>id addr))))
   (define (state-gen states state-ids state-tran)
@@ -93,7 +93,7 @@
   (state-gen states state-ids state-tran))
 
 (define (function-graphs _ groupings tables)
-  (match-define (list id>lambda insrt store kstore) tables)
+  (match-define (list store kstore instr id>lambda) tables)
   (match-define (list init trans subs) groupings)
   (define all-nodes (list->set (apply append (hash-keys trans)
                            (map (lambda(sv)(hash-keys (cadr sv))) (hash-values subs)))))
