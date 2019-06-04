@@ -15,6 +15,7 @@
   "dependencies": {
     "@material-ui/core": "^4.0.1",
     "@material-ui/icons": "^4.0.1",
+    "@material-ui/styles": "^4.0.2",
     "codemirror": "^5.47.0",
     "cytoscape": "^3.6.2",
     "express": "^4.17.1",

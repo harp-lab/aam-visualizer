@@ -3,7 +3,10 @@ import amber from '@material-ui/core/colors/amber';
 
 const theme = createMuiTheme({
   palette: {
-    warning: amber[700]
+    warning: {
+      main: amber[700],
+      contrastText: '#fff'
+    }
   }
 });
 

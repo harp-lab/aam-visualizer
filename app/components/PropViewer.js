@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
+import Toolbar from '@material-ui/core/Toolbar';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import Typography from '@material-ui/core/Typography';
+import withTheme from '@material-ui/styles/withTheme';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
 
@@ -114,7 +116,14 @@ class StatesViewer extends Component {
   
       element = (
         <React.Fragment>
-          <Typography variant='h5' align='center'>States</Typography>
+          <Toolbar
+            variant='dense'
+            style={{
+              backgroundColor: this.props.theme.palette.secondary.main,
+              color: this.props.theme.palette.secondary.contrastText
+            }}>
+            <Typography>States</Typography>
+          </Toolbar>
           <Table size='small'>
             <TableHead>
               <TableRow>{ labels }</TableRow>
@@ -130,6 +139,7 @@ class StatesViewer extends Component {
     return element;
   }
 }
+StatesViewer = withTheme(StatesViewer);
 
 class EnvViewer extends Component {
   render() {
@@ -158,7 +168,14 @@ class EnvViewer extends Component {
       
       element = (
         <React.Fragment>
-          <Typography variant='h5' align='center'>Environment</Typography>
+          <Toolbar
+            variant='dense'
+            style={{
+              backgroundColor: this.props.theme.palette.secondary.main,
+              color: this.props.theme.palette.secondary.contrastText
+            }}>
+            <Typography>Environment</Typography>
+          </Toolbar>
           <Table size='small'>
             <TableHead>
               <TableRow>{ labels }</TableRow>
@@ -175,5 +192,6 @@ class EnvViewer extends Component {
     return element;
   }
 }
+EnvViewer = withTheme(EnvViewer);
 
 export default PropViewer;

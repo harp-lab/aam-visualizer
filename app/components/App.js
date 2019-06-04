@@ -236,8 +236,8 @@ class App extends Component {
           style={{
             display: 'flex',
             justifyContent: 'center',
-            backgroundColor: Theme.palette.warning,
-            color: Theme.palette.common.white
+            backgroundColor: Theme.palette.warning.main,
+            color: Theme.palette.warning.contrastText
           }}>
           Development Server
         </Typography>);
