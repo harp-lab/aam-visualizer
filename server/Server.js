@@ -268,6 +268,8 @@ class Server {
             project.importGraphs(data.graphs);
           }
           project.status = data.status;
+          if (data.status == 'error')
+            project.error = data.error;
           project.store = data.store;
           callback(projectId);
         } else

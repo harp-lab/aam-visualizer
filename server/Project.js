@@ -45,6 +45,7 @@ class Project {
     return {
       id: projectId,
       status: this.status,
+      error: this.error,
       code: this.code,
       graphs: this.graphs,
       store: this.store,

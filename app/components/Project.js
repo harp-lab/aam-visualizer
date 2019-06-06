@@ -23,11 +23,11 @@ class Project extends Component {
 
     switch (project.status) {
       case project.STATUSES.edit:
-      case project.STATUSES.error:
         if (project.code == '')
           this.props.getCode(this.props.id);
         break;
       case project.STATUSES.done:
+      case project.STATUSES.error:
         if (Object.keys(project.graphs).length == 0)
           this.getGraphs();
         break;
@@ -87,6 +87,7 @@ class Project extends Component {
         const data = await res.json();
         const project = this.props.project;
         project.status = data.status;
+        project.error = data.error;
         project.code = data.code;
         if (project.status == project.STATUSES.done) {
           project.importGraphs(data.graphs);
@@ -191,7 +192,7 @@ class Project extends Component {
         view = <Editor
           data={ project.code }
           error
-          errorContent={ ' TODO ' } />;
+          errorContent={ project.error } />;
         break;
     };
     return view;

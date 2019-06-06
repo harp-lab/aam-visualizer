@@ -14,7 +14,7 @@
   
   (define (error s)
     (log LOG_TYPE_ENGINE (string-append "ERROR: " s))
-    (exit 1))
+    (exit 2))
 
   (define hashsym_counter 0)
   (define (hashsym s)
@@ -24,7 +24,7 @@
   (define (peek n)
     (if (> (length toks) n)
       (list-ref toks n)
-      '(tok "")))
+      (hash 'tok "")))
   (define (peek-e n)
     (tok-s (peek n)))
   (define (expect e)
@@ -34,6 +34,10 @@
         (set! toks (rest toks))
         tok)
       (error (format "expected token \"~a\"" e))))
+  (define (ensure n)
+    (if (< (length toks) n)
+      (exit 2)
+      #t))
   
   (define (prim? e)
     (member e '("begin" "lambda" "define" "if" "quote")))
@@ -67,6 +71,7 @@
     (define s
       (match e
         [(or "(" "[") (parseP)]
+        ["" (error "invalid syntax")]
         [_ (parseA)]))
     (match (peek-e 0)
       [(or ")" "]") `(,s)]
@@ -100,12 +105,14 @@
         (define form (tok-s (hash-ref ast (string->symbol aTok))))
         (case form
           [("lambda")
+            (ensure 3)
             (match-define `(,lambda-tok ,args-tok ,body-tok) toks)
             (define children
               (for/hash ([tok `(,args-tok ,body-tok)] [label '("args" "body")])
                 (values (string->symbol (tok-s tok)) (hash 'label label))))
             (hash 'form form 'children children)]
           [("define")
+            (ensure 3)
             (match-define `(,define-tok ,id-tok ,body-toks ...) toks)
             (define body-tok-lst
               (if (list? body-toks)
@@ -116,15 +123,18 @@
                 (values (string->symbol (tok-s tok)) (hash))))
             (hash 'form form 'children children)]
           [("if")
+            (ensure 4)
             (match-define `(,if-tok ,ge-tok ,te-tok ,ee-tok) toks)
             (define children
               (for/hash ([tok `(,ge-tok ,te-tok ,ee-tok)] [label '("ge" "te" "ee")])
                 (values (string->symbol (tok-s tok)) (hash 'label label))))
             (hash 'form form 'children children)]
           [("quote")
+            (ensure 2)
             (match-define `(,quote-tok ,data-tok) toks)
             (hash 'form form 'children (hash (string->symbol (tok-s data-tok)) (hash)))]
           [("begin")
+            (ensure 2)
             (match-define `(,begin-tok ,body-toks ...) toks)
             (define body-tok-lst
               (if (list? body-toks)

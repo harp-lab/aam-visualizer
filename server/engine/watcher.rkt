@@ -19,6 +19,12 @@
   (write-json (hash-set (read-json in) 'status "error") out)
   (close-input-port in)
   (close-output-port out))
+(define (mark-parse-error input-path output-path)
+  (define in (open-input-file input-path))
+  (define out (open-output-file output-path))
+  (write-json (hash-set* (read-json in) 'status "error" 'error "parse") out)
+  (close-input-port in)
+  (close-output-port out))
 
 ; watcher loop
 (define (watcher)
@@ -47,9 +53,12 @@
       
       ; call engine
       (log LOG_TYPE_WATCHER (format "~a - calling engine" file))
-      (define success (system (format "racket engine.rkt -o ~a ~a" output-path input-path)))
-      (cond
-        [(not success)
+      (define exit_code (system/exit-code (format "racket engine.rkt -o ~a ~a" output-path input-path)))
+      (match exit_code
+        [2
+          (log LOG_TYPE_WATCHER (format "~a - engine failed (parser)" file))
+          (mark-parse-error input-path output-path)]
+        [(not 0)
           (log LOG_TYPE_WATCHER (format "~a - engine failed" file))
           (mark-error input-path output-path)])
       
