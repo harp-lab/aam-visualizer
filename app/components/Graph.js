@@ -56,8 +56,7 @@ const config = {
       style: { 'background-color': '#ffeb3b' }
     }
   ],
-  headless: true,
-  userZoomingEnabled: false
+  headless: true
 };
 
 class Graph extends Component {
