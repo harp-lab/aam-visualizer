@@ -198,7 +198,7 @@ class Graph extends Component {
   render() {
     return <div
       style={ style }
-      ref={ (ref) => this.cyRef = ref } />;
+      ref={ ref => this.cyRef = ref } />;
   }
 }
 

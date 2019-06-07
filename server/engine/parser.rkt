@@ -34,10 +34,6 @@
         (set! toks (rest toks))
         tok)
       (error (format "expected token \"~a\"" e))))
-  (define (ensure n)
-    (if (< (length toks) n)
-      (exit 2)
-      #t))
   
   (define (prim? e)
     (member e '("begin" "lambda" "define" "if" "quote")))
@@ -99,6 +95,10 @@
     (tokize (~a id) start end))
   
   (define (process toks)
+    (define (ensure n)
+      (if (< (length toks) n)
+        (exit 2)
+        #t))
     (define aTok (tok-s (first toks)))
     (match aTok
       [(regexp #rx"a")

@@ -60,7 +60,8 @@
           (mark-parse-error input-path output-path)]
         [(not 0)
           (log LOG_TYPE_WATCHER (format "~a - engine failed" file))
-          (mark-error input-path output-path)])
+          (mark-error input-path output-path)]
+        [else #t])
       
       (log LOG_TYPE_WATCHER (format "~a - deleting input" file))
       (delete-file input-path)
