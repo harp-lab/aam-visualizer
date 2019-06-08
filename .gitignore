@@ -5,5 +5,4 @@ node-debug.log
 *.*~
 *.*#
 server/engine/*-out
-package-lock.json
 server/engine/compiled
