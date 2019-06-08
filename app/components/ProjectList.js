@@ -5,7 +5,9 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import CallSplitIcon from '@material-ui/icons/CallSplit';
 import DeleteIcon from '@material-ui/icons/Delete';
+import Tooltip from '@material-ui/core/Tooltip';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 
@@ -56,8 +58,9 @@ class ProjectList extends Component {
           button
           key={ id }
           onClick={ () => this.props.onClick(id) }
-          align='flex-start'>
-          <ListItemText style={ { flex: '0 0 10em' } }>{ id }</ListItemText>
+          align='flex-start'
+          style={{ paddingRight: 144+16 }}>
+          <ListItemText style={{ flex: '0 0 10em' }}>{ project.analysis }</ListItemText>
           <ListItemText
             style={{
               overflow: 'hidden',
@@ -65,15 +68,20 @@ class ProjectList extends Component {
             }}>
             { (project.name || 'unnamed') }
           </ListItemText>
+          <ListItemText style={ { flex: '0 0 10em' } }>{ id }</ListItemText>
           <ListItemText style={ { flex: '0 0 10em' } }>{ project.status }</ListItemText>
-          <ListItemText style={{ flex: '0 0 10em' }}>{ project.analysis }</ListItemText>
           <ListItemSecondaryAction>
-            <ProjectMenu
-              onRename={ () => this.openRenameDialog(id) }
-              onFork={ () => this.props.onFork(id) } />
-            <IconButton onClick={ () => this.props.onDelete(id) }>
-              <DeleteIcon />
-            </IconButton>
+            <ProjectMenu onRename={ () => this.openRenameDialog(id) }/>
+            <Tooltip title='Fork'>
+              <IconButton onClick={ () => this.props.onFork(id) }>
+                <CallSplitIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Delete'>
+              <IconButton onClick={ () => this.props.onDelete(id) }>
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
           </ListItemSecondaryAction>
         </ListItem>
       );
@@ -119,9 +127,11 @@ class ProjectMenu extends Component {
   render() {
     return (
       <React.Fragment>
-        <IconButton onClick={ this.open }>
-          <MoreHorizIcon />
-        </IconButton>
+        <Tooltip title='More'>
+          <IconButton onClick={ this.open }>
+            <MoreHorizIcon />
+          </IconButton>
+        </Tooltip>
 
         <Menu
           anchorEl={ this.state.anchor }
@@ -133,13 +143,6 @@ class ProjectMenu extends Component {
               this.props.onRename();
             } }>
             rename
-          </MenuItem>
-          <MenuItem
-            onClick={ () => {
-              this.close();
-              this.props.onFork();
-            } }>
-            fork
           </MenuItem>
         </Menu>
       </React.Fragment>
