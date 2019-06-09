@@ -32,6 +32,7 @@ class Project extends Component {
           this.getGraphs();
         break;
     }
+    this.historyEnabled = true;
 
     this.saveCode = this.saveCode.bind(this);
     this.processCode = this.processCode.bind(this);
@@ -148,19 +149,36 @@ class Project extends Component {
     this.setState({ highlightedNodeIds });
   }
   addHistory() {
+    if (this.historyEnabled) {
+      const project = this.props.project;
+      const graphId = project.mainGraphId;
+  
+      const metadata = project.mainGraph.metadata;
+      if (!metadata.history)
+        metadata.history = [];
+      const data = {
+        mainNodeId: project.mainGraph.metadata.selectedNode,
+        subNodeId: (project.subGraph && project.subGraph.metadata.selectedNode)
+      };
+      metadata.history.push(data);
+  
+      this.saveGraphMetadata(graphId, { history: metadata.history });
+    }
+  }
+  history(index) {
+    this.historyEnabled = false;
     const project = this.props.project;
     const graphId = project.mainGraphId;
+    const subGraphId = project.subGraphId;
 
     const metadata = project.mainGraph.metadata;
-    if (!metadata.history)
-      metadata.history = [];
-    const data = {
-      mainNodeId: project.mainGraph.metadata.selectedNode,
-      subNodeId: (project.subGraph && project.subGraph.metadata.selectedNode)
-    };
-    metadata.history.push(data);
-
+    const record = metadata.history[index];
+    metadata.history = metadata.history.slice(0, index + 1);
+    this.selectMainNode(record.mainNodeId);
+    if (record.subNodeId)
+      this.selectNode(subGraphId, record.subNodeId);
     this.saveGraphMetadata(graphId, { history: metadata.history });
+    this.historyEnabled = true;
   }
 
   render() {
@@ -223,14 +241,24 @@ class Project extends Component {
     const history = this.props.project.mainGraph.metadata.history;
     let links;
     if (history)
-      links = history.map(data => {
+      links = history.map((data, index) => {
         const mainNodeId = data.mainNodeId;
         const subNodeId = data.subNodeId;
         let link;
         if (subNodeId)
-          link = <Link key={ `${mainNodeId}` }>{ `${mainNodeId} - ${subNodeId}` }</Link>;
+          link = (
+            <Link
+              key={ `${mainNodeId}` }
+              onClick={ () => this.history(index) }>
+              { `${mainNodeId} - ${subNodeId}` }
+            </Link>);
         else
-          link = <Link key={ `${mainNodeId}` }>{ mainNodeId }</Link>;
+          link = (
+          <Link
+            key={ `${mainNodeId}` }
+            onClick={ () => this.history(index) }>
+            { mainNodeId }
+          </Link>);
         return link;
       });
     return (
