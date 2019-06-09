@@ -47,97 +47,91 @@ class PropViewer extends Component {
   }
 }
 
-class Message extends Component {
-  render() {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-        <Typography variant='h6'>
-          { this.props.data }
-        </Typography>
-      </div>);
-  }
+function Message(props) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <Typography variant='h6'>
+        { props.data }
+      </Typography>
+    </div>);
 }
 
-class DataViewer extends Component {
-  render() {
-    const data = this.props.data;
+function DataViewer(props) {
+  const data = props.data;
 
-    let element;
-    if (data) {
-      const dataItems = Object.entries(data)
-      .map(([id, data]) => {
-        const string = typeof data == 'object' ? data.toString() : data;
-        const output = string || 'undefined';
-        return (
-          <ListItem key={ id }>
-            <ListItemText
-              primary={ id }
-              secondary={ output } />
-          </ListItem>);
+  let element;
+  if (data) {
+    const dataItems = Object.entries(data)
+    .map(([id, data]) => {
+      const string = typeof data == 'object' ? data.toString() : data;
+      const output = string || 'undefined';
+      return (
+        <ListItem key={ id }>
+          <ListItemText
+            primary={ id }
+            secondary={ output } />
+        </ListItem>);
+    });
+    element = <List>{ dataItems }</List>;
+  } else
+    element = <Message data='No data available' />
+
+  return element;
+}
+
+function StatesViewer(props) {
+  let element;
+  if (props.data.length > 0) {
+    const labels = ['syntax', 'instr', 'stack']
+      .map(label => {
+        return <TableCell key={ label }>{ label }</TableCell>
       });
-      element = <List>{ dataItems }</List>;
-    } else
-      element = <Message data='No data available' />
+    
+    const items = props.data
+      .map((data, index) => {
+        const stackItems = data.stack
+          .map((data, index) => {
+            return <Typography key={ index }>{ data }</Typography>;
+          });
 
-    return element;
-  }
-}
+        return (
+          <TableRow key={ index }>
+            <TableCell>{ data.syntax }</TableCell>
+            <TableCell>{ data.instr }</TableCell>
+            <TableCell>{ stackItems }</TableCell>
+          </TableRow>);
+      });
 
-class StatesViewer extends Component {
-  render() {
-    let element;
-    if (this.props.data.length > 0) {
-      const labels = ['syntax', 'instr', 'stack']
-        .map(label => {
-          return <TableCell key={ label }>{ label }</TableCell>
-        });
-      
-      const items = this.props.data
-        .map((data, index) => {
-          const stackItems = data.stack
-            .map((data, index) => {
-              return <Typography key={ index }>{ data }</Typography>;
-            });
+    element = (
+      <React.Fragment>
+        <Toolbar
+          variant='dense'
+          style={{
+            backgroundColor: props.theme.palette.secondary.main,
+            color: props.theme.palette.secondary.contrastText
+          }}>
+          <Typography>States</Typography>
+        </Toolbar>
+        <Table size='small'>
+          <TableHead>
+            <TableRow>{ labels }</TableRow>
+          </TableHead>
+          <TableBody>
+            { items }
+          </TableBody>
+        </Table>
+      </React.Fragment>);
+  } else
+    element = <Typography variant='h6'>No states</Typography>;
 
-          return (
-            <TableRow key={ index }>
-              <TableCell>{ data.syntax }</TableCell>
-              <TableCell>{ data.instr }</TableCell>
-              <TableCell>{ stackItems }</TableCell>
-            </TableRow>);
-        });
-  
-      element = (
-        <React.Fragment>
-          <Toolbar
-            variant='dense'
-            style={{
-              backgroundColor: this.props.theme.palette.secondary.main,
-              color: this.props.theme.palette.secondary.contrastText
-            }}>
-            <Typography>States</Typography>
-          </Toolbar>
-          <Table size='small'>
-            <TableHead>
-              <TableRow>{ labels }</TableRow>
-            </TableHead>
-            <TableBody>
-              { items }
-            </TableBody>
-          </Table>
-        </React.Fragment>);
-    } else
-      element = <Typography variant='h6'>No states</Typography>;
-
-    return element;
-  }
+  return element;
 }
 StatesViewer = withTheme(StatesViewer);
 

@@ -44,7 +44,12 @@ class Project {
   }
 
   get mainGraph() { return this.graphs[this.mainGraphId]; }
-  get subGraph() { return this.graphs[this.subGraphId]; }
+  get subGraph() {
+    let graph;
+    if (this.subGraphId)
+      graph = this.graphs[this.subGraphId];
+    return graph;
+  }
   get subGraphId() {
     const graph = this.mainGraph;
     const nodeId = graph.metadata.selectedNode;

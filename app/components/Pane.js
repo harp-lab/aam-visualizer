@@ -13,13 +13,13 @@ class Pane extends Component {
       const props = {...widthProps, ...heightProps};
       return React.cloneElement(child, props);
     });
-    const style = {...this.props.style, ...{
+    const style = {...{
       display: 'flex',
       flexDirection: 'column',
       height: height ? height : '100%',
       width: width ? width : '100%',
       overflow: overflow ? overflow : 'hidden'
-    }};
+    }, ...this.props.style};
 
     return <div style={ style }>{ children }</div>;
   }
