@@ -105,24 +105,25 @@ class Server {
     app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
   initWatcher() {
-    const args = [`${Consts.ENGINE_DIR}/watcher.rkt`];
-    const options = { cwd: Consts.ENGINE_DIR };
-    this.watcher = child_process.spawn('racket', args, options);
-    
-    // pipe console output
-    this.watcher.stdout.setEncoding('utf8');
-    this.watcher.stdout.on('data', data => {
-      console.log(data.trim());
+    G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
+    const options = {
+      stdio: [0, 1, 2, 'ipc']
+    };
+    const watcher = child_process.fork(path.resolve(__dirname, 'Watcher.js'), [], options);
+
+    watcher.on('message', data => {
+      const id = data.id;
+      this.readProject(Consts.OUTPUT_DIR, id);
     });
-    this.watcher.stderr.setEncoding('utf8');
-    this.watcher.stderr.on('data', data => {
-      G.log(Consts.LOG_TYPE_WATCHER, `ERROR: ${data.trim()}`);
-    });
-    this.watcher.on('close', code => {
+    watcher.on('close', code => {
       G.log(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
     });
-    G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
+    
+    this.watcher = watcher;
+  }
+  notifyWatcher(file) {
+    this.watcher.send({ id: file });
   }
 
   createProject() {
@@ -164,8 +165,9 @@ class Server {
       case project.STATUSES.edit:
         project.status = project.STATUSES.process;
         this.writeProject(projectId, Consts.INPUT_DIR);
+        this.notifyWatcher(projectId);
         fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
-        this.checkProject(projectId);
+        //this.checkProject(projectId);
         break;
       default:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - immutable`);
@@ -180,6 +182,7 @@ class Server {
           G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: process`)
           setTimeout(() => this.checkProject(projectId), 1000);
           break;
+        case project.STATUSES.error:
         case project.STATUSES.done:
           G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: done`);
           break;
