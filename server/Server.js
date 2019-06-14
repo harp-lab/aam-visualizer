@@ -109,7 +109,7 @@ class Server {
     const options = {
       stdio: [0, 1, 2, 'ipc']
     };
-    const watcher = child_process.fork(path.resolve(__dirname, 'Watcher.js'), [], options);
+    const watcher = child_process.fork(path.resolve(__dirname, 'watcher.js'), [], options);
 
     watcher.on('message', data => {
       const id = data.id;
