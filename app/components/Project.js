@@ -10,7 +10,9 @@ import Pane from './Pane';
 import Editor from './Editor';
 import Graph from './Graph';
 import FunctionGraph from './FunctionGraph';
+import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
+import CodeMark from './data/CodeMark';
 
 class Project extends Component {
   constructor(props) {
@@ -19,7 +21,7 @@ class Project extends Component {
     const project = this.props.project;
     const highlightedNodeIds = undefined;
     this.state = {
-      highlightedNodeIds,
+      highlightedNodeIds
     };
 
     switch (project.status) {
@@ -42,6 +44,7 @@ class Project extends Component {
     this.unselectNode = this.unselectNode.bind(this);
     this.selectMainNode = this.selectMainNode.bind(this);
     this.selectEdge = this.selectEdge.bind(this);
+    this.hoverNodes = this.hoverNodes.bind(this);
   }
   saveLocalCode(code) {
     const project = this.props.project;
@@ -95,6 +98,7 @@ class Project extends Component {
         project.code = data.code;
         if (project.status == project.STATUSES.done) {
           project.importGraphs(data.graphs);
+          project.importAst(data.ast);
           project.store = data.store;
         }
         project.analysis = data.analysis
@@ -138,6 +142,9 @@ class Project extends Component {
       
       this.addHistory();
     }
+  }
+  hoverNodes(graphId, nodeIds) {
+    this.saveGraphMetadata(graphId, { hoverNodes: nodeIds });
   }
   selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
@@ -225,7 +232,7 @@ class Project extends Component {
     const historyElement = this.renderHistory();
     const selectElement = this.renderSelect();
     const graphElement = this.renderGraph();
-    const editorElement = this.renderEditor();
+    const editorElement = this.renderCodeViewer();
     const propViewerElement =this.renderPropViewer();
 
     return (
@@ -311,6 +318,7 @@ class Project extends Component {
           data={ mainGraph.export() }
           positions={ mainGraph.metadata.positions }
           selectedNode={ mainGraph.metadata.selectedNode }
+          hoverNodes={ mainGraph.metadata.hoverNodes }
           onNodeSelect={ this.selectMainNode }
           onNodeUnselect={ this.selectMainNode }
           onSave={ this.saveGraphMetadata } />;
@@ -319,7 +327,7 @@ class Project extends Component {
 
     return graphElement;
   }
-  renderEditor() {
+  renderCodeViewer() {
     const project = this.props.project;
     const mainGraphId = project.mainGraphId;
     const mainGraph = project.mainGraph;
@@ -328,49 +336,49 @@ class Project extends Component {
 
     // generate marks
     const marks = {};
-    for (const [id, node] of Object.entries(mainGraph.nodes)) {
-      if (node.start && node.end)
-        marks[id] = {
-          start: node.start,
-          end: node.end,
-          graphId: mainGraphId
-        };
-    }
-    if (subGraphId) {
-      for (const [id, node] of Object.entries(subGraph.nodes)) {
-        if (node.start && node.end)
-          marks[id] = {
-            start: node.start,
-            end: node.end,
-            graphId: subGraphId
-          };
+    for (const [id, data] of Object.entries(project.ast))
+      marks[id] = new CodeMark(data.start, data.end);
+    function addMarks(graphId, graph) {
+      for (const [id, node] of Object.entries(graph.nodes)) {
+        const astLink = node.astLink;
+        if (astLink)
+          marks[astLink].addNode(graphId, id);
       }
+    }
+    addMarks(mainGraphId, mainGraph);
+    if (subGraphId) {
+      addMarks(subGraphId, subGraph);
+      
     }
 
     let selected, selectFunc;
     if (subGraphId) {
-      selected = subGraph.metadata.selectedNode;
+      const selectedNode = subGraph.metadata.selectedNode;
+      if (selectedNode)
+        selected = subGraph.nodes[selectedNode].astLink;
       selectFunc = (graphId, nodeId) => {
         if (graphId == mainGraphId)
           this.selectMainNode(nodeId);
         else
           this.selectNode(graphId, nodeId);
       };
-    } else
-      selected = mainGraph.metadata.selectedNode;
-
-    let editorElement = (
-      <Pane height='50%'>
-        <Editor
+    } else {
+      const selectedNode = mainGraph.metadata.selectedNode;
+      if (selectedNode)
+        selected = mainGraph.nodes[selectedNode].astLink;
+    }
+    
+    return (
+      <Pane height='50%' overflow='auto'>
+        <CodeViewer
           id={ this.props.id }
           type={ (subGraphId || mainGraphId) }
-          data={ project.code }
+          code={ project.code }
           marks={ marks }
           selected={ selected }
-          onNodeSelect={ (selectFunc || this.selectNode) } />
+          onNodeSelect={ (selectFunc || this.selectNode) }
+          onCodeHover={ this.hoverNodes } />
       </Pane>);
-    
-    return editorElement;
   }
   renderPropViewer() {
     const project = this.props.project;

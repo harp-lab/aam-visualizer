@@ -6,7 +6,7 @@ class SummaryGraph extends AbstractGraph {
     let node;
     switch (data.form) {
       default:
-        node = new ParentNode(data.form, data.data, data.children, data.start, data.end);
+        node = new ParentNode(data.form, data.data, data.children, data.astLink);
         node.detail = data.detail;
         node.env = data.env;
         node.states = data.states;

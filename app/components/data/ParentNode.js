@@ -1,8 +1,8 @@
 import LeafNode from './LeafNode';
 
 class ParentNode extends LeafNode {
-  constructor(form, data, children, start, end) {
-    super(form, data, start, end);
+  constructor(form, data, children, astLink) {
+    super(form, data, astLink);
     this.children = children;
   }
 }

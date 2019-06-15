@@ -54,6 +54,10 @@ const config = {
         return element.hasClass('highlighted') && element.selected();
       },
       style: { 'background-color': '#ffeb3b' }
+    },
+    {
+      selector: '.hover',
+      style: { 'background-color': '#b388ff' }
     }
   ],
   headless: true
@@ -66,6 +70,7 @@ class Graph extends Component {
     config.elements = this.props.data;
     this.cy = cytoscape(config);
     this.highlight();
+    this.hover();
 
     this.initNodeEvents();
     this.initEdgeEvents();
@@ -149,6 +154,17 @@ class Graph extends Component {
       }
     });
   }
+  hover() {
+    const hoverNodes = this.props.hoverNodes;
+    this.cy.batch(() => {
+      this.cy.nodes().removeClass('hover');
+      if (hoverNodes) {
+        hoverNodes.forEach(nodeId => {
+          this.cy.$(`#${nodeId}`).addClass('hover');
+        })
+      }
+    });
+  }
   save(props) {
     const positions = {};
     props.data.forEach(node => {
@@ -181,6 +197,7 @@ class Graph extends Component {
     
     this.select();
     this.highlight();
+    this.hover();
 
     const bounds = this.cyRef.getBoundingClientRect();
     const heightUpdate = bounds.height !== this.height;
