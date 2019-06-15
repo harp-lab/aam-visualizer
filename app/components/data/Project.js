@@ -1,6 +1,7 @@
 import AstGraph from './AstGraph';
 import DefaultGraph from './DefaultGraph';
 import SummaryGraph from './SummaryGraph';
+import CodePos from './CodePos';
 
 const GRAPHS = {
   ast: 'ast'
@@ -40,7 +41,18 @@ class Project {
       }
     }
 
-    this.mainGraphId = 'funcs';
+    //this.mainGraphId = 'funcs';
+    this.mainGraphId = 'states';
+  }
+  importAst(ast) {
+    this.ast = {};
+    for (const [id, data] of Object.entries(ast)) {
+      if (data.start && data.end)
+        this.ast[id] = {
+          start: new CodePos(data.start[0], data.start[1]),
+          end: new CodePos(data.end[0], data.end[1])
+        };
+    }
   }
 
   get mainGraph() { return this.graphs[this.mainGraphId]; }

@@ -269,6 +269,7 @@ class Server {
           if (data.graphs) {
             project.status = project.STATUSES.process;
             project.importGraphs(data.graphs);
+            project.ast = data.ast;
           }
           project.status = data.status;
           if (data.status == 'error')

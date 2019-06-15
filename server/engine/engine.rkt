@@ -62,14 +62,11 @@
     'status "done"
     'store store
     'graphs (hash-union (hash
-      'ast-TODO (hash
-        'type "ast"
-        'graph code-ast
-        'start code-astStart)
       'states (hash
         'graph state-graph)
       'funcs func-graph
-    ) func-detail-graphs)))
+    ) func-detail-graphs)
+    'ast code-ast))
 
 (define out
   (if (non-empty-string? (output-file-path))
