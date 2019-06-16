@@ -361,11 +361,15 @@ class Project extends Component {
         else
           this.selectNode(graphId, nodeId);
       };
-      const hoveredNodes = mainGraph.metadata.hoverNodes;
-      if (hoveredNodes)
-        hovered = hoveredNodes.map(node => {
-          return mainGraph.nodes[node].astLink;
+      const hoveredNodes = subGraph.metadata.hoverNodes;
+      if (hoveredNodes) {
+        hovered = [];
+        hoveredNodes.forEach(node => {
+          const astLink = subGraph.nodes[node].astLink;
+          if (astLink)
+            hovered.push(astLink);
         });
+      }
     } else {
       const selectedNode = mainGraph.metadata.selectedNode;
       if (selectedNode)
@@ -381,11 +385,14 @@ class Project extends Component {
       }
     }
     
+    let graphIds = [mainGraphId];
+    if (subGraphId)
+      graphIds.push(subGraphId);
     return (
       <Pane height='50%' overflow='auto'>
         <CodeViewer
           id={ this.props.id }
-          type={ (subGraphId || mainGraphId) }
+          graphIds={ graphIds }
           code={ project.code }
           marks={ marks }
           selected={ selected }
