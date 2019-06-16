@@ -61,10 +61,7 @@ function CodeViewer(props) {
       if (hovered && hoveredMark.inRange(new CodePos(lineId, chId)))
         style = { backgroundColor: '#d1c4e9' };
       
-      /*const hoveredNodeMark = marks[props.hovered];
-      if (props.hovered && hoveredNodeMark.inRange(new CodePos(lineId, chId)))
-        style = { backgroundColor: '#d1c4e9' };*/
-      if (props.hovered && props.hovered.length > 0) {
+      if (props.hovered) {
         props.hovered.forEach(astId => {
           const mark = marks[astId];
           if (mark.inRange(new CodePos(lineId, chId)))

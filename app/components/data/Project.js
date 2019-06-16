@@ -21,6 +21,18 @@ class Project {
     };
     this.status = this.STATUSES.empty;
   }
+  import(data) {
+    this.status = data.status;
+    this.error = data.error;
+    
+    this.code = data.code;
+    this.analysis = data.analysis
+    if (this.status == this.STATUSES.done) {
+      this.importGraphs(data.graphs);
+      this.importAst(data.ast);
+      this.store = data.store;
+    }
+  }
   importGraphs(graphs) {
     for (const [id, data] of Object.entries(graphs)) {
       switch (id) {

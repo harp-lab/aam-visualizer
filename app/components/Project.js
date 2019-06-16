@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -14,153 +14,112 @@ import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
 import CodeMark from './data/CodeMark';
 
-class Project extends Component {
-  constructor(props) {
-    super(props);
+function Project(props) {
+  const [highlighted, setHighlighted] = useState(undefined);
 
-    const project = this.props.project;
-    const highlightedNodeIds = undefined;
-    this.state = {
-      highlightedNodeIds
-    };
-
-    switch (project.status) {
-      case project.STATUSES.edit:
-        if (project.code == '')
-          this.props.getCode(this.props.id);
-        break;
-      case project.STATUSES.done:
-      case project.STATUSES.error:
-        if (Object.keys(project.graphs).length == 0)
-          this.getGraphs();
-        break;
-    }
-    this.historyEnabled = true;
-
-    this.saveCode = this.saveCode.bind(this);
-    this.processCode = this.processCode.bind(this);
-    this.saveGraphMetadata = this.saveGraphMetadata.bind(this);
-    this.selectNode = this.selectNode.bind(this);
-    this.unselectNode = this.unselectNode.bind(this);
-    this.selectMainNode = this.selectMainNode.bind(this);
-    this.selectEdge = this.selectEdge.bind(this);
-    this.hoverNodes = this.hoverNodes.bind(this);
+  const project = props.project;
+  switch (project.status) {
+    case project.STATUSES.edit:
+      if (project.code == '')
+        props.getCode(props.id);
+      break;
+    case project.STATUSES.done:
+    case project.STATUSES.error:
+      if (Object.keys(project.graphs).length == 0)
+        getGraphs();
+      break;
   }
-  saveLocalCode(code) {
-    const project = this.props.project;
-    if (code == '')
-      project.status = project.STATUSES.empty;
-    else
-      project.status = project.STATUSES.edit;
-    project.code = code;
-    this.props.onSave(project);
-  }
-  async saveCode(code) {
-    const project = this.props.project;
+
+  let historyEnabled = true;
+
+  async function saveCode(code) {
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        this.saveLocalCode(code);
-        await fetch(`/api/projects/${this.props.id}/save`, {
+        project.status = project.STATUSES.edit;
+        if (code == '')
+          project.status = project.STATUSES.empty;
+        project.code = code;
+        props.onSave(project);
+        await fetch(`/api/projects/${props.id}/save`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
         });
+        break;
     }
   }
-  async processCode(code, options) {
-    await this.saveCode(code);
-    const res = await fetch(`/api/projects/${this.props.id}/process`, {
+  async function processCode(code, options) {
+    await saveCode(code);
+    const res = await fetch(`/api/projects/${props.id}/process`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
     });
     switch (res.status) {
       case 200:
-        const project = this.props.project;
         project.status = project.STATUSES.process;
-        this.props.onSave(project);
-        setTimeout(() => this.getGraphs(), 5000);
+        props.onSave(project);
+        setTimeout(() => getGraphs(), 5000);
         break;
       case 412:
-        this.props.onNotify('Project process request rejected');
+        props.onNotify('Project process request rejected');
         break;
     }
   }
-  async getGraphs() {
-    const res = await fetch(`/api/projects/${this.props.id}/data`, { method: 'GET' });
+  async function getGraphs() {
+    const res = await fetch(`/api/projects/${props.id}/data`, { method: 'GET' });
     switch (res.status) {
       case 200:
         const data = await res.json();
-        const project = this.props.project;
-        project.status = data.status;
-        project.error = data.error;
-        project.code = data.code;
-        if (project.status == project.STATUSES.done) {
-          project.importGraphs(data.graphs);
-          project.importAst(data.ast);
-          project.store = data.store;
-        }
-        project.analysis = data.analysis
-        this.props.onSave(project);
+        project.import(data);
+        props.onSave(project);
         break;
       case 204:
-        setTimeout(() => this.getGraphs(), 5000);
+        setTimeout(() => getGraphs(), 5000);
         break;
       case 412:
-        this.props.onNotify('Project data request rejected');
+        props.onNotify('Project data request rejected');
         break;
     }
   }
-  saveGraphMetadata(graphId, metadata) {
-    const project = this.props.project;
+  function saveMetadata(graphId, metadata) {
     const graph = project.graphs[graphId];
     graph.metadata = {...graph.metadata, ...metadata};
-    this.props.onSave(project);
+    props.onSave(project);
   }
 
-  selectNode(graphId, nodeId) {
-    const selectedNode = nodeId;
-    this.saveGraphMetadata(graphId, { selectedNode });
-  }
-  unselectNode(graphId, nodeId) {
-    const selectedNode = undefined;
-    this.saveGraphMetadata(graphId, { selectedNode });
-  }
-  selectMainNode(nodeId) {
-    const project = this.props.project;
+  function selectNode(graphId, nodeId) { saveMetadata(graphId, { selectedNode: nodeId }); }
+  function unselectNode(graphId, nodeId) { saveMetadata(graphId, { selectedNode: undefined }); }
+  function selectMainNode(nodeId) {
     if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
       // reset selected
       const subGraph = project.subGraph;
       if (subGraph) { subGraph.resetSelected(); }
 
       // reset highlighted
-      this.setState({ highlightedNodeIds: undefined });
 
-      this.selectNode(project.mainGraphId, nodeId);
-      this.props.onSave(project);
+      selectNode(project.mainGraphId, nodeId);
+      props.onSave(project);
       
-      this.addHistory();
+      setHighlighted(undefined);
+      addHistory();
     }
   }
-  hoverNodes(graphId, nodeIds) {
-    this.saveGraphMetadata(graphId, { hoverNodes: nodeIds });
-  }
-  selectEdge(graphId, edgeId) {
+  function hoverNodes(graphId, nodeIds) { saveMetadata(graphId, { hoveredNodes: nodeIds }); }
+  function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
-    this.saveGraphMetadata(graphId, { selectedEdge });
+    saveMetadata(graphId, { selectedEdge });
 
-    const project = this.props.project;
     const graph = project.graphs[graphId];
     const edge = graph.edges[edgeId];
     let highlightedNodeIds;
     if (edge)
       highlightedNodeIds = edge.calls;
-    this.setState({ highlightedNodeIds });
+    setHighlighted({ highlightedNodeIds });
   }
-  addHistory() {
-    if (this.historyEnabled) {
-      const project = this.props.project;
+  function addHistory() {
+    if (historyEnabled) {
       const graphId = project.mainGraphId;
   
       // add record to history
@@ -173,12 +132,11 @@ class Project extends Component {
       };
       metadata.history.push(data);
   
-      this.saveGraphMetadata(graphId, { history: metadata.history });
+      saveMetadata(graphId, { history: metadata.history });
     }
   }
-  history(index) {
-    this.historyEnabled = false;
-    const project = this.props.project;
+  function history(index) {
+    historyEnabled = false;
     const graphId = project.mainGraphId;
     const subGraphId = project.subGraphId;
 
@@ -188,17 +146,16 @@ class Project extends Component {
     metadata.history = metadata.history.slice(0, index + 1);
 
     // select node
-    this.selectMainNode(record.mainNodeId);
+    selectMainNode(record.mainNodeId);
     if (record.subNodeId)
-      this.selectNode(subGraphId, record.subNodeId);
+      selectNode(subGraphId, record.subNodeId);
     
-    this.saveGraphMetadata(graphId, { history: metadata.history });
-    this.historyEnabled = true;
+    saveMetadata(graphId, { history: metadata.history });
+    historyEnabled = true;
   }
 
-  render() {
+  function render() {
     let view;
-    const project = this.props.project;
     const status = project.status;
     switch (status) {
       case 'empty':
@@ -206,8 +163,8 @@ class Project extends Component {
         view = <Editor
           data={ project.code }
           processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
-          onSave={ this.saveCode }
-          onProcess={ this.processCode }
+          onSave={ saveCode }
+          onProcess={ processCode }
           edit />;
         break;
       case 'process':
@@ -217,7 +174,7 @@ class Project extends Component {
         if (Object.keys(project.graphs).length == 0)
           view = <Loading status='Downloading' variant='circular'/>;
         else
-          view = this.renderVisual();
+          view = renderVisual();
         break;
       case 'error':
         view = <Editor
@@ -228,12 +185,12 @@ class Project extends Component {
     };
     return view;
   }
-  renderVisual() {
-    const historyElement = this.renderHistory();
-    const selectElement = this.renderSelect();
-    const graphElement = this.renderGraph();
-    const editorElement = this.renderCodeViewer();
-    const propViewerElement =this.renderPropViewer();
+  function renderVisual() {
+    const historyElement = renderHistory();
+    const selectElement = renderSelect();
+    const graphElement = renderGraph();
+    const editorElement = renderCodeViewer();
+    const propViewerElement = renderPropViewer();
 
     return (
       <SplitPane vertical>
@@ -250,15 +207,15 @@ class Project extends Component {
         </Pane>
       </SplitPane>);
   }
-  renderHistory() {
-    const history = this.props.project.mainGraph.metadata.history;
+  function renderHistory() {
+    const graphHistory = props.project.mainGraph.metadata.history;
     let links;
-    if (history)
-      links = history.map((data, index) => {
+    if (graphHistory)
+      links = graphHistory.map((data, index) => {
         const mainNodeId = data.mainNodeId;
         const subNodeId = data.subNodeId;
 
-        const clickFunc = () => this.history(index);
+        const clickFunc = () => history(index);
 
         let content = mainNodeId;
         
@@ -276,8 +233,7 @@ class Project extends Component {
         { links }
       </Breadcrumbs>);
   }
-  renderSelect() {
-    const project = this.props.project;
+  function renderSelect() {
     const menuItems = Object.entries(project.graphs)
       .filter(([graphId, graph]) => !graph.hasOwnProperty('subGraphType'))
       .map(([graphId, graph]) => {
@@ -289,50 +245,52 @@ class Project extends Component {
         value={ project.mainGraphId }
         onChange={ event => {
           project.mainGraphId = event.target.value;
-          this.props.onSave(project);
+          props.onSave(project);
         } }>
         { menuItems }
       </Select>);
   }
-  renderGraph() {
-    const project = this.props.project;
+  function renderGraph() {
     const mainGraphId = project.mainGraphId;
     const mainGraph = project.graphs[mainGraphId];
     let graphElement;
     switch (mainGraphId) {
       case 'funcs':
         graphElement = <FunctionGraph
-          projectId={ this.props.id }
-          project={ this.props.project }
-          highlightedNodeIds={ this.state.highlightedNodeIds }
-          onNodeSelect={ this.selectNode }
-          onNodeUnselect={ this.unselectNode }
-          onMainNodeSelect={ this.selectMainNode }
-          onEdgeSelect={ this.selectEdge }
-          onSave={ this.saveGraphMetadata } />;
+          projectId={ props.id }
+          project={ props.project }
+          highlightedNodeIds={ highlighted }
+          onNodeSelect={ selectNode }
+          onNodeUnselect={ unselectNode }
+          onMainNodeSelect={ selectMainNode }
+          onEdgeSelect={ selectEdge }
+          onSave={ saveMetadata } />;
         break;
       default:
         graphElement = <Graph
-          projectId={ this.props.id }
+          projectId={ props.id }
           graphId={ mainGraphId }
           data={ mainGraph.export() }
           positions={ mainGraph.metadata.positions }
           selectedNode={ mainGraph.metadata.selectedNode }
-          hoverNodes={ mainGraph.metadata.hoverNodes }
-          onNodeSelect={ this.selectMainNode }
-          onNodeUnselect={ this.selectMainNode }
-          onSave={ this.saveGraphMetadata } />;
+          hoveredNodes={ mainGraph.metadata.hoveredNodes }
+          onNodeSelect={ selectMainNode }
+          onNodeUnselect={ selectMainNode }
+          onSave={ saveMetadata } />;
         break;
     }
 
     return graphElement;
   }
-  renderCodeViewer() {
-    const project = this.props.project;
+  function renderCodeViewer() {
     const mainGraphId = project.mainGraphId;
     const mainGraph = project.mainGraph;
     const subGraphId = project.subGraphId;
     const subGraph = project.subGraph;
+
+    let graphIds = [mainGraphId];
+    if (subGraphId)
+      graphIds.push(subGraphId);
 
     // generate marks
     const marks = {};
@@ -350,59 +308,52 @@ class Project extends Component {
       addMarks(subGraphId, subGraph);
     }
 
-    let selected, selectFunc, hovered;
+    let selected, selectFunc;
     if (subGraphId) {
       const selectedNode = subGraph.metadata.selectedNode;
       if (selectedNode)
         selected = subGraph.nodes[selectedNode].astLink;
       selectFunc = (graphId, nodeId) => {
         if (graphId == mainGraphId)
-          this.selectMainNode(nodeId);
+          selectMainNode(nodeId);
         else
-          this.selectNode(graphId, nodeId);
+          selectNode(graphId, nodeId);
       };
-      const hoveredNodes = subGraph.metadata.hoverNodes;
-      if (hoveredNodes) {
-        hovered = [];
-        hoveredNodes.forEach(node => {
-          const astLink = subGraph.nodes[node].astLink;
-          if (astLink)
-            hovered.push(astLink);
-        });
-      }
     } else {
       const selectedNode = mainGraph.metadata.selectedNode;
       if (selectedNode)
         selected = mainGraph.nodes[selectedNode].astLink;
-      const hoveredNodes = mainGraph.metadata.hoverNodes;
-      if (hoveredNodes) {
-        hovered = [];
-        hoveredNodes.forEach(node => {
-          const astLink = mainGraph.nodes[node].astLink;
-          if (astLink)
-            hovered.push(astLink);
-        });
-      }
     }
-    
-    let graphIds = [mainGraphId];
+
+    // generate hovered asts
+    const hovered = [];
+    function getHoveredAst(graph) {
+      const hoveredNodes = graph.metadata.hoveredNodes;
+      if (hoveredNodes)
+        hoveredNodes.forEach(nodeId => {
+          const astId = graph.nodes[nodeId].astLink;
+          if (astId)
+            hovered.push(astId);
+        })
+    }
+    getHoveredAst(mainGraph);
     if (subGraphId)
-      graphIds.push(subGraphId);
+      getHoveredAst(subGraph);
+    
     return (
       <Pane height='50%' overflow='auto'>
         <CodeViewer
-          id={ this.props.id }
+          id={ props.id }
           graphIds={ graphIds }
           code={ project.code }
           marks={ marks }
           selected={ selected }
           hovered={ hovered }
-          onNodeSelect={ (selectFunc || this.selectNode) }
-          onCodeHover={ this.hoverNodes } />
+          onNodeSelect={ (selectFunc || selectNode) }
+          onCodeHover={ hoverNodes } />
       </Pane>);
   }
-  renderPropViewer() {
-    const project = this.props.project;
+  function renderPropViewer() {
     const mainGraph = project.mainGraph;
     const subGraph = project.subGraph;
 
@@ -413,9 +364,11 @@ class Project extends Component {
     
     return (
       <Pane height='50%' overflow='auto'>
-        <PropViewer data={ element } store={ this.props.project.store } />
+        <PropViewer data={ element } store={ props.project.store } />
       </Pane>);
   }
+
+  return render();
 }
 
 export default Project;
