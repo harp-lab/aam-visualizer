@@ -98,13 +98,13 @@ class Graph extends Component {
     this.cy.on('mouseover', 'node', evt => {
       const node = evt.target;
       const metadata = {
-        hoverNodes: [node.id()]
+        hoveredNodes: [node.id()]
       };
       this.props.onSave(this.props.graphId, metadata);
     });
     this.cy.on('mouseout', 'node', evt => {
       const metadata = {
-        hoverNodes: undefined
+        hoveredNodes: undefined
       };
       this.props.onSave(this.props.graphId, metadata);
     });
@@ -168,11 +168,11 @@ class Graph extends Component {
     });
   }
   hover() {
-    const hoverNodes = this.props.hoverNodes;
+    const hoveredNodes = this.props.hoveredNodes;
     this.cy.batch(() => {
       this.cy.nodes().removeClass('hover');
-      if (hoverNodes) {
-        hoverNodes.forEach(nodeId => {
+      if (hoveredNodes) {
+        hoveredNodes.forEach(nodeId => {
           this.cy.$(`#${nodeId}`).addClass('hover');
         })
       }
