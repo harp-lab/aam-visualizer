@@ -348,10 +348,9 @@ class Project extends Component {
     addMarks(mainGraphId, mainGraph);
     if (subGraphId) {
       addMarks(subGraphId, subGraph);
-      
     }
 
-    let selected, selectFunc;
+    let selected, selectFunc, hovered;
     if (subGraphId) {
       const selectedNode = subGraph.metadata.selectedNode;
       if (selectedNode)
@@ -362,10 +361,24 @@ class Project extends Component {
         else
           this.selectNode(graphId, nodeId);
       };
+      const hoveredNodes = mainGraph.metadata.hoverNodes;
+      if (hoveredNodes)
+        hovered = hoveredNodes.map(node => {
+          return mainGraph.nodes[node].astLink;
+        });
     } else {
       const selectedNode = mainGraph.metadata.selectedNode;
       if (selectedNode)
         selected = mainGraph.nodes[selectedNode].astLink;
+      const hoveredNodes = mainGraph.metadata.hoverNodes;
+      if (hoveredNodes) {
+        hovered = [];
+        hoveredNodes.forEach(node => {
+          const astLink = mainGraph.nodes[node].astLink;
+          if (astLink)
+            hovered.push(astLink);
+        });
+      }
     }
     
     return (
@@ -376,6 +389,7 @@ class Project extends Component {
           code={ project.code }
           marks={ marks }
           selected={ selected }
+          hovered={ hovered }
           onNodeSelect={ (selectFunc || this.selectNode) }
           onCodeHover={ this.hoverNodes } />
       </Pane>);

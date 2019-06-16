@@ -95,6 +95,19 @@ class Graph extends Component {
           this.props.onNodeUnselect(node.id());
       }
     });
+    this.cy.on('mouseover', 'node', evt => {
+      const node = evt.target;
+      const metadata = {
+        hoverNodes: [node.id()]
+      };
+      this.props.onSave(this.props.graphId, metadata);
+    });
+    this.cy.on('mouseout', 'node', evt => {
+      const metadata = {
+        hoverNodes: undefined
+      };
+      this.props.onSave(this.props.graphId, metadata);
+    });
   }
   initEdgeEvents() {
     if (this.props.onEdgeSelect) {
