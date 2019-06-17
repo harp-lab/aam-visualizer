@@ -326,19 +326,20 @@ function Project(props) {
     }
 
     // generate hovered asts
-    const hovered = [];
+    const hoveredSet = new Set();
     function getHoveredAst(graph) {
       const hoveredNodes = graph.metadata.hoveredNodes;
       if (hoveredNodes)
         hoveredNodes.forEach(nodeId => {
           const astId = graph.nodes[nodeId].astLink;
           if (astId)
-            hovered.push(astId);
+            hoveredSet.add(astId);
         })
     }
     getHoveredAst(mainGraph);
     if (subGraphId)
       getHoveredAst(subGraph);
+    const hovered = Array.from(hoveredSet);
     
     return (
       <Pane height='50%' overflow='auto'>
