@@ -39,8 +39,7 @@
      (hash
       'id id
       'form "eval"
-      'start (loc-start (cadr state))
-      'end (loc-end (cadr state))
+      'astLink (list (ast-id (cadr state)))
       'env (make-env (caddr state) a->sym)
       'data (hash
              'label (format "~a - eval" id))
@@ -51,8 +50,7 @@
      (hash
       'id id
       'form (~a (cadr state))
-      'start (loc-start (caddr state))
-      'end (loc-end (caddr state))
+      'astLink (list (ast-id (caddr state)))
       'data (hash
              'label (format "~a - ~a" id (cadr state)))
      'states (list (hash 'syntax (~a (only-syntax state))
@@ -146,8 +144,7 @@
         'id (symbol->string id)
         'form (~a lid)
         'detail (symbol->string id)
-        'start (loc-start syntax)
-        'end (loc-end syntax)
+        'astLink (list (ast-id syntax))
         'data (hash
                'label (format "~a - ~a" id lid))
         'children (for/hash([child (hash-keys trans)])
@@ -162,8 +159,7 @@
        (hash
         'id (symbol->string id)
         'form (~a (car n))
-        'start (loc-start syntax)
-        'end (loc-end syntax)
+        'astLink (list (ast-id syntax))
         'data (hash
                'label (format "~a - ~a" id (car n))
                'to-syntax (~a (only-syntax syntax)))

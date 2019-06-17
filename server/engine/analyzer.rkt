@@ -8,8 +8,7 @@
  analyze-syn
  regroup-by-call
  step-state
- loc-start
- loc-end
+ ast-id
  get-li
  get-kappa
  only-syntax)
@@ -41,17 +40,7 @@
 
 (struct ast/loc (ast bound loc lambda-id)  #:transparent)
 
-(define (loc-start syn)
-  (define loc (ast/loc-loc syn))
-  (if (pair? loc)
-      (car loc)
-      (ast/loc-bound syn)))
-
-(define (loc-end syn)
-  (define loc (ast/loc-loc syn))
-  (if (pair? loc)
-      (cdr loc)
-      loc))
+(define (ast-id ast) (~a (ast/loc-loc ast)))
 
 (define (only-syntax ast)
   (match ast
@@ -74,11 +63,6 @@
   (define lam-expr (ast/loc-ast lam))
   (match lam-expr [`(lambda ,_ ,e) e]))
 
-(define (get-loc item)
-  (define start (hash-ref item 'start `(0 0)))
-  (define end (hash-ref item 'end `(0 0)))
-  (cons start end))
-
 (define (get-symbol item)
   (string->symbol (hash-ref item 'tok)))
 
@@ -92,12 +76,12 @@
     (match (symbol->string start)
       [(regexp #rx"a")
        (define symb (get-symbol item))
-       (ast/loc symb (hash-ref bindings symb 'free) (get-loc item) last-lam-id)]
+       (ast/loc symb (hash-ref bindings symb 'free) start last-lam-id)]
       [_
        (define parts (get-parts item))
        (define (make-apply)
          (ast/loc (map (lambda (id)
-                         (json->ast jast id bindings last-lam-id)) parts) 'apply (get-loc item) last-lam-id))
+                         (json->ast jast id bindings last-lam-id)) parts) 'apply start last-lam-id))
        (match (symbol->string (car parts))
          [(regexp #rx"a")
           (match (get-symbol (hash-ref jast (car parts)))
@@ -108,7 +92,7 @@
                (foldl (lambda (xi bs) (hash-set bs (ast/loc-ast xi) xi)) bindings xs))
              (define this-lam-id (or next-lam (newsym 'func)))
              (define aste (json->ast jast (caddr parts) bindings-new this-lam-id))
-             (define this-lam (ast/loc `(lambda ,xs ,aste) 'lambda (get-loc item) last-lam-id))
+             (define this-lam (ast/loc `(lambda ,xs ,aste) 'lambda start last-lam-id))
              (hash-set! id>lambda this-lam-id this-lam)
              this-lam]
             ['let
@@ -125,7 +109,7 @@
                       (cons '() bindings)
                       binds))
              (define aste (json->ast jast (caddr parts) bindings-new last-lam-id))
-             (ast/loc `(let ,pairs ,aste) 'let (get-loc item) last-lam-id)]
+             (ast/loc `(let ,pairs ,aste) 'let start last-lam-id)]
             ['begin
              (json->ast jast (last parts) bindings last-lam-id)]
             [var (make-apply)])]
@@ -619,7 +603,7 @@
   (define sg-results (explore-state initial-state id>lambda instr))
   (match-define (list states sigma sigmak) sg-results)
   (define tables (list sigma sigmak instr id>lambda))
-  (match-define (list calls returns subs) (regroup-by-call initial-state states tables))
+  (match-define (list init trans subs) (regroup-by-call initial-state states tables))
   (cons states tables))
   ;(print-explore sg-results)
   ;(display "\ncalls:\n")
