@@ -18,7 +18,7 @@ function FunctionGraph(props) {
         positions={ mainGraph.metadata.positions }
         selectedNode={ mainGraph.metadata.selectedNode }
         highlighted={ props.highlightedNodeIds }
-        hoverNodes={ mainGraph.metadata.hoverNodes }
+        hoveredNodes={ mainGraph.metadata.hoveredNodes }
         onNodeSelect={ props.onMainNodeSelect }
         onNodeUnselect={ nodeId => props.onMainNodeSelect(undefined) }
         onSave={ props.onSave } />
@@ -38,7 +38,7 @@ function FunctionGraph(props) {
           positions={ subGraph.metadata.positions }
           selectedNode={ subGraph.metadata.selectedNode }
           selectedEdge={ subGraph.metadata.selectedEdge }
-          hoverNodes={ subGraph.metadata.hoverNodes }
+          hoveredNodes={ subGraph.metadata.hoveredNodes }
           onNodeSelect={ nodeId => props.onNodeSelect(subGraphId, nodeId) }
           onNodeUnselect={ nodeId => props.onNodeUnselect(subGraphid, nodeId) }
           onEdgeSelect={ edgeId => {
