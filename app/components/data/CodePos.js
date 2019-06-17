@@ -3,7 +3,7 @@ class CodePos {
     this.line = line;
     this.ch = ch;
   }
-  toString() { return `line ${this.line} char ${this.ch}`; }
+  toString() { return `line ${this.line} ch ${this.ch}`; }
 }
 
 export default CodePos;
