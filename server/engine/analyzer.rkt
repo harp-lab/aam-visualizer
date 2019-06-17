@@ -333,9 +333,11 @@
   (define (tick i lid state)
     (define size (min count (+ 1 (length i))))
     (match state
-      [`(inner apply . ,_) (take (cons lid i) size)]
+      [`(eval ,(ast/loc `(let . ,_) _ _ _) . ,_) i]
+      [`(eval ,(? atomic?) . ,_) i]
+      [`(eval ,(ast/loc `(,e0 . ,_) _ _ _) . ,_) (take (cons e0 i) size)]
       [else i]))
-  (define (tick2 i fi state) (cons i fi))
+  (define (tick2 i fi state) (cons fi fi))
   (list tick tick2))
 
 (define (get-li state)
@@ -374,14 +376,14 @@
                  (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,dn) ,(cdr es) ,e0s ,rhok ,new-fi) kappa+))))]
             [addr
              (for/set ([kont (hash-ref sigmak addr)])
-               (match-define (list lid e+)
+               (match-define (list lid e+ i+)
                  (match kont
-                   ['halt (list 'top (lbody id>lambda 'top))]
-                   [(cons `(frame ,_ ,e . ,_) _) (list (ast/loc-lambda-id e) e)]
+                   ['halt (list 'top (lbody id>lambda 'top) '())]
+                   [(cons `(frame ,_ ,e ,_ ,_ ,_ ,_ ,fi) _) (list (ast/loc-lambda-id e) e fi)]
                    [addr
                     (define lid (car addr))
-                    (list lid (lbody id>lambda lid))]))
-               `(inner return ,e+ ,dn (,rho) ,(tick i lid state) ,kont))]))
+                    (list lid (lbody id>lambda lid) i)]))
+               `(inner return ,e+ ,dn (,rho) ,i+ ,kont))]))
         `(,new-states ,sigma ,sigmak)])]
     [`(eval ,(ast/loc `(,e0 . ,es) _ _ l) ,rho ,i ,kappa)
      (define e (cadr state))
@@ -400,14 +402,14 @@
               (set `(eval ,(car es) ,rhok ,new-i ,(cons `(frame ,cat ,e (,@ds ,d) ,(cdr es) ,e0s ,rhok ,new-fi) kappa+))))]
          [addr
           (for/set ([kont (hash-ref sigmak addr)])
-            (match-define (list lid e+)
+            (match-define (list lid e+ i+)
               (match kont
-                ['halt (list 'top (lbody id>lambda 'top))]
-                [(cons `(frame ,_ ,e . ,_) _) (list (ast/loc-lambda-id e) e)]
+                ['halt (list 'top (lbody id>lambda 'top) '())]
+                [(cons `(frame ,_ ,e ,_ ,_ ,_ ,_ ,fi) _) (list (ast/loc-lambda-id e) e fi)]
                 [addr
                  (define lid (car addr))
-                 (list lid (lbody id>lambda lid))]))
-            `(inner return ,e+ ,d (,rho) ,(tick i lid state) ,kont))]))
+                 (list lid (lbody id>lambda lid) i)]))
+            `(inner return ,e+ ,d (,rho) ,i+ ,kont))]))
      `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))
