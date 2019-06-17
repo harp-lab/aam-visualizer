@@ -116,7 +116,7 @@ function Project(props) {
     let highlightedNodeIds;
     if (edge)
       highlightedNodeIds = edge.calls;
-    setHighlighted({ highlightedNodeIds });
+    setHighlighted(highlightedNodeIds);
   }
   function addHistory() {
     if (historyEnabled) {
