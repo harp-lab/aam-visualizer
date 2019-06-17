@@ -26,11 +26,11 @@ function CodeViewer(props) {
   }
   function hover(line, ch) {
     const markId = getMark(line, ch);
+    unhover();
     if (markId) {
       for (const [graphId, nodes] of Object.entries(marks[markId].nodes))
         props.onCodeHover(graphId, nodes);
-    } else
-      unhover();
+    }
   }
   function unhover() {
     for (const graphId of props.graphIds)
@@ -76,8 +76,7 @@ function CodeViewer(props) {
       return (
         <span
           key={ tokId }
-          onMouseOver={ () => hover(lineId, tokStart.ch) }
-          >
+          onMouseOver={ () => hover(lineId, tokStart.ch) }>
           { content }
         </span>);
     });
