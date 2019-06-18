@@ -95,6 +95,11 @@
              (define this-lam (ast/loc `(lambda ,xs ,aste) 'lambda start last-lam-id))
              (hash-set! id>lambda this-lam-id this-lam)
              this-lam]
+            ['if
+             (define guard (json->ast jast (cadr parts) bindings last-lam-id))
+             (define caset (json->ast jast (caddr parts) bindings last-lam-id))
+             (define casef (json->ast jast (cadddr parts) bindings last-lam-id))
+             (ast/loc `(if ,guard ,caset ,casef) 'if start last-lam-id)]
             ['let
              (define binds (get-parts (hash-ref jast (cadr parts))))
              (match-define (cons pairs bindings-new)
@@ -126,6 +131,8 @@
   (define id>lambda (make-hash))
   (define (syntax->ast syntax bindings last-lam-id [next-lam-id #f])
     (match syntax
+      [#t (ast/loc '|#t| '|#t| (gensym '|#t|) last-lam-id)]
+      [#f (ast/loc '|#f| '|#f| (gensym '|#f|) last-lam-id)]
       [`(let ([,xs ,es]...) ,e_b)
        (match-define (cons pairs bindings-new)
          (foldr (lambda (xi ei acc)
@@ -139,6 +146,11 @@
                 xs es))
        (define astb (syntax->ast e_b bindings-new last-lam-id))
        (ast/loc `(let ,pairs ,astb) 'let (gensym 'let) last-lam-id)]
+      [`(if ,g ,t ,f)
+       (define guard (syntax->ast g bindings last-lam-id))
+       (define caset (syntax->ast t bindings last-lam-id))
+       (define casef (syntax->ast f bindings last-lam-id))
+       (ast/loc `(if ,guard ,caset ,casef) 'if (gensym 'if) last-lam-id)]
       [(? symbol? x) (ast/loc x (hash-ref bindings x 'free) (gensym x) last-lam-id)]
       [`(lambda ,xs ,e)
        (match-define (cons vars bindings-new)
@@ -297,6 +309,8 @@
 
 (define (atomic ae rho sigma)
   (match ae
+    [(ast/loc '|#f| _ _ _) (set #f)]
+    [(ast/loc '|#t| _ _ _) (set #t)]
     [(ast/loc (? symbol? x) b _ _) (hash-ref sigma (hash-ref rho b 'notfound) 'notfound)]
     [(ast/loc `(lambda ,xs ,e) _ _ _)
      (set `(clo ,xs ,e ,rho))]))
@@ -325,6 +339,8 @@
 
 (define (atomic? ae)
   (match ae
+    [(ast/loc '|#t| _ _ _) #t]
+    [(ast/loc '|#f| _ _ _) #t]
     [(ast/loc `(lambda ,_ ,_) _ _ _) #t]
     [(ast/loc (? symbol? _) _ _ _) #t]
     [else #f]))
@@ -361,6 +377,12 @@
      (define new-i (tick i lid state))
      (define new-state
        `(eval ,(car es) ,rho ,new-i ,(cons `(frame let ,e (,(set `(clo ,xs ,e_b ,rho))) ,(cdr es) () ,rho ,new-i) kappa)))
+     `(,(set new-state) ,sigma ,sigmak)]
+    [`(eval ,(ast/loc `(if ,g ,t ,f) _ _ lid) ,rho ,i ,kappa)
+     (define e (cadr state))
+     (define new-i (tick i lid state))
+     (define new-state
+       `(eval ,g ,rho ,new-i ,(cons `(frame if ,e () () (,t ,f ,rho) ,rho ,new-i) kappa)))
      `(,(set new-state) ,sigma ,sigmak)]
     [`(eval ,(? atomic? ae) ,rho ,i ,kappa)
      (match (atomic ae rho sigma)
@@ -410,6 +432,12 @@
                  (define lid (car addr))
                  (list lid (lbody id>lambda lid) i)]))
             `(inner return ,e+ ,d (,rho) ,i+ ,kont))]))
+     `(,new-states ,sigma ,sigmak)]
+    [`(inner if ,_ (,d) (,t ,f ,rho) ,i ,kappa)
+     (define new-states (for/set ([g d])
+                          (match g
+                            [#f `(eval ,f ,rho ,i ,kappa)]
+                            [_ `(eval ,t ,rho ,i ,kappa)])))
      `(,new-states ,sigma ,sigmak)]
     [`(inner let ,_ (,d . ,ds) () ,i ,kappa)
      (match-define `(clo ,xs ,e ,rho) (set-first d))
@@ -546,6 +574,23 @@
                   (make-immutable-hash (set->list stop))
                   (make-immutable-hash (cons (cons (car go) `(call-return ,(cdr go)))
                                              (set->list stop))))]
+             [(or
+               `(inner if . ,_))
+              (define (seg states)
+                (define (seg states sets)
+                  (cond [(set-empty? states) sets]
+                        [else
+                         (define expr (cadr (set-first states)))
+                         (define new-set (foldl
+                                          (lambda(state matches)
+                                            (if (equal? expr (cadr state))
+                                                (set-add matches state)
+                                                matches))
+                                          (set (set-first states))
+                                          (set->list (set-rest states))))
+                         (seg (set-subtract states new-set) (cons new-set sets))]))
+                (seg states (list)))
+              (make-immutable-hash (map (lambda(s)(cons s `(step))) (seg next-states)))]
              [else (hash next-states `(step))])]
           [else (hash)]))
       (define fronteer+ (set-union (set-rest fronteer) (list->set (hash-keys next-trans))))

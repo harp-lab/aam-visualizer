@@ -23,6 +23,8 @@
 
 (define (print-val v)
   (match v
+    [#f (~a #f)]
+    [#t (~a #t)]
     [`(clo ,xs ,e ,rho)
      (match-define (list l _) (get-li e))
      (~a l)]))
