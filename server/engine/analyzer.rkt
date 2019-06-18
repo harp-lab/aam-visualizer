@@ -457,21 +457,23 @@
     [`(inner apply ,_ (,d . ,ds) () ,i ,kappa)
        (foldl (lambda (clo acc)
                 (match-define `(,states ,sigma+ ,sigmak+) acc)
-                (match-define `(clo ,xs ,e ,rho) clo)
-                (define lid (ast/loc-lambda-id e))
-                (define i+ (tick i lid state))
-                (define ais (map (lambda (xi) (list xi i+)) xs))
-                (define rho+ (foldl (lambda (xi ai r)
-                                      (hash-set r xi ai))
-                                    rho
-                                    xs ais))
-                (define sigma-new (foldl (lambda (ai di s)
-                                       (store-include s ai di))
-                                     sigma+
-                                     ais ds))
-                (define ak `(,lid ,rho+))
-                (define sigmak-new (store-include sigmak+ ak (set kappa)))
-                `(,(set-add states `(eval ,e ,rho+ ,i+ ,ak)) ,sigma-new ,sigmak-new))
+                (match clo
+                  [`(clo ,xs ,e ,rho)
+                   (define lid (ast/loc-lambda-id e))
+                   (define i+ (tick i lid state))
+                   (define ais (map (lambda (xi) (list xi i+)) xs))
+                   (define rho+ (foldl (lambda (xi ai r)
+                                         (hash-set r xi ai))
+                                       rho
+                                       xs ais))
+                   (define sigma-new (foldl (lambda (ai di s)
+                                              (store-include s ai di))
+                                            sigma+
+                                            ais ds))
+                   (define ak `(,lid ,rho+))
+                   (define sigmak-new (store-include sigmak+ ak (set kappa)))
+                   `(,(set-add states `(eval ,e ,rho+ ,i+ ,ak)) ,sigma-new ,sigmak-new)]
+                  [_ `(,(set-add states `(non-func ,clo)) ,sigma ,sigmak)]))
               `(,(set) ,sigma ,sigmak)
               (set->list d))]
     [else `(,(set) ,sigma ,sigmak)]))
@@ -667,3 +669,6 @@
 (define (ex6) (explore (cfa 0) `((lambda (x y z) (x x y z))(lambda (a b c) (b a b c))(lambda (a b c) (c a b c))(lambda (a b c) (a a b c)))))
 ;stuck states: free vars
 (define (ex4) (explore (cfa 0) `(let ([a ((let ([b (x x)]) (let ([z b]) b)) (let ([c (z a)]) c))]) a)))
+
+(define (ex7) (explore (cfa 0) `(let ([a #f][b #t][rev (lambda(r)(if r #f #t))])(rev (rev #t)))))
+(define (ex8) (explore (cfa 0) `(let ([a #f][b (lambda(x)x)][call (lambda(c)(c #t))])(call (call b)))))
