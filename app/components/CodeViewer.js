@@ -42,7 +42,7 @@ function CodeViewer(props) {
     .split(/\r\n|\n/)
     .map(line => {
       //return line.split('');
-      return line.match(/\(|\)|\w+|\s+/g);
+      return line.match(/\(|\)|\[|\]|\#t|\#f|\w+|\s+/g);
     });
   
   // generate lines
@@ -88,7 +88,7 @@ function CodeViewer(props) {
       </div>);
   });
 
-  return <div>{ element }</div>;
+  return <div style={{ whiteSpace: 'pre' }}>{ element }</div>;
 }
 
 function Token(props) {
@@ -104,7 +104,7 @@ function Token(props) {
   if (mark.includes(start, end)) {
     element = <Span
       content={ content }
-      color={ color }/>;
+      color={ color } />;
   } else if (mark.startsIn(start, end)) {
     element = (
       <Fragment>
