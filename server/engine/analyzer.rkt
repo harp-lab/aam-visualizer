@@ -350,6 +350,7 @@
     (define size (min count (+ 1 (length i))))
     (match state
       [`(eval ,(ast/loc `(let . ,_) _ _ _) . ,_) i]
+      [`(eval ,(ast/loc `(if . ,_) _ _ _) . ,_) i]
       [`(eval ,(? atomic?) . ,_) i]
       [`(eval ,(ast/loc `(,e0 . ,_) _ _ _) . ,_) (take (cons e0 i) size)]
       [else i]))
