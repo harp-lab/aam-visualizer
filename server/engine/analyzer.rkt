@@ -528,30 +528,44 @@
     (define finals (mutable-set))
     (define (s->trans s) (hash-ref state>state-trans s (set)))
     (define init (hash-ref all-calls lid))
-    (define (build-graph fronteer trans)
+    (define (build-graph fronteer complete trans)
       (define next (set-first fronteer))
+      (define complete+ (set-add complete next))
       (define next-trans
         (match next
           [(? set? (not (? set-empty?)))
            (define next-states (apply set-union (set-map next s->trans)))
            (match (set-first next)
              [(or
-               `(eval ,(? atomic?) ,_ ,_ ,(not `((frame . ,_) . ,_)))
-               `(inner return ,_ ,_ ,_ ,_ ,(not `((frame . ,_) . ,_))))
-              (make-immutable-hash
-               (set-map next-states
-                        (lambda (state)
-                          (define li (get-li state))
-                          (match li
-                            [(list lid _)
-                             (set-add! returns lid)
-                             (cons `(exit ,lid) `(return-out, lid))]
-                            ['halt
-                             (set-add! finals state)
-                             (cons state `(halt))]
-                            [else
-                             (set-add! finals state)
-                             (cons state `(stuck))]))))]
+               `(eval ,(? atomic?) . ,_)
+               `(inner return . ,_))
+              (match-define (list stop go)
+                (foldl (lambda(state bins)
+                         (match-define (list stop go) bins)
+                         (define k (get-kappa state))
+                         (match k
+                           [`((frame . ,_) . ,_) (list stop (set-union go (s->trans state)))]
+                           [addr (list (set-union stop
+                                                  (list->set
+                                                   (set-map (s->trans state)
+                                                            (lambda (state+)
+                                                              (define li (get-li state+))
+                                                              (match li
+                                                                [(list lid _)
+                                                                 (set-add! returns lid)
+                                                                 (cons `(exit ,lid) `(return-out, lid))]
+                                                                ['halt
+                                                                 (set-add! finals state+)
+                                                                 (cons state+ `(halt))]
+                                                                [else
+                                                                 (set-add! finals state+)
+                                                                 (cons state+ `(stuck))])))))
+                                       go)]))
+                       (list (set) (set))
+                       (set->list next)))
+              (if (set-empty? go)
+                  (make-immutable-hash (set->list stop))
+                  (make-immutable-hash (cons (cons go `(step)) (set->list stop))))]
              [`(inner apply . ,_)
               (match-define (list stop go)
                 (foldl (lambda(s rs)
@@ -596,12 +610,14 @@
               (make-immutable-hash (map (lambda(s)(cons s `(step))) (seg next-states)))]
              [else (hash next-states `(step))])]
           [else (hash)]))
-      (define fronteer+ (set-union (set-rest fronteer) (list->set (hash-keys next-trans))))
+      (define fronteer+ (set-subtract
+                         (set-union (set-rest fronteer) (list->set (hash-keys next-trans)))
+                         complete+))
       (define trans+ (hash-set trans next next-trans))
       (if (set-empty? fronteer+)
           trans+
-          (build-graph fronteer+ trans+)))
-    (define trans (build-graph (set init) (hash))) 
+          (build-graph fronteer+ complete+ trans+)))
+    (define trans (build-graph (set init) (set) (hash))) 
     (list init trans calls returns finals))
   (cons (car (get-li init))
           (foldl (lambda(c t)
