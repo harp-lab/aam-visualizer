@@ -1,4 +1,5 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment } from 'react';
+import Typography from '@material-ui/core/Typography';
 import CodePos from './data/CodePos';
 
 function CodeViewer(props) {
@@ -81,14 +82,28 @@ function CodeViewer(props) {
         </span>);
     });
     return (
-      <div
-        key={ lineId }
-        onMouseLeave={ () => unhover() }>
-        { lineElement }
-      </div>);
+      <Fragment>
+        <Typography
+          display='inline'>
+          { lineId + 1 }
+        </Typography>
+        <Typography
+          key={ lineId }
+          onMouseLeave={ () => unhover() }
+          display='inline'
+          variant='body2'
+          style={{
+            fontFamily: 'Roboto Mono, "Courier New", Courier, monospace'
+          }}>
+          { lineElement }
+        </Typography>
+      </Fragment>);
   });
 
-  return <div>{ element }</div>;
+  return (
+    <div>
+      { element }
+    </div>);
 }
 
 function Token(props) {
@@ -128,7 +143,11 @@ function Token(props) {
 }
 
 function Span(props) {
-  return <span style={{ backgroundColor: props.color }}>{ props.content }</span>;
+  return (
+    <span
+    style={{ backgroundColor: props.color }}>
+      { props.content }
+    </span>);
 }
 
 export default CodeViewer;
