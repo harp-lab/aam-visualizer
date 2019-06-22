@@ -23,6 +23,8 @@
 
 (define (print-val v)
   (match v
+    [#f (~a #f)]
+    [#t (~a #t)]
     [`(clo ,xs ,e ,rho)
      (match-define (list l _) (get-li e))
      (~a l)]))
@@ -31,7 +33,7 @@
   (for/hash ([v (hash-keys rho)])
     (define addr (hash-ref rho v))
     (values (string->symbol (~a (only-syntax v)))
-            (hash 'instr (~a (cadr addr)) 'store (symbol->string(a->sym addr))))))
+            (hash 'instr (~a (map only-syntax (cadr addr))) 'store (symbol->string(a->sym addr))))))
 
 (define (state-node id state a->sym sk)
   (match (car state)
@@ -44,7 +46,7 @@
       'data (hash
              'label (format "~a - eval" id))
       'states (list (hash 'syntax (~a (only-syntax state))
-                          'instr (~a (cadr (get-li state)))
+                          'instr (~a (map only-syntax (cadr (get-li state))))
                           'stack (print-k (get-kappa state) sk))))]
     ['inner
      (hash
@@ -54,7 +56,7 @@
       'data (hash
              'label (format "~a - ~a" id (cadr state)))
      'states (list (hash 'syntax (~a (only-syntax state))
-                         'instr (~a (cadr (get-li state)))
+                         'instr (~a (map only-syntax (cadr (get-li state))))
                          'stack (print-k (get-kappa state) sk))))]
     ['halt
      (hash
@@ -169,7 +171,7 @@
       [states
        (define s (if (set? states) (set-first states) states))
        (define synt (lambda(s)(~a (only-syntax s))))
-       (define instr (lambda(s)(match (get-li s)[(list l i) (~a i)][end (~a end)])))
+       (define instr (lambda(s)(match (get-li s)[(list l i) (~a (map only-syntax i))][end (~a end)])))
        (define kont (lambda(s)(match (get-kappa s) [(? symbol? k) (list (~a k))][k (print-k k kstore)])))
        (define in-one (lambda(s)(hash 'syntax (synt s) 'instr (instr s) 'stack (kont s))))
        (match s

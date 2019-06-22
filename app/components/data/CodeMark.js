@@ -13,11 +13,22 @@ class CodeMark {
       this.nodes[graphId] = [nodeId];
   }
   in(pos, start, end) {
-    const inLine = start.line <= pos.line && pos.line <= end.line;
-    const inCh = start.ch <= pos.ch && pos.ch < end.ch;
+    const oneLine = start.line == end.line;
     let result = false;
-    if (inLine && inCh)
-      result = true;
+    if (oneLine) {
+      const inLine = start.line <= pos.line && pos.line <= end.line;
+      const inCh = start.ch <= pos.ch && pos.ch < end.ch;
+      if (inLine && inCh)
+        result = true;
+    } else {
+      const startLine = pos.line == start.line;
+      const endLine = pos.line == end.line;
+      const midLine = start.line < pos.line && pos.line < end.line;
+      const afterStartCh = start.ch <= pos.ch;
+      const beforeEndCh = pos.ch < end.ch;
+      if ((startLine && afterStartCh) || midLine || (endLine && beforeEndCh))
+        result = true;
+    }
     return result;
   }
   startsIn(start, end) { return this.in(this.start, start, end); }
