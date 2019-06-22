@@ -51,43 +51,44 @@ function CodeViewer(props) {
   // generate lines
   const element = lines.map((line, lineId) => {
     let ch = 0;
-    // generate toks
-    let lineElement;
-    if (line) {
-      lineElement = line.map((tok, tokId) => {
-        const tokStart = new CodePos(lineId, ch);
-        const tokEnd = new CodePos(lineId, ch + tok.length);
-        ch += tok.length;
-  
-        const hovered = props.hovered;
-        const selected = props.selected;
-        let content = tok;
-        if (hovered.length > 0) {
-          const hoveredMarks = hovered.map(id => { return marks[id]; });
-          content = <Token
-            content={ tok }
-            marks={ hoveredMarks }
-            start={ tokStart }
-            end={ tokEnd }
-            color={ '#d1c4e9' } />;
-        } else if (selected)
-          content = <Token
-            content={ tok }
-            marks={ [marks[selected]] }
-            start={ tokStart }
-            end={ tokEnd }
-            color={ '#fff59d' } />;
-  
-        return (
-          <span
-            key={ tokId }
-            onMouseOver={ () => hover(lineId, tokStart.ch) }>
-            { content }
-          </span>);
-      });
-    } else
-      lineElement = <span></span>;
+
+    // make line equal empty space if null
+    if (!line)
+      line = [' '];
     
+    // generate toks
+    const lineElement = line.map((tok, tokId) => {
+      const tokStart = new CodePos(lineId, ch);
+      const tokEnd = new CodePos(lineId, ch + tok.length);
+      ch += tok.length;
+
+      const hovered = props.hovered;
+      const selected = props.selected;
+      let content = tok;
+      if (hovered.length > 0) {
+        const hoveredMarks = hovered.map(id => { return marks[id]; });
+        content = <Token
+          content={ tok }
+          marks={ hoveredMarks }
+          start={ tokStart }
+          end={ tokEnd }
+          color={ '#d1c4e9' } />;
+      } else if (selected)
+        content = <Token
+          content={ tok }
+          marks={ [marks[selected]] }
+          start={ tokStart }
+          end={ tokEnd }
+          color={ '#fff59d' } />;
+
+      return (
+        <span
+          key={ tokId }
+          onMouseOver={ () => hover(lineId, tokStart.ch) }>
+          { content }
+        </span>);
+    });
+  
 
     const theme = props.theme;
 
@@ -96,11 +97,14 @@ function CodeViewer(props) {
         style={{
           display: 'inline-block',
           width: gutterWidth,
-          textAlign: 'right',
+          fontFamily: 'Roboto Mono, "Courier New", Courier, monospace',
           backgroundColor: theme.palette.grey['200'],
+          textAlign: 'right',
+          verticalAlign: 'middle',
           padding: '0 5px'
         }}>
         <Typography
+          variant='body2'
           ref={ ref => {
             const lastLine = lineId == lines.length - 1;
             if (ref && lastLine) {
@@ -123,7 +127,8 @@ function CodeViewer(props) {
           display='inline'
           variant='body2'
           style={{
-            fontFamily: 'Roboto Mono, "Courier New", Courier, monospace'
+            fontFamily: 'Roboto Mono, "Courier New", Courier, monospace',
+            verticalAlign: 'middle'
           }}>
           { lineElement }
         </Typography>
