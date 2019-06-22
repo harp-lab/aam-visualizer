@@ -15,7 +15,7 @@
   
   (define (lex-e s row col)
     (define e (first (regexp-match
-      #px"\\(|\\)|\\[|\\]|#t|#f|[\\w]+|\r\n|\n|[\\s]+"
+      #px"\\(|\\)|\\[|\\]|#t|#f|[\\w]+|\r\n|\n|\\s"
       s)))
     (define len (string-length e))
     (define es (substring s len))

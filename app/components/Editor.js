@@ -169,14 +169,21 @@ class Editor extends Component {
     }
 
     return (
-      <div style={ { 
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%' } }>
+      <div
+        style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'auto'
+        }}>
         { infoElement }
         <div
           ref={ ref => this.cmRef = ref }
-          style={ { height: '100%' } } />
+          style={{
+            flex: '1 1 auto',
+            overflow: 'auto',
+            height: '100%'
+          }} />
         { editMenu }
       </div>
     );

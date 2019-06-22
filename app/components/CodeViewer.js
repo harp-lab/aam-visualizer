@@ -1,8 +1,11 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import Typography from '@material-ui/core/Typography';
+import withTheme from '@material-ui/styles/withTheme';
 import CodePos from './data/CodePos';
 
 function CodeViewer(props) {
+  const [gutterWidth, setGutterWidth] = useState('auto');
+
   // filter marks that do not have linked nodes
   const marks = {};
   Object.entries(props.marks).forEach(([id, mark]) => {
@@ -42,7 +45,6 @@ function CodeViewer(props) {
   const lines = props.code
     .split(/\r\n|\n/)
     .map(line => {
-      //return line.split('');
       return line.match(/\(|\)|\[|\]|\#t|\#f|\w+|\s+/g);
     });
   
@@ -50,45 +52,73 @@ function CodeViewer(props) {
   const element = lines.map((line, lineId) => {
     let ch = 0;
     // generate toks
-    const lineElement = line.map((tok, tokId) => {
-      const tokStart = new CodePos(lineId, ch);
-      const tokEnd = new CodePos(lineId, ch + tok.length);
-      ch += tok.length;
+    let lineElement;
+    if (line) {
+      lineElement = line.map((tok, tokId) => {
+        const tokStart = new CodePos(lineId, ch);
+        const tokEnd = new CodePos(lineId, ch + tok.length);
+        ch += tok.length;
+  
+        const hovered = props.hovered;
+        const selected = props.selected;
+        let content = tok;
+        if (hovered.length > 0) {
+          const hoveredMarks = hovered.map(id => { return marks[id]; });
+          content = <Token
+            content={ tok }
+            marks={ hoveredMarks }
+            start={ tokStart }
+            end={ tokEnd }
+            color={ '#d1c4e9' } />;
+        } else if (selected)
+          content = <Token
+            content={ tok }
+            marks={ [marks[selected]] }
+            start={ tokStart }
+            end={ tokEnd }
+            color={ '#fff59d' } />;
+  
+        return (
+          <span
+            key={ tokId }
+            onMouseOver={ () => hover(lineId, tokStart.ch) }>
+            { content }
+          </span>);
+      });
+    } else
+      lineElement = <span></span>;
+    
 
-      const hovered = props.hovered;
-      const selected = props.selected;
-      let content = tok;
-      if (hovered.length > 0) {
-        const hoveredMarks = hovered.map(id => { return marks[id]; });
-        content = <Token
-          content={ tok }
-          marks={ hoveredMarks }
-          start={ tokStart }
-          end={ tokEnd }
-          color={ '#d1c4e9' } />;
-      } else if (selected)
-        content = <Token
-          content={ tok }
-          marks={ [marks[selected]] }
-          start={ tokStart }
-          end={ tokEnd }
-          color={ '#fff59d' } />;
+    const theme = props.theme;
 
-      return (
-        <span
-          key={ tokId }
-          onMouseOver={ () => hover(lineId, tokStart.ch) }>
-          { content }
-        </span>);
-    });
-    return (
-      <Fragment>
+    const gutterElement = (
+      <div
+        style={{
+          display: 'inline-block',
+          width: gutterWidth,
+          textAlign: 'right',
+          backgroundColor: theme.palette.grey['200'],
+          padding: '0 5px'
+        }}>
         <Typography
-          display='inline'>
+          ref={ ref => {
+            const lastLine = lineId == lines.length - 1;
+            if (ref && lastLine) {
+              const bounds = ref.getBoundingClientRect();
+              const width = bounds.width;
+              if (gutterWidth !== width)
+                setGutterWidth(bounds.width);
+            }
+          }}
+          color='textSecondary'>
           { lineId + 1 }
         </Typography>
+      </div>);
+    
+    return (
+      <div key={ lineId }>
+        { gutterElement }
         <Typography
-          key={ lineId }
           onMouseLeave={ () => unhover() }
           display='inline'
           variant='body2'
@@ -97,18 +127,12 @@ function CodeViewer(props) {
           }}>
           { lineElement }
         </Typography>
-      </Fragment>);
+      </div>);
   });
 
-<<<<<<< HEAD
-  return (
-    <div>
-      { element }
-    </div>);
-=======
   return <div style={{ whiteSpace: 'pre' }}>{ element }</div>;
->>>>>>> 9fdbbc702bb85a4a1e9aeaabc8972b4573e5b3c9
 }
+CodeViewer = withTheme(CodeViewer);
 
 function Token(props) {
   const {content, color, start, end} = props;
