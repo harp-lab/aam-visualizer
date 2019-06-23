@@ -81,12 +81,10 @@ function CodeViewer(props) {
           end={ tokEnd }
           color={ '#fff59d' } />;
 
-      return (
-        <span
-          key={ tokId }
-          onMouseOver={ () => hover(lineId, tokStart.ch) }>
-          { content }
-        </span>);
+      return <Span
+        key={ tokId }
+        content={content}
+        onMouseOver={ () => hover(lineId, tokStart.ch) }/>;
     });
   
 
@@ -100,7 +98,6 @@ function CodeViewer(props) {
           fontFamily: 'Roboto Mono, "Courier New", Courier, monospace',
           backgroundColor: theme.palette.grey['200'],
           textAlign: 'right',
-          verticalAlign: 'middle',
           padding: '0 5px'
         }}>
         <Typography
@@ -124,11 +121,11 @@ function CodeViewer(props) {
         { gutterElement }
         <Typography
           onMouseLeave={ () => unhover() }
-          display='inline'
           variant='body2'
           style={{
-            fontFamily: 'Roboto Mono, "Courier New", Courier, monospace',
-            verticalAlign: 'middle'
+            display: 'inline-block',
+            verticalAlign: 'bottom',
+            fontFamily: 'Roboto Mono, "Courier New", Courier, monospace'
           }}>
           { lineElement }
         </Typography>
@@ -159,14 +156,14 @@ function Token(props) {
         { content.substr(0, start.ch) }
         <Span
           content={ content.substr(start.ch) }
-          color={ color }/>
+          color={ color } />
       </Fragment>);
   } else if (mark.endsIn(start, end)) {
     element = (
       <Fragment>
         <Span
           content={ content.substr(0, end.ch) }
-          color={ color }/>
+          color={ color } />
         { content.substr(end.ch) }
       </Fragment>);
   } else
@@ -178,7 +175,11 @@ function Token(props) {
 function Span(props) {
   return (
     <span
-    style={{ backgroundColor: props.color }}>
+      onMouseOver={ props.onMouseOver }
+      style={{
+        display: 'inline-block',
+        backgroundColor: (props.color || 'inherit')
+      }}>
       { props.content }
     </span>);
 }
