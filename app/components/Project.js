@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -16,17 +16,20 @@ import CodeMark from './data/CodeMark';
 
 function Project(props) {
   const project = props.project;
-  switch (project.status) {
-    case project.STATUSES.edit:
-      if (project.code == '')
-        props.getCode(props.id);
-      break;
-    case project.STATUSES.done:
-    case project.STATUSES.error:
-      if (Object.keys(project.graphs).length == 0)
-        getGraphs();
-      break;
-  }
+
+  useEffect(() => {
+    switch (project.status) {
+      case project.STATUSES.edit:
+        if (project.code == '')
+          props.getCode(props.id);
+        break;
+      case project.STATUSES.done:
+      case project.STATUSES.error:
+        if (Object.keys(project.graphs).length == 0)
+          getGraphs();
+        break;
+    }
+  }, []);
 
   let historyEnabled = true;
 
@@ -93,13 +96,12 @@ function Project(props) {
     if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
       // reset selected
       const subGraph = project.subGraph;
-      if (subGraph) { subGraph.resetSelected(); }
-
-      // reset highlighted
+      if (subGraph) {
+        subGraph.resetSelected();
+        props.onSave(project);
+      }
 
       selectNode(project.mainGraphId, nodeId);
-      props.onSave(project);
-      
       highlightNodes(project.mainGraphId, undefined);
       addHistory();
     }
@@ -154,11 +156,11 @@ function Project(props) {
   }
 
   function render() {
-    let view;
+    let viewElement;
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        view = <Editor
+        viewElement = <Editor
           data={ project.code }
           processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
           onSave={ saveCode }
@@ -166,22 +168,22 @@ function Project(props) {
           edit />;
         break;
       case project.STATUSES.process:
-        view = <Loading status='Processing' variant='circular'/>;
+        viewElement = <Loading status='Processing' variant='circular'/>;
         break;
       case project.STATUSES.done:
         if (Object.keys(project.graphs).length == 0)
-          view = <Loading status='Downloading' variant='circular'/>;
+          viewElement = <Loading status='Downloading' variant='circular'/>;
         else
-          view = renderVisual();
+          viewElement = renderVisual();
         break;
       case project.STATUSES.error:
-        view = <Editor
+        viewElement = <Editor
           data={ project.code }
           error
           errorContent={ project.error } />;
         break;
     };
-    return view;
+    return viewElement;
   }
   function renderVisual() {
     const historyElement = renderHistory();
@@ -211,17 +213,11 @@ function Project(props) {
     if (graphHistory)
       links = graphHistory.map((data, index) => {
         const mainNodeId = data.mainNodeId;
-        const subNodeId = data.subNodeId;
-
-        const clickFunc = () => history(index);
-
-        let content = mainNodeId;
-        
         return (
           <Link
             key={ `${mainNodeId}` }
-            onClick={ clickFunc }>
-            { content }
+            onClick={ () => history(index) }>
+            { mainNodeId }
           </Link>);
       });
     
@@ -301,9 +297,8 @@ function Project(props) {
       }
     }
     addMarks(mainGraphId, mainGraph);
-    if (subGraphId) {
+    if (subGraphId)
       addMarks(subGraphId, subGraph);
-    }
 
     let selected, selectFunc;
     if (subGraphId) {
