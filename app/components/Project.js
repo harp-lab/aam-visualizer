@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -15,8 +15,6 @@ import PropViewer from './PropViewer';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const [highlighted, setHighlighted] = useState(undefined);
-
   const project = props.project;
   switch (project.status) {
     case project.STATUSES.edit:
@@ -102,10 +100,11 @@ function Project(props) {
       selectNode(project.mainGraphId, nodeId);
       props.onSave(project);
       
-      setHighlighted(undefined);
+      highlightNodes(project.mainGraphId, undefined);
       addHistory();
     }
   }
+  function highlightNodes(graphId, nodeIds) { saveMetadata(graphId, {highlightedNodes: nodeIds}); }
   function hoverNodes(graphId, nodeIds) { saveMetadata(graphId, { hoveredNodes: nodeIds }); }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
@@ -116,7 +115,7 @@ function Project(props) {
     let highlightedNodeIds;
     if (edge)
       highlightedNodeIds = edge.calls;
-    setHighlighted(highlightedNodeIds);
+    highlightNodes(project.mainGraphId, highlightedNodeIds);
   }
   function addHistory() {
     if (historyEnabled) {
@@ -156,10 +155,9 @@ function Project(props) {
 
   function render() {
     let view;
-    const status = project.status;
-    switch (status) {
-      case 'empty':
-      case 'edit':
+    switch (project.status) {
+      case project.STATUSES.empty:
+      case project.STATUSES.edit:
         view = <Editor
           data={ project.code }
           processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
@@ -167,16 +165,16 @@ function Project(props) {
           onProcess={ processCode }
           edit />;
         break;
-      case 'process':
+      case project.STATUSES.process:
         view = <Loading status='Processing' variant='circular'/>;
         break;
-      case 'done':
+      case project.STATUSES.done:
         if (Object.keys(project.graphs).length == 0)
           view = <Loading status='Downloading' variant='circular'/>;
         else
           view = renderVisual();
         break;
-      case 'error':
+      case project.STATUSES.error:
         view = <Editor
           data={ project.code }
           error
@@ -259,7 +257,6 @@ function Project(props) {
         graphElement = <FunctionGraph
           projectId={ props.id }
           project={ props.project }
-          highlightedNodeIds={ highlighted }
           onNodeSelect={ selectNode }
           onNodeUnselect={ unselectNode }
           onMainNodeSelect={ selectMainNode }

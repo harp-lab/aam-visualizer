@@ -17,7 +17,7 @@ function FunctionGraph(props) {
         data={ mainGraph.export() }
         positions={ mainGraph.metadata.positions }
         selectedNode={ mainGraph.metadata.selectedNode }
-        highlighted={ props.highlightedNodeIds }
+        highlighted={ mainGraph.metadata.highlightedNodes }
         hoveredNodes={ mainGraph.metadata.hoveredNodes }
         onNodeSelect={ props.onMainNodeSelect }
         onNodeUnselect={ nodeId => props.onMainNodeSelect(undefined) }
