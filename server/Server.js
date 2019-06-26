@@ -1,7 +1,9 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs-extra');
 const child_process = require('child_process');
+const express = require('express');
+const fse = require('fs-extra');
+const fs = require('fs');
+const fsp = fs.promises;
+const path = require('path');
 const Consts = require('./Consts.js');
 const G = require('./Global.js');
 const Project = require('./Project.js');
@@ -9,8 +11,10 @@ const Project = require('./Project.js');
 class Server {
   constructor() {
     this.projects = {};
-
-    this.initData();
+    this.init();
+  }
+  async init() {
+    await this.initData();
     this.initServer();
     this.initWatcher();
   }
@@ -74,20 +78,20 @@ class Server {
           break;
       }
     });
-    projectRouter.put('/save', (req, res) => {
+    projectRouter.put('/save', async (req, res) => {
       const projectId = req.params.id;
       const data = req.body;
-      this.saveProject(projectId, data);
+      await this.saveProject(projectId, data);
       res.status(202).end();
     });
-    projectRouter.put('/process', (req, res) => {
+    projectRouter.put('/process', async (req, res) => {
       const projectId = req.params.id;
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.edit:
           const options = req.body;
           project.analysis = options.analysis;
-          this.processProject(projectId);
+          await this.processProject(projectId);
           res.status(200).end();
           break;
         default:
@@ -132,7 +136,7 @@ class Server {
     this.projects[projectId] = new Project();
     return projectId;
   }
-  saveProject(projectId, data) {
+  async saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - saving`);
     const project  = this.projects[projectId];
     const name = data.name;
@@ -145,17 +149,17 @@ class Server {
       default:
         if (name)
           project.name = name;
-        this.writeProject(projectId);
+        await this.writeProject(projectId);
         break;
     }
   }
   deleteProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - delete`);
     const project = this.projects[projectId];
-    fs.remove(`${project.dirPath}/${projectId}`);
+    fse.remove(`${project.dirPath}/${projectId}`);
     delete this.projects[projectId];
   }
-  processProject(projectId) {
+  async processProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - process`);
     const project = this.projects[projectId];
     switch (project.status) {
@@ -164,9 +168,9 @@ class Server {
         break;
       case project.STATUSES.edit:
         project.status = project.STATUSES.process;
-        this.writeProject(projectId, Consts.INPUT_DIR);
+        await this.writeProject(projectId, Consts.INPUT_DIR);
         this.notifyWatcher(projectId);
-        fs.remove(`${Consts.SAVE_DIR}/${projectId}`);
+        fse.remove(`${Consts.SAVE_DIR}/${projectId}`);
         //this.checkProject(projectId);
         break;
       default:
@@ -174,23 +178,22 @@ class Server {
         break;
     }
   }
-  checkProject(projectId) {
-    this.readProject(Consts.OUTPUT_DIR, projectId, projectId => {
-      const project = this.projects[projectId];
-      switch (project.status) {
-        case project.STATUSES.process:
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: process`)
-          setTimeout(() => this.checkProject(projectId), 1000);
-          break;
-        case project.STATUSES.error:
-        case project.STATUSES.done:
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: done`);
-          break;
-        default:
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status check`);
-          break;
-      }
-    });
+  async checkProject(projectId) {
+    await this.readProject(Consts.OUTPUT_DIR, projectId);
+    const project = this.projects[projectId];
+    switch (project.status) {
+      case project.STATUSES.process:
+        G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: process`)
+        setTimeout(() => this.checkProject(projectId), 1000);
+        break;
+      case project.STATUSES.error:
+      case project.STATUSES.done:
+        G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: done`);
+        break;
+      default:
+        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status check`);
+        break;
+    };
   }
   getProjectList() {
     const list = {};
@@ -205,25 +208,25 @@ class Server {
   }
   
   // file system handlers
-  initData() {
+  async initData() {
     if (Consts.INIT_DATA) {
       G.log(Consts.LOG_TYPE_INIT, 'clear data');
-      fs.removeSync(Consts.DATA_DIR);
+      fse.removeSync(Consts.DATA_DIR);
     }
 
     // ensure data directories
     G.log(Consts.LOG_TYPE_INIT, 'ensure directories');
-    fs.ensureDirSync(Consts.OUTPUT_DIR);
-    fs.ensureDirSync(Consts.INPUT_DIR);
-    fs.ensureDirSync(Consts.SAVE_DIR);
+    fse.ensureDirSync(Consts.OUTPUT_DIR);
+    fse.ensureDirSync(Consts.INPUT_DIR);
+    fse.ensureDirSync(Consts.SAVE_DIR);
 
     // read data directories
     G.log(Consts.LOG_TYPE_INIT, 'read data');
-    this.readProjectDir(Consts.OUTPUT_DIR);
-    this.readProjectDir(Consts.INPUT_DIR, projectId => this.checkProject(projectId));
-    this.readProjectDir(Consts.SAVE_DIR);
+    await this.readProjectDir(Consts.OUTPUT_DIR);
+    await this.readProjectDir(Consts.INPUT_DIR);
+    await this.readProjectDir(Consts.SAVE_DIR);
   }
-  writeProject(projectId, dirPath) {
+  async writeProject(projectId, dirPath) {
     const project = this.projects[projectId];
     // if no new dirPath, get set dirPath
     if (dirPath == undefined)
@@ -233,53 +236,44 @@ class Server {
     
     const filePath = `${dirPath}/${projectId}`;
     const output = project.export(projectId);
-    fs.writeFile(filePath, JSON.stringify(output), 'utf8', err => {
-      if (err)
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - write fail`);
-    });
+    const file = await fsp.open(filePath, 'w');
+    await file.writeFile(JSON.stringify(output));
+    await file.close();
   }
-  readProjectDir(dirPath, callback = projectId => {}) {
-    const fileList = fs.readdirSync(dirPath);
-    fileList.forEach(projectId => {
+  async readProjectDir(dirPath) {
+    const fileList = fse.readdirSync(dirPath);
+    fileList.forEach(async projectId => {
       const project = this.projects[projectId];
       if (project)
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - import duplicate`);
       else {
         this.projects[projectId] = new Project();
-        this.readProject(dirPath, projectId, callback);
+        await this.readProject(dirPath, projectId)
       }
     });
   }
-  readProject(dirPath, projectId, callback = projectId => {}) {
-    const project = this.projects[projectId];
-    fs.readFile(`${dirPath}/${projectId}`, { encoding: 'utf-8' }, (error, dataString) => {
-      if (error) {
-        if (error.code == 'ENOENT') {
+  async readProject(dirPath, projectId) {
+    let file;
+    try {
+      const filePath = path.join(dirPath, projectId);
+      file = await fsp.open(filePath, 'r');
+      const data = await file.readFile({encoding: 'utf-8'});
+      const json = JSON.parse(data);
+      const project = this.projects[projectId];
+      project.dirPath = dirPath;
+      project.import(json);
+    } catch(err) {
+      switch (err.code) {
+        case 'ENOENT':
           G.log(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
-          callback(projectId);
-        } else
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail`);
-      } else {
-        const data = JSON.parse(dataString);
-        if (data.id == projectId) {
-          project.dirPath = dirPath;
-          project.name = data.name;
-          project.analysis = data.analysis;
-          project.importCode(data.code);
-          if (data.graphs) {
-            project.status = project.STATUSES.process;
-            project.importGraphs(data.graphs);
-            project.ast = data.ast;
-          }
-          project.status = data.status;
-          if (data.status == 'error')
-            project.error = data.error;
-          project.store = data.store;
-          callback(projectId);
-        } else
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - data id (${data.id}) mismatch`);
+          break;
+        default:
+          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail (${err.code})`);
+          break;
       }
-    });
+    } finally {
+      await file.close();
+    }
   }
 }
 
