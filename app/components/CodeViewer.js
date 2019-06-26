@@ -2,9 +2,11 @@ import React, { Fragment, useState, useEffect } from 'react';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
 import CodePos from './data/CodePos';
+import indigo from '@material-ui/core/colors/indigo';
 
 function CodeViewer(props) {
   const [gutterWidth, setGutterWidth] = useState('auto');
+  const theme = props.theme;
 
   // filter marks that do not have linked nodes
   const marks = {};
@@ -40,6 +42,7 @@ function CodeViewer(props) {
     for (const graphId of props.graphIds)
       props.onCodeHover(graphId, undefined);
   }
+  
 
   // compile code into nested array
   const lines = props.code
@@ -62,6 +65,11 @@ function CodeViewer(props) {
       const tokEnd = new CodePos(lineId, ch + tok.length);
       ch += tok.length;
 
+      const isPrim = tok.match(/lambda|let|if|\#t|\#f/);
+      let textColor = 'inherit';
+      if (isPrim)
+        textColor = indigo[800];
+
       const hovered = props.hovered;
       const selected = props.selected;
       let content = tok;
@@ -72,23 +80,21 @@ function CodeViewer(props) {
           marks={ hoveredMarks }
           start={ tokStart }
           end={ tokEnd }
-          color={ '#d1c4e9' } />;
+          color={ theme.palette.hover.light  } />;
       } else if (selected)
         content = <Token
           content={ tok }
           marks={ [marks[selected]] }
           start={ tokStart }
           end={ tokEnd }
-          color={ '#fff59d' } />;
+          color={ theme.palette.select.light } />;
 
       return <Span
         key={ tokId }
         content={content}
+        textColor={ textColor }
         onMouseOver={ () => hover(lineId, tokStart.ch) }/>;
     });
-  
-
-    const theme = props.theme;
 
     const gutterElement = (
       <div
@@ -178,7 +184,8 @@ function Span(props) {
       onMouseOver={ props.onMouseOver }
       style={{
         display: 'inline-block',
-        backgroundColor: (props.color || 'inherit')
+        backgroundColor: (props.color || 'inherit'),
+        color: (props.textColor || 'inherit')
       }}>
       { props.content }
     </span>);
