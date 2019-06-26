@@ -14,6 +14,20 @@ class Project {
     };
     this.status = this.STATUSES.empty;
   }
+  import(data) {
+    this.name = data.name;
+    this.analysis = data.analysis;
+    this.importCode(data.code);
+    if (data.graphs) {
+      this.status = this.STATUSES.process;
+      this.importGraphs(data.graphs);
+      this.ast = data.ast;
+    }
+    this.status = data.status;
+    if (data.status == 'error')
+      this.error = data.error;
+    this.store = data.store;
+  }
   importCode(code) {
     switch (this.status) {
       case this.STATUSES.empty:
