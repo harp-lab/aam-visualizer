@@ -55,9 +55,8 @@ class Project {
         break;
     }
   }
-  export(projectId) {
+  export() {
     return {
-      id: projectId,
       status: this.status,
       error: this.error,
       code: this.code,

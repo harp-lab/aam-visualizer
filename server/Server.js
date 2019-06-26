@@ -34,14 +34,12 @@ class Server {
 
     app.get('/api/all', (req, res) => {
       res.json(this.getProjectList())
-        .status(200)
-        .end();
+        .status(200).end();
     });
     app.get('/api/create', (req, res) => {
       const projectId = this.createProject();
       res.json({ id: projectId })
-        .status(201)
-        .end();
+        .status(201).end();
     });
     
     // handle project requests
@@ -57,8 +55,7 @@ class Server {
       const projectId = req.params.id;
       const project = this.projects[projectId];
       res.json({ id: projectId, code: project.code })
-        .status(200)
-        .end();
+        .status(200).end();
     });
     projectRouter.get('/data', (req, res) => {
       const projectId = req.params.id;
@@ -67,8 +64,7 @@ class Server {
         case project.STATUSES.done:
         case project.STATUSES.error:
           res.json(project.export(projectId))
-            .status(200)
-            .end();
+            .status(200).end();
           break;
         case project.STATUSES.process:
           res.status(204).end();
@@ -99,26 +95,19 @@ class Server {
           break;
       }
     });
-    projectRouter.put('/delete', (req, res) => {
-      this.deleteProject(req.params.id);
+    projectRouter.put('/delete', async (req, res) => {
+      await this.deleteProject(req.params.id);
       res.status(205).end();
     });
     
     app.use('/api/projects/:id', projectRouter);
-    
     app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
   initWatcher() {
     G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
-    const options = {
-      stdio: [0, 1, 2, 'ipc']
-    };
+    const options = { stdio: [0, 1, 2, 'ipc'] };
     const watcher = child_process.fork(path.resolve(__dirname, 'watcher.js'), [], options);
-
-    watcher.on('message', data => {
-      const id = data.id;
-      this.readProject(Consts.OUTPUT_DIR, id);
-    });
+    watcher.on('message', data => { this.readProject(Consts.OUTPUT_DIR, data.id); });
     watcher.on('close', code => {
       G.log(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
@@ -126,9 +115,7 @@ class Server {
     
     this.watcher = watcher;
   }
-  notifyWatcher(file) {
-    this.watcher.send({ id: file });
-  }
+  notifyWatcher(file) { this.watcher.send({ id: file }); }
 
   createProject() {
     const projectId = `${Date.now()}`;
@@ -153,10 +140,10 @@ class Server {
         break;
     }
   }
-  deleteProject(projectId) {
+  async deleteProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - delete`);
     const project = this.projects[projectId];
-    fse.remove(`${project.dirPath}/${projectId}`);
+    await fsp.unlink(`${project.dirPath}/${projectId}`);
     delete this.projects[projectId];
   }
   async processProject(projectId) {
@@ -170,30 +157,12 @@ class Server {
         project.status = project.STATUSES.process;
         await this.writeProject(projectId, Consts.INPUT_DIR);
         this.notifyWatcher(projectId);
-        fse.remove(`${Consts.SAVE_DIR}/${projectId}`);
-        //this.checkProject(projectId);
+        await fsp.unlink(`${Consts.SAVE_DIR}/${projectId}`);
         break;
       default:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - immutable`);
         break;
     }
-  }
-  async checkProject(projectId) {
-    await this.readProject(Consts.OUTPUT_DIR, projectId);
-    const project = this.projects[projectId];
-    switch (project.status) {
-      case project.STATUSES.process:
-        G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: process`)
-        setTimeout(() => this.checkProject(projectId), 1000);
-        break;
-      case project.STATUSES.error:
-      case project.STATUSES.done:
-        G.log(Consts.LOG_TYPE_PROJ, `${projectId} - status: done`);
-        break;
-      default:
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - invalid status check`);
-        break;
-    };
   }
   getProjectList() {
     const list = {};
@@ -211,14 +180,15 @@ class Server {
   async initData() {
     if (Consts.INIT_DATA) {
       G.log(Consts.LOG_TYPE_INIT, 'clear data');
-      fse.removeSync(Consts.DATA_DIR);
+      await fse.remove(Consts.DATA_DIR);
     }
 
     // ensure data directories
     G.log(Consts.LOG_TYPE_INIT, 'ensure directories');
-    fse.ensureDirSync(Consts.OUTPUT_DIR);
-    fse.ensureDirSync(Consts.INPUT_DIR);
-    fse.ensureDirSync(Consts.SAVE_DIR);
+    const options = { recursive: true };
+    await fsp.mkdir(Consts.OUTPUT_DIR, options);
+    await fsp.mkdir(Consts.INPUT_DIR, options);
+    await fsp.mkdir(Consts.SAVE_DIR, options);
 
     // read data directories
     G.log(Consts.LOG_TYPE_INIT, 'read data');
@@ -241,7 +211,7 @@ class Server {
     await file.close();
   }
   async readProjectDir(dirPath) {
-    const fileList = fse.readdirSync(dirPath);
+    const fileList = await fsp.readdir(dirPath);
     fileList.forEach(async projectId => {
       const project = this.projects[projectId];
       if (project)
