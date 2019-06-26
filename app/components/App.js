@@ -212,8 +212,8 @@ function Message(props) {
       style={{
         display: 'flex',
         justifyContent: 'center',
-        backgroundColor: Theme.palette.warning.main,
-        color: Theme.palette.warning.contrastText
+        backgroundColor: Theme.palette.warn.main,
+        color: Theme.palette.warn.contrastText
       }}>
       {props.content}
     </Typography>);
