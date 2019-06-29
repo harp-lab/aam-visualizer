@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import cytoscape from 'cytoscape';
+import withTheme from '@material-ui/styles/withTheme';
 
 function getStyle(prop, defaultStyle) {
   return element => {
@@ -57,12 +58,59 @@ const config = {
 };
 
 function Graph(props) {
-  const cyRef = useRef(undefined);
+  const cyElem = useRef(undefined);
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  config.elements = props.data;
-  const cy = useRef(cytoscape(config)).current;
+  const theme = props.theme;
+  const config = {
+    style: [
+      {
+        selector: 'node',
+        style: {
+          'label': 'data(label)',
+          'text-wrap': 'wrap'
+        }
+      },
+      {
+        selector: 'node:selected',
+        style: { 'background-color': theme.palette.select.main }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'label': 'data(label)',
+          'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle',
+          'line-style': getStyle('line-style', 'solid')
+        }
+      },
+      {
+        selector: 'edge:selected',
+        style: {
+          'line-color': theme.palette.select.main,
+          'target-arrow-color': theme.palette.select.main
+        }
+      },
+      {
+        selector: '.highlighted',
+        style: { 'background-color': theme.palette.suggest.main }
+      },
+      {
+        selector: element => {
+          return element.hasClass('highlighted') && element.selected();
+        },
+        style: { 'background-color': theme.palette.suggest.dark }
+      },
+      {
+        selector: '.hover',
+        style: { 'background-color': theme.palette.hover.main }
+      }
+    ],
+    headless: true
+  };
+  const cyRef = useRef(cytoscape(config));
+  const cy = cyRef.current;
 
   // event handlers
   ['select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
@@ -86,8 +134,9 @@ function Graph(props) {
     if (props.hoveredNodes !== [node.id()])
       props.onSave(props.graphId, { hoveredNodes: [node.id()] });
   });
-  cy.on('mouseout', 'node', evt => { props.onSave(props.graphId, { hoveredNodes: undefined }); });
-  
+  cy.on('mouseout', 'node', evt => {
+    props.onSave(props.graphId, { hoveredNodes: undefined });
+  });
   if (props.onEdgeSelect) {
     cy.on('select', 'edge', evt => {
       const edge = evt.target;
@@ -105,12 +154,15 @@ function Graph(props) {
   
   // mount/unmount
   useEffect(() => {
-    cy.mount(cyRef.current);
+    cy.mount(cyElem.current);
     return () => cy.unmount();
   }, []);
 
-  // node positions
+  // graph change
   useEffect(() => {
+    // add nodes 
+    cy.add(props.data);
+
     // load node positions
     const positions = props.positions;
     if (positions) {
@@ -129,6 +181,9 @@ function Graph(props) {
         positions[nodeId] = cy.$(`#${nodeId}`).position();
       })
       props.onSave(props.graphId, { positions });
+
+      // remove nodes
+      cy.nodes().remove();
     };
   }, [props.projectId, props.graphId]);
 
@@ -165,7 +220,7 @@ function Graph(props) {
     events.current = true;
 
     // update bounds
-    bounds.current = cyRef.current.getBoundingClientRect();
+    bounds.current = cyElem.current.getBoundingClientRect();
   });
 
   return <div
@@ -175,7 +230,8 @@ function Graph(props) {
       minHeight: 0,
       width: '100%'
     }}
-    ref={ cyRef } />;
+    ref={ cyElem } />;
 }
+Graph = withTheme(Graph);
 
 export default Graph;
