@@ -30,8 +30,7 @@ function CodeViewer(props) {
     });
     return markId;
   }
-  function hover(line, ch) {
-    const markId = getMark(line, ch);
+  function hover(markId) {
     unhover();
     if (markId) {
       for (const [graphId, nodes] of Object.entries(marks[markId].nodes))
@@ -41,6 +40,18 @@ function CodeViewer(props) {
   function unhover() {
     for (const graphId of props.graphIds)
       props.onCodeHover(graphId, undefined);
+  }
+  function click(markId) {
+    // only select node if unambiguous
+    const mark = marks[markId];
+    const nodes = mark.nodes;
+    const graphIds = Object.keys(mark.nodes);
+    if (graphIds.length == 1) {
+      const graphId = graphIds[0];
+      const graphNodes = nodes[graphId];
+      if (graphNodes.length == 1)
+        props.onNodeSelect(graphId, graphNodes[0]);
+    }
   }
   
 
@@ -89,11 +100,14 @@ function CodeViewer(props) {
           end={ tokEnd }
           color={ theme.palette.select.light } />;
 
+      const markId = getMark(lineId, tokStart.ch);
       return <Span
         key={ tokId }
         content={content}
         textColor={ textColor }
-        onMouseOver={ () => hover(lineId, tokStart.ch) }/>;
+        onMouseOver={ () => hover(markId) }
+        onClick={ () => click(markId) }
+        style={{ cursor: 'pointer' }}/>;
     });
 
     const gutterElement = (
@@ -182,10 +196,12 @@ function Span(props) {
   return (
     <span
       onMouseOver={ props.onMouseOver }
+      onClick={ props.onClick }
       style={{
         display: 'inline-block',
         backgroundColor: (props.color || 'inherit'),
-        color: (props.textColor || 'inherit')
+        color: (props.textColor || 'inherit'),
+        ...props.style
       }}>
       { props.content }
     </span>);

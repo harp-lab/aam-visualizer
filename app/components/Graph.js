@@ -1,12 +1,5 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import cytoscape from 'cytoscape';
-
-const style = {
-    flex: '1 1 1%',
-    display: 'block',
-    minHeight: 0,
-    width: '100%'
-};
 
 function getStyle(prop, defaultStyle) {
   return element => {
@@ -63,173 +56,126 @@ const config = {
   headless: true
 };
 
-class Graph extends Component {
-  constructor(props) {
-    super(props);
+function Graph(props) {
+  const cyRef = useRef(undefined);
+  const bounds = useRef(undefined);
+  const events = useRef(false);
 
-    config.elements = this.props.data;
-    this.cy = cytoscape(config);
-    this.highlight();
-    this.hover();
+  config.elements = props.data;
+  const cy = useRef(cytoscape(config)).current;
 
-    this.initNodeEvents();
-    this.initEdgeEvents();
-    this.eventsEnabled = false;
-  }
-  initNodeEvents() {
-    this.cy.on('select', 'node', event => {
-      const node = event.target;
-      if (this.eventsEnabled)
-        this.props.onNodeSelect(node.id());
-    });
-    this.cy.on('unselect', 'node', event => {
-      const node = event.target;
-      if (this.eventsEnabled) {
-        // disable node unselect if 'selectedNode' prop defined
-        if (this.props.selectedNode) {
-          this.eventsEnabled = false;
-          node.select();
-          this.eventsEnabled = true;
-        }
-        else
-          this.props.onNodeUnselect(node.id());
+  // event handlers
+  ['select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
+  cy.on('select', 'node', evt => {
+    const node = evt.target;
+    if (events.current)
+      props.onNodeSelect(node.id());
+  });
+  cy.on('unselect', 'node', evt => {
+    const node = evt.target;
+    if (events.current) {
+      if (props.selectedNode) {
+        events.current = false;
+        node.select();
+        events.current = true;
       }
-    });
-    this.cy.on('mouseover', 'node', evt => {
-      const node = evt.target;
-      const metadata = {
-        hoveredNodes: [node.id()]
-      };
-      this.props.onSave(this.props.graphId, metadata);
-    });
-    this.cy.on('mouseout', 'node', evt => {
-      const metadata = {
-        hoveredNodes: undefined
-      };
-      this.props.onSave(this.props.graphId, metadata);
-    });
-  }
-  initEdgeEvents() {
-    if (this.props.onEdgeSelect) {
-      this.cy.on('select', 'edge', event => {
-        const edge = event.target;
-        if (this.eventsEnabled) {
-          event.target.unselect();
-          this.props.onEdgeSelect(edge.id());
-        }
-      });
-      this.cy.on('unselect', 'edge', event => {
-        if (this.eventsEnabled) {
-          this.props.onEdgeSelect(undefined);
-        }
-      });
-    } else {
-      // disable edge select if 'onEdgeSelect' func defined
-      this.cy.on('select', 'edge', event => event.target.unselect());
     }
-  }
-
-  position() {
-    if (this.props.positions) {
-      this.cy.nodes().positions((element, index) => {
-        return this.props.positions[element.data('id')];
-      });
-      this.cy.fit();
-    }
-    else
-      this.cy.layout({ name: 'cose', directed: true }).run();
-  }
-  select() {
-    this.eventsEnabled = false;
-
-    this.cy.batch(() => {
-      // select nodes
-      this.cy.nodes().unselect();
-      if (this.props.selectedNode)
-        this.cy.$(`#${this.props.selectedNode}`).select();
+  });
+  cy.on('mouseover', 'node', evt => {
+    const node = evt.target;
+    if (props.hoveredNodes !== [node.id()])
+      props.onSave(props.graphId, { hoveredNodes: [node.id()] });
+  });
+  cy.on('mouseout', 'node', evt => { props.onSave(props.graphId, { hoveredNodes: undefined }); });
   
-      // select edges
-      this.cy.edges().unselect();
-      if (this.props.selectedEdge)
-        this.cy.$(`#${this.props.selectedEdge}`).select();
-    });
-
-    this.eventsEnabled = true;
-  }
-  highlight() {
-    const highlighted = this.props.highlighted;
-    this.cy.batch(() => {
-      this.cy.nodes().removeClass('highlighted');
-      if (highlighted) {
-        highlighted.forEach(nodeId => {
-          this.cy.$(`#${nodeId}`).addClass('highlighted');
-        });
+  if (props.onEdgeSelect) {
+    cy.on('select', 'edge', evt => {
+      const edge = evt.target;
+      if (events.current) {
+        edge.unselect();
+        props.onEdgeSelect(edge.id());
       }
     });
-  }
-  hover() {
-    const hoveredNodes = this.props.hoveredNodes;
-    this.cy.batch(() => {
-      this.cy.nodes().removeClass('hover');
-      if (hoveredNodes) {
-        hoveredNodes.forEach(nodeId => {
-          this.cy.$(`#${nodeId}`).addClass('hover');
+    cy.on('unselect', 'edge', evt => {
+      if (events.current)
+        props.onEdgeSelect(undefined);
+    });
+  } else
+    cy.on('select', 'edge', evt => evt.target.unselect());
+  
+  // mount/unmount
+  useEffect(() => {
+    cy.mount(cyRef.current);
+    return () => cy.unmount();
+  }, []);
+
+  // node positions
+  useEffect(() => {
+    // load node positions
+    const positions = props.positions;
+    if (positions) {
+      cy.nodes().positions(element => {
+        return positions[element.data('id')];
+      });
+      cy.fit();
+    } else
+      cy.layout({ name: 'cose', directed: true }).run();
+    
+    return () => {
+      // save node positions
+      const positions = {};
+      props.data.forEach(node => {
+        const nodeId = node.data.id;
+        positions[nodeId] = cy.$(`#${nodeId}`).position();
+      })
+      props.onSave(props.graphId, { positions });
+    };
+  }, [props.projectId, props.graphId]);
+
+  // resize on bound changes
+  useEffect(() => {
+    cy.resize();
+  }, [bounds.current]);
+
+  // update
+  useEffect(() => {
+    // mark nodes
+    events.current = false;
+    cy.batch(() => {
+      select([props.selectedNode, props.selectedEdge]);
+      addClass(props.highlighted, 'highlighted');
+      addClass(props.hoveredNodes, 'hover');
+    });
+    function select(elementIds) {
+      cy.nodes().unselect();
+      cy.edges().unselect();
+      elementIds.forEach(elementId => {
+        if (elementId)
+          cy.$(`#${elementId}`).select();
+      });
+    }
+    function addClass(nodeIds, className) {
+      cy.nodes().removeClass(className);
+      if (nodeIds) {
+        nodeIds.forEach(nodeId => {
+          cy.$(`#${nodeId}`).addClass(className);
         })
       }
-    });
-  }
-  save(props) {
-    const positions = {};
-    props.data.forEach(node => {
-      const id = node.data.id;
-      positions[id] = this.cy.$(`#${id}`).position();
-    });
-    props.onSave(props.graphId, { positions });
-  }
-
-  componentDidMount() {
-    const bounds = this.cyRef.getBoundingClientRect();
-    this.height = bounds.height;
-    this.width = bounds.width;
-
-    this.cy.mount(this.cyRef);
-    this.position();
-    this.select();
-    this.cy.resize();
-    this.eventsEnabled = true;
-  }
-  componentDidUpdate(prevProps) {
-    const projectUpdate = this.props.projectId !== prevProps.projectId;
-    const graphUpdate = this.props.graphId !== prevProps.graphId;
-    if (projectUpdate || graphUpdate) {
-      this.save(prevProps);
-      this.cy.nodes().remove();
-      this.cy.add(this.props.data);
-      this.position();
     }
-    
-    this.select();
-    this.highlight();
-    this.hover();
+    events.current = true;
 
-    const bounds = this.cyRef.getBoundingClientRect();
-    const heightUpdate = bounds.height !== this.height;
-    const widthUpdate = bounds.width !== this.width;
-    if (heightUpdate || widthUpdate) {
-      this.height = bounds.height;
-      this.width = bounds.width;
-      this.cy.resize();
-    }
-  }
-  componentWillUnmount() {
-    this.save(this.props);
-    this.cy.unmount();
-  }
-  render() {
-    return <div
-      style={ style }
-      ref={ ref => this.cyRef = ref } />;
-  }
+    // update bounds
+    bounds.current = cyRef.current.getBoundingClientRect();
+  });
+
+  return <div
+    style={{
+      flex: '1 1 1%',
+      display: 'block',
+      minHeight: 0,
+      width: '100%'
+    }}
+    ref={ cyRef } />;
 }
 
 export default Graph;

@@ -268,8 +268,8 @@ function Project(props) {
           selectedNode={ mainGraph.metadata.selectedNode }
           hoveredNodes={ mainGraph.metadata.hoveredNodes }
           onNodeSelect={ selectMainNode }
-          onNodeUnselect={ selectMainNode }
-          onSave={ saveMetadata } />;
+          onSave={ saveMetadata }
+          alwaysSelected />;
         break;
     }
 
@@ -342,7 +342,8 @@ function Project(props) {
           marks={ marks }
           selected={ selected }
           hovered={ hovered }
-          onNodeSelect={ (selectFunc || selectNode) }
+          //onNodeSelect={ (selectFunc || selectNode) }
+          onNodeSelect={ selectNode }
           onCodeHover={ hoverNodes } />
       </Pane>);
   }
