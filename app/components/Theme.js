@@ -7,15 +7,21 @@ import yellow from '@material-ui/core/colors/yellow';
 const theme = createMuiTheme({
   palette: {
     secondary: {
-      light: blue.A200,
-      main: blue.A400,
-      dark: blue.A700,
+      light: blue[300],
+      main: blue[500],
+      dark: blue[700],
     },
     select: {
-      light: yellow[200]
+      light: blue[100],
+      main: blue[400]
     },
     hover: {
-      light: deepPurple[100]
+      light: deepPurple[100],
+      main: deepPurple[400]
+    },
+    suggest: {
+      main: yellow[400],
+      dark: yellow[700]
     },
     warn: {
       main: amber.A700,
