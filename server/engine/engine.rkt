@@ -14,6 +14,7 @@
   )
 
 ; handle commandline arguments
+(sleep 100)
 (define output-file-path (make-parameter ""))
 (define input-file-path
   (command-line

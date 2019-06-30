@@ -39,15 +39,31 @@ function App(props) {
 
     return projectId;
   }
+  async function cancelProject(projectId) {
+    const res = await fetch(`/api/projects/${projectId}/cancel`, { method: 'POST' });
+    switch (res.status) {
+      case 200:
+        const project = projects[projectId];
+        project.status = project.STATUSES.edit;
+        saveLocalProject(projectId, project);
+        break;
+      case 409:
+        queueSnackbar(`Project ${projectId} cancel request denied - already finished`)
+        break;
+      default:
+        queueSnackbar(`Project ${projectId} cancel request failed`);
+        break;
+    }
+  }
   async function deleteProject(projectId) {
-    const res = await fetch(`/api/projects/${projectId}/delete`, { method: 'PUT' });
+    const res = await fetch(`/api/projects/${projectId}/delete`, { method: 'POST' });
     switch (res.status) {
       case 205:
         deleteLocalProject(projectId);
         if (selectedProjectId == projectId)
           setSelectedProjectId(undefined);
         break;
-      case 404:
+      default:
         queueSnackbar(`Project ${projectId} delete request failed`);
         break;
     }
@@ -108,7 +124,8 @@ function App(props) {
             onClick={ selectProject }
             onProjectsUpdate={ setProjects }
             onSave={ saveLocalProject }
-            onFork = { forkProject }
+            onFork={ forkProject }
+            onCancel={ cancelProject }
             onDelete={ deleteProject }
             onLoad={ setLoad } />;
       break;

@@ -48,7 +48,7 @@ function Project(props) {
         project.code = code;
         props.onSave(project);
         await fetch(`/api/projects/${props.id}/save`, {
-          method: 'PUT',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
         });
@@ -58,7 +58,7 @@ function Project(props) {
   async function processCode(code, options) {
     await saveCode(code);
     const res = await fetch(`/api/projects/${props.id}/process`, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
     });

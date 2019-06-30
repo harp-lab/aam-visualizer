@@ -1,5 +1,6 @@
 const child_process = require('child_process');
 const fs = require('fs');
+const fsp = fs.promises;
 const path = require('path');
 const Consts = require('./Consts');
 const G = require('./Global');
@@ -9,39 +10,60 @@ const log = content => G.log(Consts.LOG_TYPE_WATCHER, content);
 class Watcher {
   constructor() {
     process.on('message', data => {
-      if (!this.state.processing)
-        this.processLoop();
+      const action = data.action;
+      switch (action) {
+        case Consts.WATCHER_ACTION_PROCESS:
+          if (!this.state.processing)
+            this.processLoop();
+          break;
+        case Consts.WATCHER_ACTION_CANCEL:
+          this.revert(data.id);
+          break;
+        default:
+          log(`invalid watcher action (${action})`);
+          break;
+      }
     });
 
-    this.state = { processing: false };
+    this.state = { processing: false, interrupt: false };
     this.processLoop = this.processLoop.bind(this);
     this.processLoop();
   }
-  processLoop() {
-    const file = this.next();
+  async processLoop() {
+    const file = await this.next();
     if (file) {
-      this.state.processing = true;
-      this.process(file);
-      this.processLoop();
+      if (!this.state.interrupt) {
+        this.state.processing = true;
+        await this.process(file);
+        await this.processLoop();
+      }
     } else
       this.state.processing = false;
   }
-  next() {
-    const files = fs.readdirSync(Consts.INPUT_DIR);
+  interrupt() {
+    this.state.interrupt = true;
+  }
+  resume() {
+    this.state.interrupt = false;
+    if (this.state.processing)
+      this.processLoop();
+  }
+  async next() {
+    const files = await fsp.readdir(Consts.INPUT_DIR);
     let oldestFile, oldestCtime;
     if (files.length > 0) {
-      files.forEach(file => {
-        const fileStats = fs.statSync(path.resolve(Consts.INPUT_DIR, file));
+      for await (const file of files) {
+        const fileStats = await fsp.stat(path.resolve(Consts.INPUT_DIR, file));
         const ctime = fileStats.ctimeMs;
         if (!oldestFile || ctime < oldestCtime) {
           oldestFile = file;
           oldestCtime = ctime;
         }
-      });
+      };
     }
     return oldestFile;
   }
-  process(file) {
+  async process(file) {
     log('calling engine');
     const inputPath = path.resolve(Consts.INPUT_DIR, file)
     const outputPath = path.resolve(Consts.OUTPUT_DIR, file);
@@ -50,11 +72,18 @@ class Watcher {
       cwd: Consts.ENGINE_DIR,
       stdio: 'inherit'
     };
-    const output = child_process.spawnSync('racket', args, options);
-    this.clean(file, output.status);
-    this.notify(file);
+
+    const code = await new Promise((resolve, reject) => {
+      this.engineProcess = child_process.spawn('racket', args, options);
+      this.engineProcess.on('exit', code => resolve(code));
+      this.fileProcess = file;
+    });
+    if (!this.engineProcess.killed) {
+      await this.clean(file, code);
+      this.notify(file, Consts.WATCHER_ACTION_PROCESS);
+    }
   }
-  clean(file, code) {
+  async clean(file, code) {
     const inputPath = path.resolve(Consts.INPUT_DIR, file)
     switch (code) {
       case 0:
@@ -62,25 +91,59 @@ class Watcher {
         break;
       case 2:
         log('parse error');
-        this.mark(file, 'parse');
+        await this.mark(file, 'parse');
         break;
       default:
         log('error');
-        this.mark(file);
+        await this.mark(file);
         break;
     }
     log('deleting input file')
-    fs.unlinkSync(inputPath);
+    await fsp.unlink(inputPath);
   }
-  mark(file, error) {
-    const data = fs.readFileSync(path.resolve(Consts.INPUT_DIR, file), { encoding: 'utf-8' });
-    const project = JSON.parse(data);
+  async mark(file, error) {
+    const srcPath = path.resolve(Consts.INPUT_DIR, file);
+    const destPath = path.resolve(Consts.OUTPUT_DIR, file);
+    const project = await this.read(srcPath);
     project.status = 'error';
     project.error = error;
-    fs.writeFileSync(path.resolve(Consts.OUTPUT_DIR, file), JSON.stringify(project));
+    await this.write(destPath, project);
   }
-  notify(file) {
-    process.send({ id: file });
+  async revert(file) {
+    if (this.fileProcess == file) {
+      this.interrupt();
+      this.engineProcess.kill();
+    }
+
+    const srcPath = path.resolve(Consts.INPUT_DIR, file);
+    const destPath = path.resolve(Consts.SAVE_DIR, file);
+    const project = await this.read(srcPath);
+    await fsp.unlink(srcPath);
+
+    project.status = 'edit';
+
+    await this.write(destPath, project);
+
+    this.resume();
+    this.notify(file, Consts.WATCHER_ACTION_CANCEL);
+  }
+  notify(file, action) {
+    process.send({
+      id: file,
+      action
+    });
+  }
+  async read(path) {
+    const file = await fsp.open(path)
+    const data = await file.readFile({encoding: 'utf-8'});
+    await file.close();
+
+    return JSON.parse(data);
+  }
+  async write(path, data) {
+    const file = await fsp.open(path, 'w');
+    await file.writeFile(JSON.stringify(data));
+    await file.close();
   }
 }
 
