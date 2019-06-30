@@ -2,61 +2,6 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import cytoscape from 'cytoscape';
 import withTheme from '@material-ui/styles/withTheme';
 
-function getStyle(prop, defaultStyle) {
-  return element => {
-    const style = element.data('style');
-    let output;
-    if (style && style[prop])
-      output = style[prop];
-    else
-      output = defaultStyle;
-    return output;
-  }
-}
-const config = {
-  style: [
-    {
-      selector: 'node',
-      style: {
-        'label': 'data(label)',
-        'text-wrap': 'wrap'
-      }
-    },
-    {
-      selector: 'node:selected',
-      style: { 'background-color': '#3f51b5' }
-    },
-    {
-      selector: 'edge',
-      style: {
-        'label': 'data(label)',
-        'curve-style': 'bezier',
-        'target-arrow-shape': 'triangle',
-        'line-style': getStyle('line-style', 'solid')
-      }
-    },
-    {
-      selector: 'edge:selected',
-      style: { 'line-color': '#3f51b5' }
-    },
-    {
-      selector: '.highlighted',
-      style: { 'background-color': '#fff59d' }
-    },
-    {
-      selector: element => {
-        return element.hasClass('highlighted') && element.selected();
-      },
-      style: { 'background-color': '#ffeb3b' }
-    },
-    {
-      selector: '.hover',
-      style: { 'background-color': '#b388ff' }
-    }
-  ],
-  headless: true
-};
-
 function Graph(props) {
   const cyElem = useRef(undefined);
   const bounds = useRef(undefined);
@@ -93,24 +38,41 @@ function Graph(props) {
         }
       },
       {
-        selector: '.highlighted',
+        selector: '.suggested',
         style: { 'background-color': theme.palette.suggest.main }
       },
       {
         selector: element => {
-          return element.hasClass('highlighted') && element.selected();
+          return element.hasClass('suggested') && element.selected();
         },
         style: { 'background-color': theme.palette.suggest.dark }
       },
       {
-        selector: '.hover',
+        selector: '.hovered',
         style: { 'background-color': theme.palette.hover.main }
       }
     ],
     headless: true
   };
+  function getStyle(prop, defaultStyle) {
+    return element => {
+      const style = element.data('style');
+      let output;
+      if (style && style[prop])
+        output = style[prop];
+      else
+        output = defaultStyle;
+      return output;
+    }
+  }
   const cyRef = useRef(cytoscape(config));
   const cy = cyRef.current;
+  const metadata = props.metadata;
+  const positions = metadata.positions;
+  const selectedNode = metadata.selectedNode;
+  const selectedEdge = metadata.selectedEdge;
+  const hoveredNodes = metadata.hoveredNodes;
+  const suggestedNodes = metadata.suggestedNodes;
 
   // event handlers
   ['select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
@@ -122,7 +84,7 @@ function Graph(props) {
   cy.on('unselect', 'node', evt => {
     const node = evt.target;
     if (events.current) {
-      if (props.selectedNode) {
+      if (selectedNode) {
         events.current = false;
         node.select();
         events.current = true;
@@ -131,7 +93,7 @@ function Graph(props) {
   });
   cy.on('mouseover', 'node', evt => {
     const node = evt.target;
-    if (props.hoveredNodes !== [node.id()])
+    if (hoveredNodes !== [node.id()])
       props.onSave(props.graphId, { hoveredNodes: [node.id()] });
   });
   cy.on('mouseout', 'node', evt => {
@@ -164,7 +126,6 @@ function Graph(props) {
     cy.add(props.data);
 
     // load node positions
-    const positions = props.positions;
     if (positions) {
       cy.nodes().positions(element => {
         return positions[element.data('id')];
@@ -197,9 +158,9 @@ function Graph(props) {
     // mark nodes
     events.current = false;
     cy.batch(() => {
-      select([props.selectedNode, props.selectedEdge]);
-      addClass(props.highlighted, 'highlighted');
-      addClass(props.hoveredNodes, 'hover');
+      select([selectedNode, selectedEdge]);
+      addClass(suggestedNodes, 'suggested');
+      addClass(hoveredNodes, 'hovered');
     });
     function select(elementIds) {
       cy.nodes().unselect();
