@@ -6,6 +6,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import CallSplitIcon from '@material-ui/icons/CallSplit';
+import CancelIcon from '@material-ui/icons/Cancel';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Tooltip from '@material-ui/core/Tooltip';
 import Menu from '@material-ui/core/Menu';
@@ -60,7 +61,7 @@ function ProjectList(props) {
 
         // update list
         if (refresh)
-          timeout.current = setTimeout(getProjectList, 5000);
+          timeout.current = setTimeout(getProjectList, 1000);
 
         props.onLoad(false);
         props.onProjectsUpdate(updatedProjects);
@@ -87,7 +88,7 @@ function ProjectList(props) {
 
     // save server
     await fetch(`/api/projects/${projectId}/save`, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
     });
@@ -114,6 +115,21 @@ function ProjectList(props) {
       <ListItemText style={{ flex: '0 0 10em' }}>
         { project.status }
       </ListItemText>);
+    let removeActionElement;
+    if (project.status == project.STATUSES.process)
+      removeActionElement = (
+      <Tooltip title='Cancel processing'>
+        <IconButton onClick={ () => props.onCancel(id)}>
+          <CancelIcon />
+        </IconButton>
+      </Tooltip>);
+    else
+      removeActionElement = (
+        <Tooltip title='Delete'>
+          <IconButton onClick={ () => props.onDelete(id) }>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>);
     const actionsElement = (
       <ListItemSecondaryAction>
         <ProjectMenu onRename={ () => openRenameDialog(id) }/>
@@ -122,11 +138,7 @@ function ProjectList(props) {
             <CallSplitIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip title='Delete'>
-          <IconButton onClick={ () => props.onDelete(id) }>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        { removeActionElement }
       </ListItemSecondaryAction>);
 
     return (

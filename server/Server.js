@@ -74,13 +74,13 @@ class Server {
           break;
       }
     });
-    projectRouter.put('/save', async (req, res) => {
+    projectRouter.post('/save', async (req, res) => {
       const projectId = req.params.id;
       const data = req.body;
       await this.saveProject(projectId, data);
       res.status(202).end();
     });
-    projectRouter.put('/process', async (req, res) => {
+    projectRouter.post('/process', async (req, res) => {
       const projectId = req.params.id;
       const project = this.projects[projectId];
       switch (project.status) {
@@ -95,9 +95,34 @@ class Server {
           break;
       }
     });
-    projectRouter.put('/delete', async (req, res) => {
-      await this.deleteProject(req.params.id);
-      res.status(205).end();
+    projectRouter.post('/cancel', async (req, res) => {
+      const projectId = req.params.id;
+      const project = this.projects[projectId];
+      switch (project.status) {
+        case project.STATUSES.process:
+          await this.cancelProject(projectId);
+          res.status(200).end();
+          break;
+        case project.STATUSES.done:
+          res.status(409).end();
+          break;
+        default:
+          res.status(412).end();
+          break;
+      }
+    });
+    projectRouter.post('/delete', async (req, res) => {
+      const projectId = req.params.id;
+      const project = this.projects[projectId];
+      switch (project.status) {
+        case project.STATUSES.process:
+          res.status(412).end();
+          break;
+        default:
+          await this.deleteProject(projectId);
+          res.status(205).end();
+          break;
+      }
     });
     
     app.use('/api/projects/:id', projectRouter);
@@ -107,7 +132,17 @@ class Server {
     G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
     const options = { stdio: [0, 1, 2, 'ipc'] };
     const watcher = child_process.fork(path.resolve(__dirname, 'watcher.js'), [], options);
-    watcher.on('message', data => { this.readProject(Consts.OUTPUT_DIR, data.id); });
+    watcher.on('message', data => {
+      const action = data.action;
+      switch (action) {
+        case Consts.WATCHER_ACTION_PROCESS:
+          this.readProject(Consts.OUTPUT_DIR, data.id);
+          break;
+        case Consts.WATCHER_ACTION_CANCEL:
+          this.readProject(Consts.SAVE_DIR, data.id);
+          break;
+      }
+    });
     watcher.on('close', code => {
       G.log(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
@@ -115,16 +150,27 @@ class Server {
     
     this.watcher = watcher;
   }
-  notifyWatcher(file) { this.watcher.send({ id: file }); }
+  notifyWatcher(file) {
+    this.watcher.send({
+      id: file,
+      action: Consts.WATCHER_ACTION_PROCESS
+    });
+  }
+  cancelWatcher(file) {
+    this.watcher.send({
+      id: file,
+      action: Consts.WATCHER_ACTION_CANCEL
+    });
+  }
 
   createProject() {
     const projectId = `${Date.now()}`;
-    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - creating`);
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - create`);
     this.projects[projectId] = new Project();
     return projectId;
   }
   async saveProject(projectId, data) {
-    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - saving`);
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - save`);
     const project  = this.projects[projectId];
     const name = data.name;
     const code = data.code;
@@ -161,6 +207,19 @@ class Server {
         break;
       default:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - immutable`);
+        break;
+    }
+  }
+  async cancelProject(projectId) {
+    G.log(Consts.LOG_TYPE_PROJ, `${projectId} - cancel`);
+    const project = this.projects[projectId];
+    switch (project.status) {
+      case project.STATUSES.process:
+        this.cancelWatcher(projectId);
+        project.dirPath = Consts.SAVE_DIR;
+        break;
+      default:
+        G.log(Cosnts.LOG_TYPE_SYS, `ERROR: project ${projectId} - cannot cancel project not processing`)
         break;
     }
   }
@@ -226,7 +285,7 @@ class Server {
     let file;
     try {
       const filePath = path.join(dirPath, projectId);
-      file = await fsp.open(filePath, 'r');
+      file = await fsp.open(filePath);
       const data = await file.readFile({encoding: 'utf-8'});
       const json = JSON.parse(data);
       const project = this.projects[projectId];

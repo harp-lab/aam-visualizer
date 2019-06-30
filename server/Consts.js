@@ -20,3 +20,6 @@ exports.LOG_TYPE_HTTP = 'http';
 exports.LOG_TYPE_SYS = 'syst';
 exports.LOG_TYPE_PROJ = 'proj';
 exports.LOG_TYPE_WATCHER = 'wtch';
+
+exports.WATCHER_ACTION_PROCESS = 'process';
+exports.WATCHER_ACTION_CANCEL = 'cancel';
