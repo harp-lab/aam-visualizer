@@ -8,10 +8,9 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 import Theme from './Theme';
-import Loading from './Loading.js';
+import Loading from './Loading';
 import ProjectList from './ProjectList';
 import Project from './Project';
-
 import ProjectData from './data/Project'
 
 const VIEWS = {
@@ -28,47 +27,6 @@ function App(props) {
   const [projects, setProjects] = useState({});
   const refProjects = useRef(projects);
   useEffect(() => { refProjects.current = projects; });
-
-  useEffect(() => {
-    async function getProjectList() {
-      const res = await fetch('/api/all', { method: 'GET' });
-      switch (res.status) {
-        case 200:
-          const data = await res.json();
-          let refresh = false;
-          const updatedProjects = {...projects};
-          for (const [id, metadata] of Object.entries(data)) {
-            let project = updatedProjects[id];
-
-            // create project
-            if (!project) {
-              project = new ProjectData();
-              updatedProjects[id] = project;
-            }
-
-            project.status = metadata.status;
-            project.name = metadata.name;
-            project.analysis = metadata.analysis;
-
-            if (project.status == project.STATUSES.process)
-              refresh = true;
-          }
-
-          // refresh list
-          if (refresh)
-            setTimeout(getProjectList, 5000);
-
-          setLoad(false);
-          setProjects(updatedProjects);
-          break;
-        default:
-          setLoad(true);
-          setTimeout(getProjectList, 1000);
-          break;
-      }
-    }
-    getProjectList();
-  }, []);
 
   async function createProject() {
     const res = await fetch('/api/create', { method: 'GET' });
@@ -146,11 +104,13 @@ function App(props) {
         viewElement = <Loading status='Getting projects' variant='linear'/>;
       else
         viewElement = <ProjectList
-            data={ projects }
+            projects={ projects }
             onClick={ selectProject }
+            onProjectsUpdate={ setProjects }
             onSave={ saveLocalProject }
             onFork = { forkProject }
-            onDelete={ deleteProject } />;
+            onDelete={ deleteProject }
+            onLoad={ setLoad } />;
       break;
     case VIEWS.project:
       const project = getSelectedProject();

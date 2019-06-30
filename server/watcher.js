@@ -9,29 +9,22 @@ const log = content => G.log(Consts.LOG_TYPE_WATCHER, content);
 class Watcher {
   constructor() {
     process.on('message', data => {
-      // if loop paused, clear timer and start loop
-      if (this.state.timeout) {
-        clearTimeout(this.state.timeout);
-        this.state.timeout = undefined;
-        this.loop();
-      }
+      if (!this.state.processing)
+        this.processLoop();
     });
 
-    this.state = {};
-    this.loop = this.loop.bind(this);
-    this.loop();
+    this.state = { processing: false };
+    this.processLoop = this.processLoop.bind(this);
+    this.processLoop();
   }
-  loop() {
+  processLoop() {
     const file = this.next();
     if (file) {
+      this.state.processing = true;
       this.process(file);
-      this.loop();
-    } else {
-      this.state.timeout = setTimeout(() => {
-        this.state.timeout = undefined;
-        this.loop();
-      }, 10000);
-    }
+      this.processLoop();
+    } else
+      this.state.processing = false;
   }
   next() {
     const files = fs.readdirSync(Consts.INPUT_DIR);

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -16,7 +16,9 @@ import CodeMark from './data/CodeMark';
 
 function Project(props) {
   const project = props.project;
+  const timeout = useRef(undefined);
 
+  // mount/unmount
   useEffect(() => {
     switch (project.status) {
       case project.STATUSES.edit:
@@ -29,6 +31,9 @@ function Project(props) {
           getGraphs();
         break;
     }
+    return () => {
+      clearTimeout(timeout.current);
+    };
   }, []);
 
   let historyEnabled = true;
@@ -61,7 +66,7 @@ function Project(props) {
       case 200:
         project.status = project.STATUSES.process;
         props.onSave(project);
-        setTimeout(() => getGraphs(), 5000);
+        timeout.current = setTimeout(() => getGraphs(), 5000);
         break;
       case 412:
         props.onNotify('Project process request rejected');
@@ -77,7 +82,7 @@ function Project(props) {
         props.onSave(project);
         break;
       case 204:
-        setTimeout(() => getGraphs(), 5000);
+        timeout.current = setTimeout(() => getGraphs(), 5000);
         break;
       case 412:
         props.onNotify('Project data request rejected');
@@ -102,11 +107,11 @@ function Project(props) {
       }
 
       selectNode(project.mainGraphId, nodeId);
-      highlightNodes(project.mainGraphId, undefined);
+      suggestNodes(project.mainGraphId, undefined);
       addHistory();
     }
   }
-  function highlightNodes(graphId, nodeIds) { saveMetadata(graphId, {highlightedNodes: nodeIds}); }
+  function suggestNodes(graphId, nodeIds) { saveMetadata(graphId, {suggestedNodes: nodeIds}); }
   function hoverNodes(graphId, nodeIds) { saveMetadata(graphId, { hoveredNodes: nodeIds }); }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
@@ -114,10 +119,10 @@ function Project(props) {
 
     const graph = project.graphs[graphId];
     const edge = graph.edges[edgeId];
-    let highlightedNodeIds;
+    let suggestedNodeIds;
     if (edge)
-      highlightedNodeIds = edge.calls;
-    highlightNodes(project.mainGraphId, highlightedNodeIds);
+      suggestedNodeIds = edge.calls;
+    suggestNodes(project.mainGraphId, suggestedNodeIds);
   }
   function addHistory() {
     if (historyEnabled) {
@@ -264,12 +269,9 @@ function Project(props) {
           projectId={ props.id }
           graphId={ mainGraphId }
           data={ mainGraph.export() }
-          positions={ mainGraph.metadata.positions }
-          selectedNode={ mainGraph.metadata.selectedNode }
-          hoveredNodes={ mainGraph.metadata.hoveredNodes }
+          metadata={ mainGraph.metadata }
           onNodeSelect={ selectMainNode }
-          onSave={ saveMetadata }
-          alwaysSelected />;
+          onSave={ saveMetadata } />;
         break;
     }
 
