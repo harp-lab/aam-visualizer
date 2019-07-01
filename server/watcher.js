@@ -40,9 +40,7 @@ class Watcher {
     } else
       this.state.processing = false;
   }
-  interrupt() {
-    this.state.interrupt = true;
-  }
+  interrupt() { this.state.interrupt = true; }
   resume() {
     this.state.interrupt = false;
     if (this.state.processing)
