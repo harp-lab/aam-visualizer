@@ -40,7 +40,13 @@ class Watcher {
     } else
       this.state.processing = false;
   }
-  interrupt() { this.state.interrupt = true; }
+  interrupt() {
+    this.state.interrupt = true;
+    if (this.engineProcess) {
+      this.engineProcess.kill();
+      this.engineProcess = undefined;
+    }
+  }
   resume() {
     this.state.interrupt = false;
     if (this.state.processing)
@@ -71,12 +77,18 @@ class Watcher {
       stdio: 'inherit'
     };
 
+    // call engine promise
     const code = await new Promise((resolve, reject) => {
       this.engineProcess = child_process.spawn('racket', args, options);
-      this.engineProcess.on('exit', code => resolve(code));
+      this.engineProcess.on('exit', code => {
+        this.fileProcess = undefined;
+        resolve(code);
+      });
       this.fileProcess = file;
     });
-    if (!this.engineProcess.killed) {
+    // callback if engine not killed
+    if (this.engineProcess && !this.engineProcess.killed) {
+      this.engineProcess = undefined;
       await this.clean(file, code);
       this.notify(file, Consts.WATCHER_ACTION_PROCESS);
     }
@@ -108,18 +120,18 @@ class Watcher {
     await this.write(destPath, project);
   }
   async revert(file) {
-    if (this.fileProcess == file) {
+    // interrupt engine if file being processed
+    if (this.fileProcess == file)
       this.interrupt();
-      this.engineProcess.kill();
-    }
 
+    // read data and delete input
     const srcPath = path.resolve(Consts.INPUT_DIR, file);
     const destPath = path.resolve(Consts.SAVE_DIR, file);
     const project = await this.read(srcPath);
     await fsp.unlink(srcPath);
 
+    // revert status to 'edit'
     project.status = 'edit';
-
     await this.write(destPath, project);
 
     this.resume();
@@ -135,7 +147,6 @@ class Watcher {
     const file = await fsp.open(path)
     const data = await file.readFile({encoding: 'utf-8'});
     await file.close();
-
     return JSON.parse(data);
   }
   async write(path, data) {

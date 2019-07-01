@@ -216,7 +216,6 @@ class Server {
     switch (project.status) {
       case project.STATUSES.process:
         this.cancelWatcher(projectId);
-        project.dirPath = Consts.SAVE_DIR;
         break;
       default:
         G.log(Cosnts.LOG_TYPE_SYS, `ERROR: project ${projectId} - cannot cancel project not processing`)
