@@ -104,45 +104,11 @@ function DataViewer(props) {
 function StatesViewer(props) {
   let element;
   if (props.data.length > 0) {
-    const labels = ['syntax', 'instr', 'stack']
-      .map(label => {
-        return <TableCell key={ label }>{ label }</TableCell>
-      });
-    
-    const items = props.data
-      .map((data, index) => {
-        const stackItems = data.stack
-          .map((data, index) => {
-            return <Typography key={ index }>{ data }</Typography>;
-          });
-
-        return (
-          <TableRow key={ index }>
-            <TableCell>{ data.syntax }</TableCell>
-            <TableCell>{ data.instr }</TableCell>
-            <TableCell>{ stackItems }</TableCell>
-          </TableRow>);
-      });
-
     element = (
-      <React.Fragment>
-        <Toolbar
-          variant='dense'
-          style={{
-            backgroundColor: props.theme.palette.secondary.main,
-            color: props.theme.palette.secondary.contrastText
-          }}>
-          <Typography>States</Typography>
-        </Toolbar>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>{ labels }</TableRow>
-          </TableHead>
-          <TableBody>
-            { items }
-          </TableBody>
-        </Table>
-      </React.Fragment>);
+      <Fragment>
+        <ViewerLabel content={ 'States' } />
+        <StateItem state={ props.data }/>
+      </Fragment>);
   } else
     element = <Typography variant='h6'>No states</Typography>;
 
@@ -150,88 +116,109 @@ function StatesViewer(props) {
 }
 StatesViewer = withTheme(StatesViewer);
 
-
-const styles = {
-  content: {
-    alignItems: 'center'
-  }
-};
 function EnvsViewer(props) {
+
   let element;
   if (props.envs)
     element = props.envs.map(({id, env}, index) => {
       let label;
-      if (Object.keys(env).length > 0) {
+      if (Object.keys(env).length > 0)
         label = id;
-      } else {
+      else
         label = `${id} (empty)`;
-      }
 
       return (
-        <ExpansionPanel
-          key={ index }>
-          <ExpansionPanelSummary
-            expandIcon={ <ExpandMoreIcon /> }
-            classes={{ content: props.classes.content }}>
-            <Tooltip title='Delete environment'>
-              <IconButton
-                size='small'
-                onClick={ evt => {
-                  evt.stopPropagation();
-                  props.onDelete(id);
-                }}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-            <Typography variant='body2'>{ label }</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
-            <EnvItem env={ env } store={ props.store }/>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>);
+        <Panel
+          key={ label }
+          label={ label }
+          onDelete={ () => props.onDelete(id) }>
+          <EnvItem
+            env={ env }
+            store={ props.store }/>
+        </Panel>);
     });
   else
     element = (<Typography variant='h6'>Empty</Typography>);
   return (
     <Fragment>
-      <Toolbar
-        variant='dense'
-        style={{
-          backgroundColor: props.theme.palette.secondary.main,
-          color: props.theme.palette.secondary.contrastText
-        }}>
-        <Typography>Environment</Typography>
-      </Toolbar>
+      <ViewerLabel content={ 'Environment' } />
       { element }
     </Fragment>);
 }
-EnvsViewer = withTheme(EnvsViewer);
-EnvsViewer = withStyles(styles)(EnvsViewer);
 
-function EnvItem(props) {
-  const labels = ['var', 'instr', 'store']
-    .map(label => {
-      return <TableCell key={ label }>{ label }</TableCell>
-    });
-  
-  const items = Object.entries(props.env)
-    .map(([id, data]) => {
-      // get store value
-      const storeItems = props.store[data.store]
-        .map(data => {
-          return <Typography key={ data }>{ data }</Typography>;
-        });
-
-      return (
-        <TableRow key={ id }>
-          <TableCell>{ id }</TableCell>
-          <TableCell>{ data.instr }</TableCell>
-          <TableCell>{ storeItems }</TableCell>
-        </TableRow>);
-    });
-  
+function ViewerLabel(props) {
+  const theme = props.theme;
   return (
-    <React.Fragment>
+    <Toolbar
+      variant='dense'
+      style={{
+        backgroundColor: theme.palette.secondary.main,
+        color: theme.palette.secondary.contrastText
+      }}>
+      <Typography>{ props.content }</Typography>
+    </Toolbar>);
+}
+ViewerLabel = withTheme(ViewerLabel);
+
+function Panel(props) {
+  return (
+    <ExpansionPanel>
+      <ExpansionPanelSummary
+        expandIcon={ <ExpandMoreIcon /> }
+        classes={{ content: props.classes.content }}>
+        <Tooltip title='Delete'>
+          <IconButton
+            size='small'
+            onClick={ evt => {
+              evt.stopPropagation();
+              props.onDelete();
+            }}>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+        <Typography variant='body2'>{ props.label }</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails>{ props.children }</ExpansionPanelDetails>
+    </ExpansionPanel>);
+}
+Panel = withStyles({
+  content: { alignItems: 'center' }
+})(Panel);
+
+function StateItem(props) {
+  const labels = ['syntax', 'instr', 'stack'];
+  const items = props.state
+    .map(state => {
+      const stackItems = state.stack
+        .map(data => <Typography key={ data }>{ data }</Typography>);
+      return [state.syntax, state.instr, stackItems];
+    });
+  return <Item
+    labels={ labels }
+    items={ items }/>;
+}
+function EnvItem(props) {
+  const labels = ['var', 'instr', 'store'];
+  const items = Object.entries(props.env)
+    .map(([id, env]) => {
+      const storeItems = props.store[env.store]
+        .map(data => <Typography key={ data }>{ data }</Typography>);
+      return [id, env.instr, storeItems];
+    });
+  return <Item
+    labels={ labels }
+    items={ items }/>;
+}
+function Item(props) {
+  const labels = props.labels
+    .map(label => <TableCell key={ label }>{ label }</TableCell>);
+  const items = props.items
+    .map(item => {
+      const fields = item.map((field, index) => <TableCell key={ index }>{ field }</TableCell>);
+      return <TableRow key={ item[0] }>{ fields }</TableRow>;
+    });
+  return (
+    <Fragment>
       <Table size='small'>
         <TableHead>
           <TableRow>{ labels }</TableRow>
@@ -240,7 +227,7 @@ function EnvItem(props) {
           { items }
         </TableBody>
       </Table>
-    </React.Fragment>);
+    </Fragment>);
 }
 
 export default PropViewer;

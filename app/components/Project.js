@@ -108,7 +108,7 @@ function Project(props) {
     const nodeEnv = project.graphs[graphId].nodes[nodeId].env;
     const match = envs.find(env => { return env.id == envId; });
     if (nodeEnv && !match) {
-      envs.push({
+      envs.unshift({
         id: envId,
         env: nodeEnv
       });
