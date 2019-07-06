@@ -89,14 +89,33 @@ function Project(props) {
         break;
     }
   }
-  function saveMetadata(graphId, metadata) {
+  function saveMetadata(data) {
+    project.metadata = {...project.metadata, ...data};
+    props.onSave(project);
+  }
+  function saveGraphMetadata(graphId, metadata) {
     const graph = project.graphs[graphId];
     graph.metadata = {...graph.metadata, ...metadata};
     props.onSave(project);
   }
 
-  function selectNode(graphId, nodeId) { saveMetadata(graphId, { selectedNode: nodeId }); }
-  function unselectNode(graphId, nodeId) { saveMetadata(graphId, { selectedNode: undefined }); }
+  function selectNode(graphId, nodeId) {
+    saveGraphMetadata(graphId, { selectedNode: nodeId });
+
+    // track metadata
+    const envs = project.metadata.envs || [];
+    const envId = `${graphId}-${nodeId}`;
+    const nodeEnv = project.graphs[graphId].nodes[nodeId].env;
+    const match = envs.find(env => { return env.id == envId; });
+    if (nodeEnv && !match) {
+      envs.push({
+        id: envId,
+        env: nodeEnv
+      });
+      saveMetadata({ envs });
+    }
+  }
+  function unselectNode(graphId, nodeId) { saveGraphMetadata(graphId, { selectedNode: undefined }); }
   function selectMainNode(nodeId) {
     if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
       // reset selected
@@ -111,11 +130,14 @@ function Project(props) {
       addHistory();
     }
   }
-  function suggestNodes(graphId, nodeIds) { saveMetadata(graphId, {suggestedNodes: nodeIds}); }
-  function hoverNodes(graphId, nodeIds) { saveMetadata(graphId, { hoveredNodes: nodeIds }); }
+  function unselectMainNode(nodeId) {
+    unselectNode(project.mainGraphId, nodeId);
+  }
+  function suggestNodes(graphId, nodeIds) { saveGraphMetadata(graphId, {suggestedNodes: nodeIds}); }
+  function hoverNodes(graphId, nodeIds) { saveGraphMetadata(graphId, { hoveredNodes: nodeIds }); }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
-    saveMetadata(graphId, { selectedEdge });
+    saveGraphMetadata(graphId, { selectedEdge });
 
     const graph = project.graphs[graphId];
     const edge = graph.edges[edgeId];
@@ -138,7 +160,7 @@ function Project(props) {
       };
       metadata.history.push(data);
   
-      saveMetadata(graphId, { history: metadata.history });
+      saveGraphMetadata(graphId, { history: metadata.history });
     }
   }
   function history(index) {
@@ -156,7 +178,7 @@ function Project(props) {
     if (record.subNodeId)
       selectNode(subGraphId, record.subNodeId);
     
-    saveMetadata(graphId, { history: metadata.history });
+    saveGraphMetadata(graphId, { history: metadata.history });
     historyEnabled = true;
   }
 
@@ -261,8 +283,9 @@ function Project(props) {
           onNodeSelect={ selectNode }
           onNodeUnselect={ unselectNode }
           onMainNodeSelect={ selectMainNode }
+          onMainNodeUnselect={ unselectMainNode }
           onEdgeSelect={ selectEdge }
-          onSave={ saveMetadata } />;
+          onSave={ saveGraphMetadata } />;
         break;
       default:
         graphElement = <Graph
@@ -271,7 +294,7 @@ function Project(props) {
           data={ mainGraph.export() }
           metadata={ mainGraph.metadata }
           onNodeSelect={ selectMainNode }
-          onSave={ saveMetadata } />;
+          onSave={ saveGraphMetadata } />;
         break;
     }
 
@@ -344,7 +367,6 @@ function Project(props) {
           marks={ marks }
           selected={ selected }
           hovered={ hovered }
-          //onNodeSelect={ (selectFunc || selectNode) }
           onNodeSelect={ selectNode }
           onCodeHover={ hoverNodes } />
       </Pane>);
@@ -357,10 +379,14 @@ function Project(props) {
     if (subGraph)
       graph = subGraph;
     const element = graph.nodes[graph.metadata.selectedNode];
-    
+
     return (
       <Pane height='50%' overflow='auto'>
-        <PropViewer data={ element } store={ props.project.store } />
+        <PropViewer
+          data={ element }
+          metadata={ props.project.metadata }
+          onSave={ saveMetadata }
+          store={ props.project.store } />
       </Pane>);
   }
 

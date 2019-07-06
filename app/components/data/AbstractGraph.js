@@ -11,7 +11,7 @@ class AbstractGraph {
     if (data.subGraphType)
       this.subGraphType = data.subGraphType;
     this.metadata = {
-      selectedNode: this.start
+      selectedNode: undefined
     };
   }
 
@@ -42,7 +42,8 @@ class AbstractGraph {
     return data;
   }
   resetSelected() {
-    this.metadata.selectedNode = this.start;
+    //this.metadata.selectedNode = this.start;
+    this.metadata.selectedNode = undefined;
     this.metadata.selectedEdge = undefined;
   }
 }
