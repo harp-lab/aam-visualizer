@@ -11,6 +11,7 @@ class Project {
   constructor() {
     this.code = '';
     this.graphs = {};
+    this.metadata = {};
 
     this.STATUSES = {
       empty: 'empty',
@@ -53,8 +54,7 @@ class Project {
       }
     }
 
-    //this.mainGraphId = 'funcs';
-    this.mainGraphId = 'states';
+    this.mainGraphId = 'funcs';
   }
   importAst(ast) {
     this.ast = {};
@@ -81,7 +81,7 @@ class Project {
     if (nodeId)
       graphId = graph.nodes[nodeId].detail
     else
-      graphId = undefined;
+      graphId = 'states';
     return graphId;
   }
 }

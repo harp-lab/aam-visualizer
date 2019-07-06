@@ -83,13 +83,8 @@ function Graph(props) {
   });
   cy.on('unselect', 'node', evt => {
     const node = evt.target;
-    if (events.current) {
-      if (selectedNode) {
-        events.current = false;
-        node.select();
-        events.current = true;
-      }
-    }
+    if (events.current)
+      props.onNodeUnselect(node.id());
   });
   cy.on('mouseover', 'node', evt => {
     const node = evt.target;
