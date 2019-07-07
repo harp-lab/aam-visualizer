@@ -3,18 +3,20 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
 
-import Pane from './Pane';
 import SplitPane from './SplitPane';
+import Pane from './Pane';
+import PaneMessage from './PaneMessage';
 import Graph from './Graph';
 
 function FunctionGraph(props) {
   const { projectId, project } = props;
 
   // render main graph
+  const mainGraphId = project.mainGraphId;
   const mainGraph = project.mainGraph;
   const mainGraphElement = <Graph
     projectId={ projectId }
-    graphId={ project.mainGraphId }
+    graphId={ mainGraphId }
     data={ mainGraph.export() }
     metadata={ mainGraph.metadata }
     onNodeSelect={ props.onMainNodeSelect }
@@ -43,25 +45,16 @@ function FunctionGraph(props) {
           }}
           onSave={ props.onSave } />
       </Fragment>);
-  } else {
-    // placeholder if no subgraph
-    subGraphElement = (
-      <Typography variant='h6'>
-        No subgraph available
-      </Typography>);
-  }
+  } else
+    subGraphElement = <PaneMessage content='No subgraph available' />;
 
   return  (
     <SplitPane horizontal>
       <Pane height='50%'>
+        <GraphLabel content={ mainGraphId } />
         { mainGraphElement }
       </Pane>
-      <Pane
-        height='50%'
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
+      <Pane height='50%'>
         { subGraphElement }
       </Pane>
     </SplitPane>);
