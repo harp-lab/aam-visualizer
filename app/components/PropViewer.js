@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
@@ -21,6 +21,7 @@ import withStyles from '@material-ui/styles/withStyles';
 
 import SplitPane from './SplitPane';
 import Pane from './Pane';
+import PaneMessage from './PaneMessage';
 
 function PropViewer(props) {
     const element = props.element;
@@ -58,20 +59,6 @@ function PropViewer(props) {
       </SplitPane>);;
 }
 
-function Message(props) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Typography variant='h6'>{ props.content }</Typography>
-    </div>);
-}
-
 function DataViewer(props) {
   const data = props.data;
   let element;
@@ -89,7 +76,7 @@ function DataViewer(props) {
     });
     element = <List>{ dataItems }</List>;
   } else
-    element = <Message content='No data available' />
+    element = <PaneMessage content='No data available' />
 
   return element;
 }
@@ -108,7 +95,7 @@ function ConfigsViewer(props) {
         </Panel>);
     })
   else
-    element = <Message content='Empty' />;
+    element = <PaneMessage content='Empty' />;
   return (
     <Fragment>
       <ViewerLabel content='Configurations' />
@@ -137,7 +124,7 @@ function EnvsViewer(props) {
         </Panel>);
     });
   else
-    element = <Message content='Empty' />;
+    element = <PaneMessage content='Empty' />;
   return (
     <Fragment>
       <ViewerLabel content='Environments' />
