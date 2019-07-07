@@ -14,8 +14,8 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withTheme from '@material-ui/styles/withTheme';
 import withStyles from '@material-ui/styles/withStyles';
 
@@ -23,43 +23,39 @@ import SplitPane from './SplitPane';
 import Pane from './Pane';
 
 function PropViewer(props) {
-    const node = props.data;
+    const element = props.element;
+    const { configs, envs } = props.metadata;
 
+    function deleteConfig(configId) {
+      const newConfigs = configs.filter(config => config.id !== configId);
+      props.onSave({ configs: newConfigs });
+    }
     function deleteEnv(envId) {
-      const envs = props.metadata.envs.filter(env => env.id !== envId);
-      props.onSave({ envs });
+      const newEnvs = envs.filter(env => env.id !== envId);
+      props.onSave({ envs: newEnvs });
     }
 
-    let element;
-    if (node) {
-      const dataElement = <DataViewer data={ node.data } />;
+    let dataElement;
+    if (element)
+      dataElement = <DataViewer data={ element.data } />;
+    else
+      dataElement = <Typography variant='h6'>No element selected</Typography>;
 
-      const states = node.states;
-      const env = node.env;
-      const mainContent = (
-        <React.Fragment>
+    return (
+      <SplitPane>
+        <Pane width="50%" overflow='auto'>
           { dataElement }
-          { (states ? <StatesViewer data={ states } /> : undefined) }
-        </React.Fragment>);
-      //if (env)
-        element = (
-          <SplitPane>
-            <Pane width="50%" overflow='auto'>
-              { mainContent }
-            </Pane>
-            <Pane width="50%" overflow='auto'>
-              <EnvsViewer
-                envs={ props.metadata.envs }
-                store={ props.store }
-                onDelete={ deleteEnv } />
-            </Pane>
-          </SplitPane>);
-      //else
-      //  element = mainContent;
-    } else
-      element = <Message data='No element selected'/>;
-    
-    return element;
+          <ConfigsViewer
+            configs={ configs }
+            onDelete={ deleteConfig } />
+        </Pane>
+        <Pane width="50%" overflow='auto'>
+          <EnvsViewer
+            envs={ envs }
+            store={ props.store }
+            onDelete={ deleteEnv } />
+        </Pane>
+      </SplitPane>);;
 }
 
 function Message(props) {
@@ -72,15 +68,12 @@ function Message(props) {
         justifyContent: 'center',
         alignItems: 'center'
       }}>
-      <Typography variant='h6'>
-        { props.data }
-      </Typography>
+      <Typography variant='h6'>{ props.content }</Typography>
     </div>);
 }
 
 function DataViewer(props) {
   const data = props.data;
-
   let element;
   if (data) {
     const dataItems = Object.entries(data)
@@ -96,31 +89,37 @@ function DataViewer(props) {
     });
     element = <List>{ dataItems }</List>;
   } else
-    element = <Message data='No data available' />
+    element = <Message content='No data available' />
 
   return element;
 }
 
-function StatesViewer(props) {
+function ConfigsViewer(props) {
+  const configs = props.configs;
   let element;
-  if (props.data.length > 0) {
-    element = (
-      <Fragment>
-        <ViewerLabel content={ 'States' } />
-        <StateItem state={ props.data }/>
-      </Fragment>);
-  } else
-    element = <Typography variant='h6'>No states</Typography>;
-
-  return element;
+  if (configs && configs.length > 0)
+    element = configs.map(({id, config}) => {
+      return (
+        <Panel
+          key={ id }
+          label={ id }
+          onDelete={ () => props.onDelete(id) }>
+          <ConfigItem config={ config } />
+        </Panel>);
+    })
+  else
+    element = <Message content='Empty' />;
+  return (
+    <Fragment>
+      <ViewerLabel content='Configurations' />
+      { element }
+    </Fragment>);
 }
-StatesViewer = withTheme(StatesViewer);
-
 function EnvsViewer(props) {
-
+  const envs = props.envs;
   let element;
-  if (props.envs)
-    element = props.envs.map(({id, env}, index) => {
+  if (envs && envs.length > 0)
+    element = envs.map(({id, env}) => {
       let label;
       if (Object.keys(env).length > 0)
         label = id;
@@ -138,10 +137,10 @@ function EnvsViewer(props) {
         </Panel>);
     });
   else
-    element = (<Typography variant='h6'>Empty</Typography>);
+    element = <Message content='Empty' />;
   return (
     <Fragment>
-      <ViewerLabel content={ 'Environment' } />
+      <ViewerLabel content='Environments' />
       { element }
     </Fragment>);
 }
@@ -161,21 +160,23 @@ function ViewerLabel(props) {
 ViewerLabel = withTheme(ViewerLabel);
 
 function Panel(props) {
+  const deleteButton = (
+    <Tooltip title='Delete'>
+      <IconButton
+        size='small'
+        onClick={ evt => {
+          evt.stopPropagation();
+          props.onDelete();
+        }}>
+        <DeleteIcon />
+      </IconButton>
+    </Tooltip>);
   return (
     <ExpansionPanel>
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
         classes={{ content: props.classes.content }}>
-        <Tooltip title='Delete'>
-          <IconButton
-            size='small'
-            onClick={ evt => {
-              evt.stopPropagation();
-              props.onDelete();
-            }}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        { deleteButton }
         <Typography variant='body2'>{ props.label }</Typography>
       </ExpansionPanelSummary>
       <ExpansionPanelDetails>{ props.children }</ExpansionPanelDetails>
@@ -185,13 +186,13 @@ Panel = withStyles({
   content: { alignItems: 'center' }
 })(Panel);
 
-function StateItem(props) {
+function ConfigItem(props) {
   const labels = ['syntax', 'instr', 'stack'];
-  const items = props.state
+  const items = props.config
     .map(state => {
       const stackItems = state.stack
         .map(data => <Typography key={ data }>{ data }</Typography>);
-      return [state.syntax, state.instr, stackItems];
+      return [state.syntax, state.instr, stackItems]
     });
   return <Item
     labels={ labels }
