@@ -101,19 +101,8 @@ function Project(props) {
 
   function selectNode(graphId, nodeId) {
     saveGraphMetadata(graphId, { selectedNode: nodeId });
-
-    // track metadata
-    const envs = project.metadata.envs || [];
-    const envId = `${graphId}-${nodeId}`;
-    const nodeEnv = project.graphs[graphId].nodes[nodeId].env;
-    const match = envs.find(env => { return env.id == envId; });
-    if (nodeEnv && !match) {
-      envs.unshift({
-        id: envId,
-        env: nodeEnv
-      });
-      saveMetadata({ envs });
-    }
+    addConfig(graphId, nodeId);
+    addEnv(graphId, nodeId);
   }
   function unselectNode(graphId, nodeId) { saveGraphMetadata(graphId, { selectedNode: undefined }); }
   function selectMainNode(nodeId) {
@@ -145,6 +134,32 @@ function Project(props) {
     if (edge)
       suggestedNodeIds = edge.calls;
     suggestNodes(project.mainGraphId, suggestedNodeIds);
+  }
+  function addConfig(graphId, nodeId) {
+    const configs = project.metadata.configs || [];
+    const configId = `${graphId}-${nodeId}`;
+    const nodeConfig = project.graphs[graphId].nodes[nodeId].states;
+    const match = configs.find(config => config.id == configId);
+    if (nodeConfig && !match) {
+      configs.unshift({
+        id: configId,
+        config: nodeConfig
+      });
+      saveMetadata({ configs });
+    }
+  }
+  function addEnv(graphId, nodeId) {
+    const envs = project.metadata.envs || [];
+    const envId = `${graphId}-${nodeId}`;
+    const nodeEnv = project.graphs[graphId].nodes[nodeId].env;
+    const match = envs.find(env => { return env.id == envId; });
+    if (nodeEnv && !match) {
+      envs.unshift({
+        id: envId,
+        env: nodeEnv
+      });
+      saveMetadata({ envs });
+    }
   }
   function addHistory() {
     if (historyEnabled) {
@@ -222,8 +237,6 @@ function Project(props) {
     return (
       <SplitPane vertical>
         <Pane width='50%'>
-          { selectElement }
-          { historyElement }
           { graphElement }
         </Pane>
         <Pane width='50%'>
@@ -383,7 +396,7 @@ function Project(props) {
     return (
       <Pane height='50%' overflow='auto'>
         <PropViewer
-          data={ element }
+          element={ element }
           metadata={ props.project.metadata }
           onSave={ saveMetadata }
           store={ props.project.store } />

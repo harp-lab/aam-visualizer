@@ -8,13 +8,12 @@ import SplitPane from './SplitPane';
 import Graph from './Graph';
 
 function FunctionGraph(props) {
-  const theme = props.theme;
-  const project = props.project;
+  const { projectId, project } = props;
 
   // render main graph
   const mainGraph = project.mainGraph;
   const mainGraphElement = <Graph
-    projectId={ props.projectId }
+    projectId={ projectId }
     graphId={ project.mainGraphId }
     data={ mainGraph.export() }
     metadata={ mainGraph.metadata }
@@ -26,23 +25,12 @@ function FunctionGraph(props) {
   let subGraphElement;
   const subGraphId = project.subGraphId;
   if (subGraphId) {
-    const subGraphLabel = (
-      <Toolbar
-        variant='dense'
-        style={{
-          backgroundColor: theme.palette.grey[300],
-          color: theme.palette.text.primary,
-          width: '100%',
-          minHeight: 'unset'
-        }}>
-        <Typography>{ subGraphId }</Typography>
-      </Toolbar>);
     const subGraph = project.graphs[subGraphId];
     subGraphElement = (
       <Fragment>
-        { subGraphLabel }
+        <GraphLabel content={ subGraphId} />
         <Graph
-          projectId={ props.projectId }
+          projectId={ projectId }
           graphId={ subGraphId }
           data={ subGraph.export() }
           metadata={ subGraph.metadata }
@@ -78,6 +66,21 @@ function FunctionGraph(props) {
       </Pane>
     </SplitPane>);
 }
-FunctionGraph = withTheme(FunctionGraph);
+
+function GraphLabel(props) {
+  const { content, theme } = props;
+  return (
+    <Toolbar
+      variant='dense'
+      style={{
+        backgroundColor: theme.palette.grey[300],
+        color: theme.palette.text.primary,
+        width: '100%',
+        minHeight: 'unset'
+      }}>
+      <Typography>{ content }</Typography>
+    </Toolbar>);
+}
+GraphLabel = withTheme(GraphLabel);
 
 export default FunctionGraph;
