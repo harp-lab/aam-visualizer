@@ -15,6 +15,8 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import StarIcon from '@material-ui/icons/Star';
+import StarBorderIcon from '@material-ui/icons/StarBorder';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withTheme from '@material-ui/styles/withTheme';
 import withStyles from '@material-ui/styles/withStyles';
@@ -31,9 +33,29 @@ function PropViewer(props) {
       const newConfigs = configs.filter(config => config.id !== configId);
       props.onSave({ configs: newConfigs });
     }
+    function saveConfig(configId) {
+      const config = configs.find(config => config.id == configId);
+      config.saved = true;
+      props.onSave({ configs });
+    }
+    function unsaveConfig(configId) {
+      const config = configs.find(config => config.id == configId);
+      config.saved = false;
+      props.onSave({ configs });
+    }
     function deleteEnv(envId) {
       const newEnvs = envs.filter(env => env.id !== envId);
       props.onSave({ envs: newEnvs });
+    }
+    function saveEnv(envId) {
+      const env = envs.find(env => env.id == envId);
+      env.saved = true;
+      props.onSave({ envs });
+    }
+    function unsaveEnv(envId) {
+      const env = envs.find(env => env.id == envId);
+      env.saved = false;
+      props.onSave({ envs });
     }
 
     let dataElement;
@@ -48,12 +70,16 @@ function PropViewer(props) {
           { dataElement }
           <ConfigsViewer
             configs={ configs }
+            onSave={ saveConfig }
+            onUnsave = { unsaveConfig }
             onDelete={ deleteConfig } />
         </Pane>
         <Pane width="50%" overflow='auto'>
           <EnvsViewer
             envs={ envs }
             store={ props.store }
+            onSave={ saveEnv }
+            onUnsave = { unsaveEnv }
             onDelete={ deleteEnv } />
         </Pane>
       </SplitPane>);;
@@ -84,17 +110,31 @@ function DataViewer(props) {
 function ConfigsViewer(props) {
   const configs = props.configs;
   let element;
-  if (configs && configs.length > 0)
-    element = configs.map(({id, config}) => {
-      return (
-        <Panel
-          key={ id }
-          label={ id }
-          onDelete={ () => props.onDelete(id) }>
-          <ConfigItem config={ config } />
-        </Panel>);
-    })
-  else
+  if (configs && configs.length > 0) {
+    const savedElement = configs.filter(config => config.saved)
+      .map(({id, config}) => {
+        return (
+          <Panel
+            key={ id }
+            label={ id }
+            onUnsave={ () => props.onUnsave(id) }
+            onDelete={ () => props.onDelete(id) }>
+            <ConfigItem config={ config } />
+          </Panel>);
+      });
+    const unsavedElement = configs.filter(config => !config.saved)
+      .map(({id, config}) => {
+        return (
+          <Panel
+            key={ id }
+            label={ id }
+            onSave={ () => props.onSave(id) }
+            onDelete={ () => props.onDelete(id) }>
+            <ConfigItem config={ config } />
+          </Panel>);
+      });
+    element = savedElement.concat(unsavedElement);
+  } else
     element = <PaneMessage content='Empty' />;
   return (
     <Fragment>
@@ -105,25 +145,48 @@ function ConfigsViewer(props) {
 function EnvsViewer(props) {
   const envs = props.envs;
   let element;
-  if (envs && envs.length > 0)
-    element = envs.map(({id, env}) => {
-      let label;
-      if (Object.keys(env).length > 0)
-        label = id;
-      else
-        label = `${id} (empty)`;
+  if (envs && envs.length > 0) {
+    const savedElement = envs.filter(env => env.saved)
+      .map(({id, env}) => {
+        let label;
+        if (Object.keys(env).length > 0)
+          label = id;
+        else
+          label = `${id} (empty)`;
 
-      return (
-        <Panel
-          key={ label }
-          label={ label }
-          onDelete={ () => props.onDelete(id) }>
-          <EnvItem
-            env={ env }
-            store={ props.store }/>
-        </Panel>);
-    });
-  else
+        return (
+          <Panel
+            key={ label }
+            label={ label }
+            onUnsave={ () => props.onUnsave(id) }
+            onDelete={ () => props.onDelete(id) }>
+            <EnvItem
+              env={ env }
+              store={ props.store }/>
+          </Panel>);
+      });
+    const unsavedElement = envs.filter(env => !env.saved)
+      .map(({id, env}) => {
+        let label;
+        if (Object.keys(env).length > 0)
+          label = id;
+        else
+          label = `${id} (empty)`;
+
+        return (
+          <Panel
+            key={ label }
+            label={ label }
+            onSave={ () => props.onSave(id) }
+            onDelete={ () => props.onDelete(id) }>
+            <EnvItem
+              env={ env }
+              store={ props.store }/>
+          </Panel>);
+      });
+
+    element = savedElement.concat(unsavedElement);
+  } else
     element = <PaneMessage content='Empty' />;
   return (
     <Fragment>
@@ -147,6 +210,31 @@ function ViewerLabel(props) {
 ViewerLabel = withTheme(ViewerLabel);
 
 function Panel(props) {
+  let saveButton;
+  if (props.onSave)
+    saveButton = (
+      <Tooltip title='Save'>
+        <IconButton
+          size='small'
+          onClick={ evt => {
+            evt.stopPropagation();
+            props.onSave();
+          }}>
+          <StarBorderIcon />
+        </IconButton>
+      </Tooltip>);
+  else if (props.onUnsave)
+    saveButton = (
+      <Tooltip title='Unsave'>
+        <IconButton
+          size='small'
+          onClick={ evt => {
+            evt.stopPropagation();
+            props.onUnsave();
+          }}>
+          <StarIcon />
+        </IconButton>
+      </Tooltip>);
   const deleteButton = (
     <Tooltip title='Delete'>
       <IconButton
@@ -163,6 +251,7 @@ function Panel(props) {
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
         classes={{ content: props.classes.content }}>
+        { saveButton }
         { deleteButton }
         <Typography variant='body2'>{ props.label }</Typography>
       </ExpansionPanelSummary>
