@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
@@ -26,8 +26,8 @@ import Pane from './Pane';
 import PaneMessage from './PaneMessage';
 
 function PropViewer(props) {
-    const element = props.element;
-    const { configs, envs } = props.metadata;
+    const { element, metadata } = props;
+    const { configs, envs } = metadata;
 
     function deleteConfig(configId) {
       const newConfigs = configs.filter(config => config.id !== configId);
@@ -111,6 +111,7 @@ function ConfigsViewer(props) {
   const configs = props.configs;
   let element;
   if (configs && configs.length > 0) {
+    console.log(configs);
     const savedElement = configs.filter(config => config.saved)
       .map(({id, config}) => {
         return (
