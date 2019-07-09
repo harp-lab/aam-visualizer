@@ -101,6 +101,8 @@ function Project(props) {
 
   function selectNode(graphId, nodeId) {
     saveGraphMetadata(graphId, { selectedNode: nodeId });
+    cleanConfigs();
+    cleanEnvs();
     addConfig(graphId, nodeId);
     addEnv(graphId, nodeId);
   }
@@ -148,6 +150,13 @@ function Project(props) {
       saveMetadata({ configs });
     }
   }
+  function cleanConfigs() {
+    const configs = project.metadata.configs;
+    if (configs) {
+      const cleanedConfigs = configs.filter(config => config.saved);
+      saveMetadata({ configs: cleanedConfigs });
+    }
+  }
   function addEnv(graphId, nodeId) {
     const envs = project.metadata.envs || [];
     const envId = `${graphId}-${nodeId}`;
@@ -159,6 +168,13 @@ function Project(props) {
         env: nodeEnv
       });
       saveMetadata({ envs });
+    }
+  }
+  function cleanEnvs() {
+    const envs = project.metadata.envs;
+    if (envs) {
+      const cleanedEnvs = envs.filter(env => env.saved);
+      saveMetadata({ envs: cleanedEnvs });
     }
   }
   function addHistory() {
