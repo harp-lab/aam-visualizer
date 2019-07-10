@@ -137,7 +137,7 @@
         'data (hash 'label (format "~a - halt" id)
                     'results (set-map d print-val))
         'children (hash))]
-      [`(,form .,_)
+       [`(,form .,_)
        (hash
         'id (symbol->string id)
         'form (symbol->string form)
@@ -250,7 +250,26 @@
 
   (define kont>id (make-id-hash konts))
   (define kont->sym (make-data->symbol kont>id))
- 
+
+  (define func>id (make-id-hash (hash-keys trans)))
+  (define func->sym (make-data->symbol func>id))
+
+  (define confs>func
+    (foldl
+     (lambda (func confs)
+       (match-define (list s-init s-trans) (hash-ref subs func))
+       (foldl
+        (lambda(c confs)
+          (hash-set confs c func))
+        confs
+        (hash-keys s-trans)))
+     (hash)
+     (hash-keys subs)))
+
+  (define conf>id (make-id-hash (hash-keys confs>func)))
+  (define conf->sym (make-data->symbol conf>id))
+
+  ;hash
   (define (make-state s)
     (match s
       [`(eval ,ast ,rho ,i ,kappa)
@@ -290,16 +309,91 @@
         'id (hash-ref state>id s)
         'form "unknown")]))
 
-  (define (make-addr addr) "todo")
+  (define (make-addr addr)
+    (match-define (list var instr) addr)
+    ;addr is (list variable instr)
+    "todo")
 
-  (define (make-kaddr kaddr) "todo")
+  (define (make-kaddr kaddr)
+    ;kaddr is (list lid env)
+    "todo")
+
+  ;list of expression ids
+  (define (make-instr i)
+    (map (lambda(e)(ast-id e)) i))
+
+  ;hash
+  (define (make-func func)
+    (define id (hash-ref func>id func))
+    (match func
+      [`(halt ,d ,rho)
+       (hash
+        'id id
+        'form "halt"
+        'result "todo"
+        'env (hash-ref env>id rho))]
+      [`(,form .,_)
+       (hash
+        'id id
+        'form (symbol->string form))]
+      [lid
+       (hash
+        'id id
+        'form (~a lid)
+        'expr (ast-id (hash-ref id>lambda lid))
+        ;'detail?
+        ;'astLink?
+        'more? "todo")]))
+
+  ;hash
+  (define (make-config conf)
+    (define id (hash-ref conf>id conf))
+    (match conf
+      [`(halt . ,_)
+       (hash
+        'id id
+        'form "halt")]
+      [`(,(or 'exit 'no-return) ,lid)
+       (define out-expr (hash-ref id>lambda lid))
+       (hash
+        'id id
+        'form (~a (car conf))
+        'astLink (list (ast-id out-expr)))]
+      [states
+       (define first-state (make-state (if (set? states) (set-first states) states)))
+       (define state-ids (if (set? states)
+                             (set-map states (lambda(s)(hash-ref state>id s)))
+                             (list (hash-ref state>id states))))
+       (define states-info (if (set? states)
+                               (set-map states make-state)
+                               (list (make-state states))))
+       (hash
+        'id id
+        'form (hash-ref first-state 'form)
+        'astLink (flatten (map (lambda(s)(hash-ref s 'astLink (list))) states-info))
+        'states state-ids)]))
+
+  ;list of hashs
+  (define (make-env env)
+    (for/list ([var (hash-keys env)])
+      (define addr (hash-ref env var))
+      (hash
+       'var (ast-id var)
+       'instr (hash-ref instr>id (cadr addr))
+       'addr (hash-ref addr>id addr))))
+ 
+
+  ;store should be hash addr>(list val...)
   
   (hash
    'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
    ;'state-graph state-trans
-   'function-graphs "todo"
-   'addr (for/hash ([a (hash-keys addr>id)]) (values (addr->sym a) (make-addr a)))
-   'kaddr (for/hash ([a (hash-keys kaddr>id)]) (values (kaddr->sym a) (make-kaddr a)))
+   'funcs (for/hash ([f (hash-keys func>id)]) (values (func->sym f) (make-func f)))
+   'configs (for/hash ([c (hash-keys conf>id)]) (values (conf->sym c) (make-config c)))
+   'envs (for/hash ([e (hash-keys env>id)]) (values (env->sym e) (make-env e)))
+   'instr (for/hash ([i (hash-keys instr>id)]) (values (instr->sym i) (make-instr i)))
+   ;'addr (for/hash ([a (hash-keys addr>id)]) (values (addr->sym a) (make-addr a)))
+   ;'kaddr (for/hash ([a (hash-keys kaddr>id)]) (values (kaddr->sym a) (make-kaddr a)))
    'more? "todo"))
 
 (define (test syntax)
