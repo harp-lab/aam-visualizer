@@ -5,7 +5,10 @@
 
 (require "analyzer.rkt")
 
-(provide full-state-graph function-graphs)
+(provide
+ full-state-graph
+ function-graphs
+ all-items)
 
 (define (print-k k sigmak)
   (match k
@@ -203,6 +206,101 @@
                       (values (a->sym a) (set-map (hash-ref store a) print-val))))
   (list func-graph detail-graphs out-store))
   
+(define (all-items states groupings tables)
+  (match-define (list init trans subs) groupings)
+  (match-define (list store kstore instr id>lambda) tables)
+
+  (define (make-data->symbol id-hash)
+    (lambda (val) (string->symbol (~a (hash-ref id-hash val)))))
+  (define (make-id-hash set)
+    (for/hash ([s set][id (range (set-count set))]) (values s id)))
+
+  (define state>id (make-id-hash states))
+  (define state->sym (make-data->symbol state>id))
+  
+  (define state-trans (for/hash ([s states])
+                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
+                       (values (hash-ref state>id s) (for/hash ([tr st-tr])
+                                                       (values (state->sym tr)(hash))))))
+  
+  (define addr>id (make-id-hash (list->set (hash-keys store))))
+  (define addr->sym (make-data->symbol addr>id))
+
+  (define kaddr>id (make-id-hash (list->set (hash-keys kstore))))
+  (define kaddr->sym (make-data->symbol kaddr>id))
+
+  (match-define (list envs instrs konts)
+    (foldl
+     (lambda (state tables)
+       (match-define (list envs instrs konts) tables)
+       (match state
+         [`(eval ,_ ,rho ,i ,kappa)
+          (list (set-add envs rho)(set-add instrs i)(set-add konts kappa))]
+         [`(inner ,_ ,_ ,_ ,_ ,i ,kappa)
+          (list envs (set-add instrs i)(set-add konts kappa))]
+         [_ tables]))
+     (list (set)(set)(set))
+     (set->list states)))
+
+  (define env>id (make-id-hash envs))
+  (define env->sym (make-data->symbol env>id))
+  
+  (define instr>id (make-id-hash instrs))
+  (define instr->sym (make-data->symbol instr>id))
+
+  (define kont>id (make-id-hash konts))
+  (define kont->sym (make-data->symbol kont>id))
+ 
+  (define (make-state s)
+    (match s
+      [`(eval ,ast ,rho ,i ,kappa)
+       (hash
+        'id (hash-ref state>id s)
+        'form "eval"
+        'expr (ast-id ast)
+        'env (hash-ref env>id rho)
+        'instr (hash-ref instr>id i)
+        'kont (hash-ref kont>id kappa))]
+      [`(inner ,cat ,ae ,d ,more ,i ,kappa)
+       (hash
+        'id (hash-ref state>id s)
+        'form (symbol->string cat)
+        'expr (ast-id ae)
+        'instr (hash-ref instr>id i)
+        'kont (hash-ref kont>id kappa))]
+      [`(notfound ,ae ,rho ,i ,kappa)
+       (hash
+        'id (hash-ref state>id s)
+        'form "not found"
+        'expr (ast-id ae)
+        'env (hash-ref env>id rho)
+        'instr (hash-ref instr>id i)
+        'kont (hash-ref kont>id kappa))]
+      [`(halt ,dn, rho)
+       (hash
+        'id (hash-ref state>id s)
+        'form "not found"
+        'env (hash-ref env>id rho))]
+      [`(non-func ,clo)
+       (hash
+        'id (hash-ref state>id s)
+        'form "non-func")]
+      [_
+       (hash
+        'id (hash-ref state>id s)
+        'form "unknown")]))
+
+  (define (make-addr addr) "todo")
+
+  (define (make-kaddr kaddr) "todo")
+  
+  (hash
+   'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
+   ;'state-graph state-trans
+   'function-graphs "todo"
+   'addr (for/hash ([a (hash-keys addr>id)]) (values (addr->sym a) (make-addr a)))
+   'kaddr (for/hash ([a (hash-keys kaddr>id)]) (values (kaddr->sym a) (make-kaddr a)))
+   'more? "todo"))
 
 (define (test syntax)
   (match-define (list init states tables) (analyze-syn syntax))
