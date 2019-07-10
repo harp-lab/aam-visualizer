@@ -54,12 +54,16 @@
 (define state-graph (full-state-graph analysis-states data-tables))
 (match-define (list func-graph func-detail-graphs store)
   (function-graphs analysis-states analysis-groupings data-tables))
+(define items (all-items analysis-states analysis-groupings data-tables))
+
+
 
 ; write output json
 (log LOG_TYPE_ENGINE (format "finished ~a analysis" analysis))
 (define out-hash
   (hash-set* proj-hash
     'status "done"
+    'items items
     'store store
     'graphs (hash-union (hash
       'states (hash
