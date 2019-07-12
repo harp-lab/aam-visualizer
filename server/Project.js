@@ -27,6 +27,7 @@ class Project {
     if (data.status == 'error')
       this.error = data.error;
     this.store = data.store;
+    this.items = data.items;
   }
   importCode(code) {
     switch (this.status) {
@@ -63,6 +64,7 @@ class Project {
       graphs: this.graphs,
       ast: this.ast,
       store: this.store,
+      items: this.items,
       name: this.name,
       analysis: this.analysis
     }
