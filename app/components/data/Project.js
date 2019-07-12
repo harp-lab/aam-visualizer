@@ -32,6 +32,7 @@ class Project {
       this.importGraphs(data.graphs);
       this.importAst(data.ast);
       this.store = data.store;
+      this.items = data.items;
     }
   }
   importGraphs(graphs) {
