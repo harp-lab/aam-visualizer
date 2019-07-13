@@ -419,7 +419,7 @@
    'instr (for/hash ([i (hash-keys instr>id)]) (values (instr->sym i) (make-instr i)))
    'konts (for/hash ([k (hash-keys kont>id)]) (values (kont->sym k) (make-kont k)))
    'vals (for/hash ([v (hash-keys val>id)]) (values (val->sym v) (make-val v)))
-   'store-entries (for/hash ([a (hash-keys addr>id)])
+   'store (for/hash ([a (hash-keys addr>id)])
                     (values (addr->sym a) (set-map (hash-ref store a) (lambda(v)(hash-ref val>id v)))))
    ;'addr (for/hash ([a (hash-keys addr>id)]) (values (addr->sym a) (make-addr a)))
    ;'kaddr (for/hash ([a (hash-keys kaddr>id)]) (values (kaddr->sym a) (make-kaddr a)))

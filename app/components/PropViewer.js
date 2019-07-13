@@ -16,6 +16,7 @@ import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import DeleteIcon from '@material-ui/icons/Delete';
 import StarIcon from '@material-ui/icons/Star';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
@@ -28,76 +29,44 @@ import Pane from './Pane';
 import PaneMessage from './PaneMessage';
 import Context from './Context';
 
+function arrayFind(array, id) { return array.find(elem => elem.id == id); }
+function arrayDelete(arr, id) { return arr.filter(elem => elem.id !== id); }
+
 function PropViewer(props) {
     const { element, metadata } = props;
     const items = useContext(Context);
-    const { configs, envs, states } = items;
-    //const { configs, envs } = metadata;
-    const viewedConfigs = metadata.configs;
-    let viewedEnvs;
-    if (viewedConfigs)
-      viewedEnvs = viewedConfigs
-        .filter(config => config.selected)
-        .map(({ id }) => {
-          const config = configs[id];
-          return config.states
-            .map(stateId => {
-              const state = states[stateId];
-              const envId = state.env;
-              console.log(envs);
-              console.log(envId);
-              return envs[envId];
-            });
-        });
-    console.log(viewedEnvs);
+    const { configs, states } = items;
 
-    function deleteConfig(configId) {
-      const newConfigs = viewedConfigs.filter(config => config.id !== configId);
-      props.onSave({ configs: newConfigs });
+    const viewedConfigs = metadata.configs || [];
+    const viewedEnvs = metadata.envs || [];
+    if (viewedConfigs)
+      viewedConfigs
+        .filter(config => config.selected)
+        .forEach(({ id }) => {
+          const config = configs[id];
+
+          if (config.states)
+            config.states
+              .forEach(stateId => {
+                const state = states[stateId];
+                if (state.env)
+                  addEnv(state.env);
+              });
+        });
+    
+    function cleanEnvs() {
+      const cleanedEnvs = viewedEnvs.filter(env => env.saved);
+      props.onSave({ envs: cleanedEnvs });
     }
-    function saveConfig(configId) {
-      const config = viewedConfigs.find(config => config.id == configId);
-      config.saved = true;
-      props.onSave({ configs: viewedConfigs });
-    }
-    function unsaveConfig(configId) {
-      const config = viewedConfigs.find(config => config.id == configId);
-      config.saved = false;
-      props.onSave({ configs: viewedConfigs });
-    }
-    function selectConfig(configId) {
-      const config = viewedConfigs.find(config => config.id == configId);
-      config.selected = true;
-      props.onSave({ configs: viewedConfigs });
-    }
-    function unselectConfig(configId) {
-      const config = viewedConfigs.find(config => config.id == configId);
-      config.selected = false;
-      props.onSave({ configs: viewedConfigs });
-    }
-    function deleteEnv(envId) {
-      const newEnvs = viewedEnvs.filter(env => env.id !== envId);
-      props.onSave({ envs: newEnvs });
-    }
-    function saveEnv(envId) {
-      const env = viewedEnvs.find(env => env.id == envId);
-      env.saved = true;
-      props.onSave({ envs: viewedEnvs });
-    }
-    function unsaveEnv(envId) {
-      const env = viewedEnvs.find(env => env.id == envId);
-      env.saved = false;
-      props.onSave({ envs: viewedEnvs });
-    }
-    function selectEnv(envId) {
-      const env = viewedEnvs.find(env => env.id == envId);
-      env.selected = true;
-      props.onSave({ envs: viewedEnvs });
-    }
-    function unselectEnv(envId) {
-      const env = viewedEnvs.find(env => env.id == envId);
-      env.selected = false;
-      props.onSave({ envs: viewedEnvs });
+    function addEnv(envId) {
+      const match = arrayFind(viewedEnvs, envId);
+      if (!match) {
+        viewedEnvs.unshift({
+          label: envId,
+          id: envId
+        });
+        props.onSave({ envs: viewedEnvs });
+      }
     }
 
     let dataElement;
@@ -112,21 +81,13 @@ function PropViewer(props) {
           { dataElement }
           <ConfigsViewer
             configs={ viewedConfigs }
-            onSave={ saveConfig }
-            onUnsave = { unsaveConfig }
-            onSelect={ selectConfig }
-            onUnselect={ unselectConfig }
-            onDelete={ deleteConfig } />
+            onSave={ configs => props.onSave({ configs }) }
+            onClean={ cleanEnvs } />
         </Pane>
         <Pane width="50%" overflow='auto'>
           <EnvsViewer
             envs={ viewedEnvs }
-            store={ props.store }
-            onSave={ saveEnv }
-            onUnsave = { unsaveEnv }
-            onSelect={ selectEnv }
-            onUnselect={ unselectEnv }
-            onDelete={ deleteEnv } />
+            onSave={ envs => props.onSave({ envs }) } />
         </Pane>
       </SplitPane>);;
 }
@@ -156,34 +117,75 @@ function DataViewer(props) {
 function ConfigsViewer(props) {
   const configs = props.configs;
   const items = useContext(Context);
+
+  useEffect(() => {
+    return () => {
+      props.onClean();
+    };
+  }, [configs]);
+
+  function deleteConfig(configId) { props.onSave( arrayDelete(configs, configId) ); }
+  function save(configId) {
+    arrayFind(configs, configId).saved = true;
+    props.onSave(configs);
+  }
+  function unsave(configId) {
+    arrayFind(configs, configId).saved = false;
+    props.onSave(configs);
+  }
+  function select(configId) {
+    arrayFind(configs, configId).selected = true;
+    props.onSave(configs);
+  }
+  function unselect(configId) {
+    props.onClean();
+    arrayFind(configs, configId).selected = false;
+    props.onSave(configs);
+  }
+
   let element;
   if (configs && configs.length > 0) {
-    const savedElement = configs.filter(config => config.saved)
-      .map(({label, id, selected}) => {
-        return (
-          <Panel
-            key={ id }
-            label={ label }
-            onUnsave={ () => props.onUnsave(id) }
-            onSelect={ selected ? undefined : () => props.onSelect(id) }
-            onUnselect={ selected ? () => props.onUnselect(id) : undefined }
-            onDelete={ () => props.onDelete(id) }>
-            <ConfigItem configId={ id } />
-          </Panel>);
-      });
-    const unsavedElement = configs.filter(config => !config.saved)
-      .map(({label, id, selected}) => {
-        return (
-          <Panel
-            key={ id }
-            label={ label }
-            onSave={ () => props.onSave(id) }
-            onSelect={ selected ? undefined : () => props.onSelect(id) }
-            onUnselect={ selected ? () => props.onUnselect(id) : undefined }
-            onDelete={ () => props.onDelete(id) }>
-            <ConfigItem configId={ id } />
-          </Panel>);
-      });
+    function generatePanel(config) {
+      const { label, id, selected, saved } = config;
+
+      const panelProps = {};
+      if (saved)
+        panelProps.onUnsave = () => unsave(id);
+      else
+        panelProps.onSave = () => save(id);
+      if (selected)
+        panelProps.onUnselect = () => unselect(id);
+      else
+        panelProps.onSelect = () => select(id);
+      
+      const states = items.configs[id].states;
+      let empty = true;
+      if (states)
+        states.forEach(stateId => {
+          const env = items.states[stateId].env;
+          if (env)
+            empty = false;
+        });
+      if (empty)
+        panelProps.disableSelect = true;
+
+      return (
+        <Panel
+          key={ id }
+          label={ label }
+          { ...panelProps }
+          onDelete={ () => deleteConfig(id) }>
+          <ConfigItem configId={ id } />
+        </Panel>);
+    }
+
+    const savedElement = configs
+      .filter(config => config.saved)
+      .map(generatePanel);
+    const unsavedElement = configs
+      .filter(config => !config.saved)
+      .map(generatePanel);
+
     element = savedElement.concat(unsavedElement);
   } else
     element = <PaneMessage content='Empty' />;
@@ -195,50 +197,58 @@ function ConfigsViewer(props) {
 }
 function EnvsViewer(props) {
   const envs = props.envs;
+
+  function deleteEnv(envId) { props.onSave( arrayDelete(envs, envId) ); }
+  function save(envId) {
+    arrayFind(envs, envId).saved = true;
+    props.onSave(envs);
+  }
+  function unsave(envId) {
+    arrayFind(envs, envId).saved = false;
+    props.onSave(envs);
+  }
+  function select(envId) {
+    arrayFind(envs, envId).selected = true;
+    props.onSave(envs);
+  }
+  function unselect(envId) {
+    arrayFind(envs, envId).selected = false;
+    props.onSave(envs);
+  }
+
   let element;
   if (envs && envs.length > 0) {
-    const savedElement = envs.filter(env => env.saved)
-      .map(({id, env, selected}) => {
-        let label;
-        if (Object.keys(env).length > 0)
-          label = id;
-        else
-          label = `${id} (empty)`;
+    function generatePanel(env) {
+      const { label, id, selected, saved } = env;
 
-        return (
-          <Panel
-            key={ label }
-            label={ label }
-            onUnsave={ () => props.onUnsave(id) }
-            onSelect={ selected ? undefined : () => props.onSelect(id) }
-            onUnselect={ selected ? () => props.onUnselect(id) : undefined }
-            onDelete={ () => props.onDelete(id) }>
-            <EnvItem
-              env={ env }
-              store={ props.store }/>
-          </Panel>);
-      });
-    const unsavedElement = envs.filter(env => !env.saved)
-      .map(({id, env, selected}) => {
-        let label;
-        if (Object.keys(env).length > 0)
-          label = id;
-        else
-          label = `${id} (empty)`;
+      const panelProps = {};
+      if (saved)
+        panelProps.onUnsave = () => unsave(id);
+      else
+        panelProps.onSave = () => save(id);
+      if (selected)
+        panelProps.onUnselect = () => unselect(id);
+      else
+        panelProps.onSelect = () => select(id);
 
-        return (
-          <Panel
-            key={ label }
-            label={ label }
-            onSave={ () => props.onSave(id) }
-            onSelect={ selected ? undefined : () => props.onSelect(id) }
-            onUnselect={ selected ? () => props.onUnselect(id) : undefined }
-            onDelete={ () => props.onDelete(id) }>
-            <EnvItem
-              env={ env }
-              store={ props.store }/>
-          </Panel>);
-      });
+      return (
+        <Panel
+          key={ id }
+          label={ label }
+          { ...panelProps }
+          onDelete={ () => deleteEnv(id) }>
+          <EnvItem
+            envId={ id }
+            store={ props.store }/>
+        </Panel>);
+    }
+
+    const savedElement = envs
+      .filter(env => env.saved)
+      .map(generatePanel);
+    const unsavedElement = envs
+      .filter(env => !env.saved)
+      .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
   } else
@@ -267,64 +277,36 @@ ViewerLabel = withTheme(ViewerLabel);
 function Panel(props) {
   let saveButton, selectButton;
   if (props.onSave)
-    saveButton = (
-      <Tooltip title='Save'>
-        <IconButton
-          size='small'
-          onClick={ evt => {
-            evt.stopPropagation();
-            props.onSave();
-          }}>
-          <StarBorderIcon />
-        </IconButton>
-      </Tooltip>);
+    saveButton = <Button
+      icon={ <StarBorderIcon /> }
+      tooltip='Save'
+      onClick={ props.onSave } />;
   else if (props.onUnsave)
-    saveButton = (
-      <Tooltip title='Unsave'>
-        <IconButton
-          size='small'
-          onClick={ evt => {
-            evt.stopPropagation();
-            props.onUnsave();
-          }}>
-          <StarIcon />
-        </IconButton>
-      </Tooltip>);
-  if (props.onSelect)
-    selectButton = (
-      <Tooltip title='Select'>
-        <IconButton
-          size='small'
-          onClick={ evt => {
-            evt.stopPropagation();
-            props.onSelect();
-          }}>
-          <CheckBoxOutlineBlankIcon />
-        </IconButton>
-      </Tooltip>);
+    saveButton = <Button
+      icon={ <StarIcon /> }
+      tooltip='Unsave'
+      onClick={ props.onUnsave } />;
+
+  if (props.disableSelect)
+    selectButton = <Button
+      icon={ <IndeterminateCheckBoxIcon color='disabled'/> }
+      tooltip='Disabled'
+      disabled />;
+  else if (props.onSelect)
+    selectButton = <Button
+      icon={ <CheckBoxOutlineBlankIcon /> }
+      tooltip='Select'
+      onClick={ props.onSelect } />;
   else if (props.onUnselect)
-    selectButton = (
-      <Tooltip title='Unselect'>
-        <IconButton
-          size='small'
-          onClick={ evt => {
-            evt.stopPropagation();
-            props.onUnselect();
-          }}>
-          <CheckBoxIcon />
-        </IconButton>
-      </Tooltip>);
-  const deleteButton = (
-    <Tooltip title='Delete'>
-      <IconButton
-        size='small'
-        onClick={ evt => {
-          evt.stopPropagation();
-          props.onDelete();
-        }}>
-        <DeleteIcon />
-      </IconButton>
-    </Tooltip>);
+    selectButton = <Button
+      icon={ <CheckBoxIcon /> }
+      tooltip='Unselect'
+      onClick={ props.onUnselect } />;
+  
+  const deleteButton = <Button
+    icon={ <DeleteIcon /> }
+    tooltip='Delete'
+    onClick={ props.onDelete } />;
   return (
     <ExpansionPanel>
       <ExpansionPanelSummary
@@ -341,42 +323,75 @@ function Panel(props) {
 Panel = withStyles({
   content: { alignItems: 'center' }
 })(Panel);
+function Button(props) {
+  const { icon, tooltip, disabled, onClick } = props;
+  const iconButtonProps = {};
+  if (disabled) {
+    iconButtonProps.disableRipple = true;
+    iconButtonProps.onClick = evt => {
+      evt.stopPropagation();
+    };
+  }
+  else {
+    iconButtonProps.onClick = evt => {
+      evt.stopPropagation();
+      onClick();
+    };
+  }
+  return (
+    <Tooltip title={ tooltip }>
+      <IconButton
+        size='small'
+        { ...iconButtonProps }>
+        { icon }
+      </IconButton>
+    </Tooltip>);
+}
 
 function ConfigItem(props) {
   const items = useContext(Context);
   const labels = ['syntax', 'instr', 'stack'];
   const { configs, states, instr, konts } = items;
   const config = configs[props.configId];
-  const entries = config.states
-    .map(stateId => {
-      const state = states[stateId];
-      const kontEntries = konts[state.kont].string
-        .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-      return [state.expr, instr[state.instr], kontEntries]
-    });
+  let entries = [];
+  if (config.states)
+    entries = config.states
+      .map(stateId => {
+        const state = states[stateId];
+        const kontEntries = konts[state.kont].string
+          .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
+        return [state.expr, instr[state.instr], kontEntries]
+      });
   return <Item
     labels={ labels }
-    items={ entries }/>;
+    entries={ entries }/>;
 }
 function EnvItem(props) {
+  const items = useContext(Context);
   const labels = ['var', 'instr', 'store'];
-  const items = Object.entries(props.env)
-    .map(([id, env]) => {
-      const storeItems = props.store[env.store]
-        .map(data => <Typography key={ data }>{ data }</Typography>);
-      return [id, env.instr, storeItems];
+  const { envs, instr, store, vals } = items;
+  const env = envs[props.envId];
+  const entries = env
+    .map(entry => {
+      // TODO look up addr in store?
+      const storeEntries = store[entry.addr]
+        .map(valId => {
+          const val = vals[valId];
+          return <Typography key={ valId }>{ `${val.ast}` }</Typography>;
+        });
+      return [entry.var, instr[entry.instr], storeEntries]
     });
   return <Item
     labels={ labels }
-    items={ items }/>;
+    entries={ entries }/>;
 }
 function Item(props) {
   const labels = props.labels
     .map(label => <TableCell key={ label }>{ label }</TableCell>);
-  const items = props.items
-    .map(item => {
-      const fields = item.map((field, index) => <TableCell key={ index }>{ field }</TableCell>);
-      return <TableRow key={ item[0] }>{ fields }</TableRow>;
+  const entries = props.entries
+    .map((entry, row) => {
+      const fields = entry.map((field, cell) => <TableCell key={ cell }>{ field }</TableCell>);
+      return <TableRow key={ row }>{ fields }</TableRow>;
     });
   return (
     <Fragment>
@@ -385,7 +400,7 @@ function Item(props) {
           <TableRow>{ labels }</TableRow>
         </TableHead>
         <TableBody>
-          { items }
+          { entries }
         </TableBody>
       </Table>
     </Fragment>);
