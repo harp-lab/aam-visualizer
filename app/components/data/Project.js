@@ -30,9 +30,9 @@ class Project {
     this.analysis = data.analysis
     if (this.status == this.STATUSES.done) {
       this.importGraphs(data.graphs);
-      this.importAst(data.ast);
       this.store = data.store;
       this.items = data.items;
+      this.importAst(data.ast);
     }
   }
   importGraphs(graphs) {
@@ -58,10 +58,11 @@ class Project {
     this.mainGraphId = 'funcs';
   }
   importAst(ast) {
-    this.ast = {};
+    const items = this.items;
+    items.ast = {};
     for (const [id, data] of Object.entries(ast)) {
       if (data.start && data.end)
-        this.ast[id] = {
+        items.ast[id] = {
           start: new CodePos(data.start[0], data.start[1]),
           end: new CodePos(data.end[0], data.end[1])
         };
