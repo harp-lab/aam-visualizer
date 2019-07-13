@@ -168,8 +168,10 @@ function ConfigsViewer(props) {
           if (env)
             noEnvs = false;
         });
-      if (noEnvs)
+      if (noEnvs) {
         panelProps.disableSelect = true;
+        panelProps.disableSelectMsg = 'No environments';
+      }
 
       return (
         <Panel
@@ -294,7 +296,7 @@ function Panel(props) {
   if (props.disableSelect)
     selectButton = <Button
       icon={ <IndeterminateCheckBoxIcon color='disabled'/> }
-      tooltip='Disabled'
+      tooltip={ props.disableSelectMsg }
       disabled />;
   else if (props.onSelect)
     selectButton = <Button
