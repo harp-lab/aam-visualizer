@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useContext } from 'react';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -87,6 +88,7 @@ function PropViewer(props) {
         <Pane width="50%" overflow='auto'>
           <EnvsViewer
             envs={ viewedEnvs }
+            onAdd={ addEnv }
             onSave={ envs => props.onSave({ envs }) } />
         </Pane>
       </SplitPane>);;
@@ -159,20 +161,20 @@ function ConfigsViewer(props) {
         panelProps.onSelect = () => select(id);
       
       const states = items.configs[id].states;
-      let empty = true;
+      let noEnvs = true;
       if (states)
         states.forEach(stateId => {
           const env = items.states[stateId].env;
           if (env)
-            empty = false;
+            noEnvs = false;
         });
-      if (empty)
+      if (noEnvs)
         panelProps.disableSelect = true;
 
       return (
         <Panel
           key={ id }
-          label={ label }
+          label={ ( states ? label : `${label} (empty)`) }
           { ...panelProps }
           onDelete={ () => deleteConfig(id) }>
           <ConfigItem configId={ id } />
@@ -197,6 +199,7 @@ function ConfigsViewer(props) {
 }
 function EnvsViewer(props) {
   const envs = props.envs;
+  const items = useContext(Context);
 
   function deleteEnv(envId) { props.onSave( arrayDelete(envs, envId) ); }
   function save(envId) {
@@ -234,12 +237,12 @@ function EnvsViewer(props) {
       return (
         <Panel
           key={ id }
-          label={ label }
+          label={ items.envs[id].length > 0 ? label : `${label} (empty)` }
           { ...panelProps }
           onDelete={ () => deleteEnv(id) }>
           <EnvItem
             envId={ id }
-            store={ props.store }/>
+            onAdd={ props.onAdd } />
         </Panel>);
     }
 
@@ -267,7 +270,8 @@ function ViewerLabel(props) {
       variant='dense'
       style={{
         backgroundColor: theme.palette.secondary.main,
-        color: theme.palette.secondary.contrastText
+        color: theme.palette.secondary.contrastText,
+        minHeight: 'auto'
       }}>
       <Typography>{ props.content }</Typography>
     </Toolbar>);
@@ -367,17 +371,22 @@ function ConfigItem(props) {
     entries={ entries }/>;
 }
 function EnvItem(props) {
+  const { envId, onAdd } = props
   const items = useContext(Context);
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
-  const env = envs[props.envId];
+  const env = envs[envId];
   const entries = env
     .map(entry => {
-      // TODO look up addr in store?
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const val = vals[valId];
-          return <Typography key={ valId }>{ `${val.ast}` }</Typography>;
+          const { ast, env } = vals[valId];
+          return (
+            <Typography key={ valId }>
+              <Tooltip title='View environment'>
+                <Link onClick={ () => onAdd(env) }>{ ast }</Link>
+              </Tooltip>
+            </Typography>);
         });
       return [entry.var, instr[entry.instr], storeEntries]
     });
