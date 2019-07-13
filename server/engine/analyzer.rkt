@@ -9,6 +9,9 @@
  regroup-by-call
  step-state
  ast-id
+ func-id
+ atomic
+ atomic?
  get-li
  get-kappa
  only-syntax)
@@ -41,6 +44,7 @@
 (struct ast/loc (ast bound loc lambda-id)  #:transparent)
 
 (define (ast-id ast) (~a (ast/loc-loc ast)))
+(define (func-id ast id>lambda) (~a (ast/loc-loc (hash-ref id>lambda (ast/loc-lambda-id ast)))))
 
 (define (only-syntax ast)
   (match ast
