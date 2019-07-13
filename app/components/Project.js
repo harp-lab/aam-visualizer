@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, createContext } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -12,6 +12,7 @@ import Graph from './Graph';
 import FunctionGraph from './FunctionGraph';
 import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
+import Context from './Context';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
@@ -139,13 +140,13 @@ function Project(props) {
   }
   function addConfig(graphId, nodeId) {
     const configs = project.metadata.configs || [];
-    const configId = `${graphId}-${nodeId}`;
+    const configId = nodeId;
     const nodeConfig = project.graphs[graphId].nodes[nodeId].states;
     const match = configs.find(config => config.id == configId);
     if (nodeConfig && !match) {
       configs.unshift({
-        id: configId,
-        config: nodeConfig
+        label: `${graphId}-${nodeId}`,
+        id: configId
       });
       saveMetadata({ configs });
     }
@@ -251,17 +252,19 @@ function Project(props) {
     const propViewerElement = renderPropViewer();
 
     return (
-      <SplitPane vertical>
-        <Pane width='50%'>
-          { graphElement }
-        </Pane>
-        <Pane width='50%'>
-          <SplitPane horizontal>
-            { editorElement }
-            { propViewerElement }
-          </SplitPane>
-        </Pane>
-      </SplitPane>);
+      <Context.Provider value={ project.items }>
+        <SplitPane vertical>
+          <Pane width='50%'>
+            { graphElement }
+          </Pane>
+          <Pane width='50%'>
+            <SplitPane horizontal>
+              { editorElement }
+              { propViewerElement }
+            </SplitPane>
+          </Pane>
+        </SplitPane>
+      </Context.Provider>);
   }
   function renderHistory() {
     const graphHistory = props.project.mainGraph.metadata.history;
