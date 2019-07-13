@@ -283,6 +283,7 @@
         'id (hash-ref state>id s)
         'form "eval"
         'expr (ast-id ast)
+        'exprString (~a (only-syntax ast))
         'env (hash-ref env>id rho)
         'instr (hash-ref instr>id i)
         'kont (hash-ref kont>id kappa))]
@@ -291,6 +292,7 @@
         'id (hash-ref state>id s)
         'form (symbol->string cat)
         'expr (ast-id ae)
+        'exprString (~a (only-syntax ae))
         'instr (hash-ref instr>id i)
         'kont (hash-ref kont>id kappa))]
       [`(notfound ,ae ,rho ,i ,kappa)
@@ -298,6 +300,7 @@
         'id (hash-ref state>id s)
         'form "not found"
         'expr (ast-id ae)
+        'exprString (~a (only-syntax ae))
         'env (hash-ref env>id rho)
         'instr (hash-ref instr>id i)
         'kont (hash-ref kont>id kappa))]
@@ -324,9 +327,11 @@
     ;kaddr is (list lid env)
     "todo")
 
-  ;list of expression ids
+  ;hash of syncronized lists
   (define (make-instr i)
-    (map (lambda(e)(ast-id e)) i))
+    (hash
+     'exprs (map (lambda(e)(ast-id e)) i)
+     'exprStrings (map (lambda(e)(~a (only-syntax e))) i)))
 
   ;hash
   (define (make-func func)
@@ -347,6 +352,7 @@
         'id id
         'form (~a lid)
         'expr (ast-id (hash-ref id>lambda lid))
+        'exprString (~a (only-syntax (hash-ref id>lambda lid)))
         ;'detail?
         ;'astLink?
         'more? "todo")]))
@@ -385,6 +391,7 @@
       (define addr (hash-ref env var))
       (hash
        'var (ast-id var)
+       'varString (~a (only-syntax var))
        'instr (hash-ref instr>id (cadr addr))
        'addr (hash-ref addr>id addr))))
 
@@ -399,6 +406,7 @@
        (hash
         'type "closure"
         'ast (func-id e id>lambda)
+        'astString (format "λ~a~a" (map (lambda(x)(~a (only-syntax x))) xs) (~a (only-syntax e)))
         'form (~a (car (get-li e)))
         'env (hash-ref env>id rho))]))
 
