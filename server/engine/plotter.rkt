@@ -229,17 +229,20 @@
   (define kaddr>id (make-id-hash (list->set (hash-keys kstore))))
   (define kaddr->sym (make-data->symbol kaddr>id))
 
-  (match-define (list envs instrs konts)
+  (match-define (list vals envs instrs konts)
     (foldl
      (lambda (state tables)
-       (match-define (list envs instrs konts) tables)
+       (match-define (list vals envs instrs konts) tables)
        (match state
+         [`(eval ,(? atomic? ae) ,rho ,i ,kappa)
+          (define new-vals (atomic ae rho store))
+          (list (set-union new-vals vals)(set-add envs rho)(set-add instrs i)(set-add konts kappa))]
          [`(eval ,_ ,rho ,i ,kappa)
-          (list (set-add envs rho)(set-add instrs i)(set-add konts kappa))]
+          (list vals (set-add envs rho)(set-add instrs i)(set-add konts kappa))]
          [`(inner ,_ ,_ ,_ ,_ ,i ,kappa)
-          (list envs (set-add instrs i)(set-add konts kappa))]
+          (list vals envs (set-add instrs i)(set-add konts kappa))]
          [_ tables]))
-     (list (set)(set)(set))
+     (list (set)(set)(set)(set))
      (set->list states)))
 
   (define env>id (make-id-hash envs))
@@ -269,6 +272,9 @@
   (define conf>id (make-id-hash (hash-keys confs>func)))
   (define conf->sym (make-data->symbol conf>id))
 
+  (define val>id (make-id-hash vals))
+  (define val->sym (make-data->symbol val>id))
+  
   ;hash
   (define (make-state s)
     (match s
@@ -381,9 +387,28 @@
        'var (ast-id var)
        'instr (hash-ref instr>id (cadr addr))
        'addr (hash-ref addr>id addr))))
+
+  ;hash
+  (define (make-val v)
+    (match v
+      [(? boolean?)
+       (hash
+        'type "bool"
+        'val v)]
+      [`(clo ,xs ,e ,rho)
+       (hash
+        'type "closure"
+        'ast (func-id e id>lambda)
+        'form (~a (car (get-li e)))
+        'env (hash-ref env>id rho))]))
+
+  ;hash - temporary
+  (define (make-kont k)
+    (hash
+     'string (print-k k kstore)))
  
 
-  ;store should be hash addr>(list val...)
+  ;store-entries are hash addr-id > (list val-id...)
   
   (hash
    'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
@@ -392,6 +417,10 @@
    'configs (for/hash ([c (hash-keys conf>id)]) (values (conf->sym c) (make-config c)))
    'envs (for/hash ([e (hash-keys env>id)]) (values (env->sym e) (make-env e)))
    'instr (for/hash ([i (hash-keys instr>id)]) (values (instr->sym i) (make-instr i)))
+   'konts (for/hash ([k (hash-keys kont>id)]) (values (kont->sym k) (make-kont k)))
+   'vals (for/hash ([v (hash-keys val>id)]) (values (val->sym v) (make-val v)))
+   'store-entries (for/hash ([a (hash-keys addr>id)])
+                    (values (addr->sym a) (set-map (hash-ref store a) (lambda(v)(hash-ref val>id v)))))
    ;'addr (for/hash ([a (hash-keys addr>id)]) (values (addr->sym a) (make-addr a)))
    ;'kaddr (for/hash ([a (hash-keys kaddr>id)]) (values (kaddr->sym a) (make-kaddr a)))
    'more? "todo"))
