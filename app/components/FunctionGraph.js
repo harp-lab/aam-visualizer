@@ -9,7 +9,7 @@ import PaneMessage from './PaneMessage';
 import Graph from './Graph';
 
 function FunctionGraph(props) {
-  const { projectId, project } = props;
+  const { projectId, project, focused } = props;
 
   // render main graph
   const mainGraphId = project.mainGraphId;
@@ -19,9 +19,11 @@ function FunctionGraph(props) {
     graphId={ mainGraphId }
     data={ mainGraph.export() }
     metadata={ mainGraph.metadata }
+    onFocus={ props.onFocus }
     onNodeSelect={ props.onMainNodeSelect }
     onNodeUnselect={ props.onMainNodeUnselect }
-    onSave={ props.onSave } />;
+    onSave={ props.onSave }
+    focus={ focused == mainGraphId } />;
 
   // render subgraph
   let subGraphElement;
@@ -36,6 +38,7 @@ function FunctionGraph(props) {
           graphId={ subGraphId }
           data={ subGraph.export() }
           metadata={ subGraph.metadata }
+          onFocus={ props.onFocus }
           onNodeSelect={ nodeId => props.onNodeSelect(subGraphId, nodeId) }
           onNodeUnselect={ nodeId => props.onNodeUnselect(subGraphId, nodeId) }
           onEdgeSelect={ edgeId => {
@@ -43,7 +46,8 @@ function FunctionGraph(props) {
               if (!edge || edge.calls)
                 props.onEdgeSelect(subGraphId, edgeId);
           }}
-          onSave={ props.onSave } />
+          onSave={ props.onSave }
+          focus={ focused == subGraphId } />
       </Fragment>);
   } else
     subGraphElement = <PaneMessage content='No subgraph available' />;
