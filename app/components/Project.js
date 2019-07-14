@@ -18,6 +18,7 @@ import CodeMark from './data/CodeMark';
 function Project(props) {
   const project = props.project;
   const timeout = useRef(undefined);
+  const [focusedGraph, setFocusedGraph] = useState(undefined);
 
   // mount/unmount
   useEffect(() => {
@@ -32,10 +33,12 @@ function Project(props) {
           getGraphs();
         break;
     }
+
     return () => {
       clearTimeout(timeout.current);
     };
   }, []);
+
 
   let historyEnabled = true;
 
@@ -301,6 +304,8 @@ function Project(props) {
         graphElement = <FunctionGraph
           projectId={ props.id }
           project={ props.project }
+          focused={ focusedGraph }
+          onFocus={ setFocusedGraph }
           onNodeSelect={ selectNode }
           onNodeUnselect={ unselectNode }
           onMainNodeSelect={ selectMainNode }

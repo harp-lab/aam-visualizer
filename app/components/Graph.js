@@ -7,7 +7,7 @@ function Graph(props) {
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  const { graphId, theme } = props;
+  const { graphId, focus, theme } = props;
 
   const config = {
     style: [
@@ -76,7 +76,8 @@ function Graph(props) {
   const suggestedNodes = metadata.suggestedNodes;
 
   // event handlers
-  ['select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
+  ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
+  cy.on('tap', () => props.onFocus(graphId));
   cy.on('select', 'node', evt => {
     const node = evt.target;
     if (events.current)
@@ -113,8 +114,22 @@ function Graph(props) {
   // mount/unmount
   useEffect(() => {
     cy.mount(cyElem.current);
+
     return () => cy.unmount();
   }, []);
+
+  useEffect(() => {
+    if (focus) {
+      document.addEventListener('keydown', keyDown );
+      return () => {
+        document.removeEventListener('keydown', keyDown )
+      }
+    }
+  }, [focus]);
+  function keyDown(evt) {
+    // TODO switch statement for arrow keys
+    console.log(`${graphId} key down`);
+  }
 
   // graph change
   useEffect(() => {
