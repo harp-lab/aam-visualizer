@@ -106,6 +106,7 @@ function Project(props) {
   }
   function unselectNode(graphId, nodeId) {
     cleanConfigs();
+    cleanEnvs();
     saveGraphMetadata(graphId, { selectedNode: undefined });
   }
   function selectMainNode(nodeId) {
@@ -146,7 +147,8 @@ function Project(props) {
     if (nodeConfig && !match) {
       configs.unshift({
         label: `${graphId}-${nodeId}`,
-        id: configId
+        id: configId,
+        selected: true // default
       });
       saveMetadata({ configs });
     }
@@ -156,6 +158,13 @@ function Project(props) {
     if (configs) {
       const cleanedConfigs = configs.filter(config => config.saved);
       saveMetadata({ configs: cleanedConfigs });
+    }
+  }
+  function cleanEnvs() {
+    const envs = project.metadata.envs;
+    if (envs) {
+      const cleanedEnvs = envs.filter(env => env.saved);
+      saveMetadata({ envs: cleanedEnvs });
     }
   }
   function addHistory() {
