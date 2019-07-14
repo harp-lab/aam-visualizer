@@ -7,7 +7,8 @@ function Graph(props) {
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  const theme = props.theme;
+  const { graphId, theme } = props;
+
   const config = {
     style: [
       {
@@ -89,10 +90,10 @@ function Graph(props) {
   cy.on('mouseover', 'node', evt => {
     const node = evt.target;
     if (hoveredNodes !== [node.id()])
-      props.onSave(props.graphId, { hoveredNodes: [node.id()] });
+      props.onSave(graphId, { hoveredNodes: [node.id()] });
   });
   cy.on('mouseout', 'node', evt => {
-    props.onSave(props.graphId, { hoveredNodes: undefined });
+    props.onSave(graphId, { hoveredNodes: undefined });
   });
   if (props.onEdgeSelect) {
     cy.on('select', 'edge', evt => {
@@ -136,12 +137,12 @@ function Graph(props) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$(`#${nodeId}`).position();
       })
-      props.onSave(props.graphId, { positions });
+      props.onSave(graphId, { positions });
 
       // remove nodes
       cy.nodes().remove();
     };
-  }, [props.projectId, props.graphId]);
+  }, [props.projectId, graphId]);
 
   // resize on bound changes
   useEffect(() => {
