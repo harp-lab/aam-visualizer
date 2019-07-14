@@ -120,12 +120,6 @@ function ConfigsViewer(props) {
   const configs = props.configs;
   const items = useContext(Context);
 
-  useEffect(() => {
-    return () => {
-      props.onClean();
-    };
-  }, [configs]);
-
   function deleteConfig(configId) { props.onSave( arrayDelete(configs, configId) ); }
   function save(configId) {
     arrayFind(configs, configId).saved = true;
@@ -364,9 +358,14 @@ function ConfigItem(props) {
     entries = config.states
       .map(stateId => {
         const state = states[stateId];
+        const instrEntries = instr[state.instr]
+          .exprStrings
+          .map(expr => {
+            return <Typography key={ expr }>{ expr }</Typography>;
+          });
         const kontEntries = konts[state.kont].string
           .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-        return [state.expr, instr[state.instr], kontEntries]
+        return [state.exprString, instrEntries, kontEntries]
       });
   return <Item
     labels={ labels }
@@ -380,17 +379,22 @@ function EnvItem(props) {
   const env = envs[envId];
   const entries = env
     .map(entry => {
+      const instrEntries = instr[entry.instr]
+        .exprStrings
+        .map(expr => {
+          return <Typography key={ expr }>{ expr }</Typography>;
+        });
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const { ast, env } = vals[valId];
+          const { astString, env } = vals[valId];
           return (
             <Typography key={ valId }>
               <Tooltip title='View environment'>
-                <Link onClick={ () => onAdd(env) }>{ ast }</Link>
+                <Link onClick={ () => onAdd(env) }>{ astString }</Link>
               </Tooltip>
             </Typography>);
         });
-      return [entry.var, instr[entry.instr], storeEntries]
+      return [entry.varString, instrEntries, storeEntries]
     });
   return <Item
     labels={ labels }
