@@ -206,8 +206,8 @@
                       (values (a->sym a) (set-map (hash-ref store a) print-val))))
   (list func-graph detail-graphs out-store))
   
-(define (all-items states groupings tables)
-  (match-define (list init trans subs) groupings)
+(define (all-items initial-state states groupings tables)
+  (match-define (list initial-func trans subs) groupings)
   (match-define (list store kstore instr id>lambda) tables)
 
   (define (make-data->symbol id-hash)
@@ -220,7 +220,7 @@
   
   (define state-trans (for/hash ([s states])
                        (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
-                       (values (hash-ref state>id s) (for/hash ([tr st-tr])
+                       (values (state->sym s) (for/hash ([tr st-tr])
                                                        (values (state->sym tr)(hash))))))
   
   (define addr>id (make-id-hash (list->set (hash-keys store))))
@@ -257,20 +257,65 @@
   (define func>id (make-id-hash (hash-keys trans)))
   (define func->sym (make-data->symbol func>id))
 
+  (define (make-edge edge)
+    (match edge
+      [`(call) (hash 'style (hash 'line-style "solid"))]
+      [`(call-and-return) (hash 'style (hash 'line-style "solid"))]
+      [`(return) (hash 'style (hash 'line-style "dashed"))]
+      [`(stop) (hash 'style (hash 'line-style "solid"))]
+      
+      [`(return-out ,func)
+       (hash
+        'style (hash'line-style "dashed")
+        'calls (list (hash-ref func>id func)))]
+      [`(halt) (hash 'style (hash 'line-style "solid"))]
+      [`(stuck) (hash 'style (hash 'line-style "solid"))]
+      [`(call-out ,func)
+       (hash
+        'style (hash 'line-style "dashed")
+        'calls (list (hash-ref func>id func)))]
+      [`(call-return ,funcs)
+       (hash
+        'style (hash 'line-style "dashed")
+        'calls (set-map funcs (lambda(f)(hash-ref func>id f))))]
+      [`(step) (hash 'style (hash 'line-style "solid"))]))
+
+  (define func-trans (for/hash ([f (hash-keys trans)])
+                       (define f-trans (hash-ref trans f))
+                       (values (func->sym f)
+                               (for/hash([target (hash-keys f-trans)])
+                                 (values (func->sym target)
+                                         (make-edge (hash-ref f-trans target)))))))
+
   (define confs>func
     (foldl
      (lambda (func confs)
-       (match-define (list s-init s-trans) (hash-ref subs func))
+       (match-define (list _ f-trans) (hash-ref subs func))
        (foldl
         (lambda(c confs)
-          (hash-set confs c func))
+          (foldl
+           (lambda(t confs)
+             (hash-set confs t func))
+           (hash-set confs c func)
+           (hash-keys (hash-ref f-trans c))))
         confs
-        (hash-keys s-trans)))
+        (hash-keys f-trans)))
      (hash)
      (hash-keys subs)))
 
   (define conf>id (make-id-hash (hash-keys confs>func)))
   (define conf->sym (make-data->symbol conf>id))
+
+  (define func-conf-graphs (for/hash ([f (hash-keys subs)])
+                             (match-define (list f-init f-trans) (hash-ref subs f))
+                             (values (func->sym f)
+                                     (hash
+                                      'start (hash-ref conf>id f-init)
+                                      'graph (for/hash ([c (hash-keys f-trans)])
+                                               (define c-trans (hash-ref f-trans c))
+                                               (values (conf->sym c) (for/hash ([t (hash-keys c-trans)])
+                                                                       (values (conf->sym t)
+                                                                               (make-edge (hash-ref c-trans t))))))))))
 
   (define val>id (make-id-hash vals))
   (define val->sym (make-data->symbol val>id))
@@ -341,7 +386,7 @@
        (hash
         'id id
         'form "halt"
-        'result "todo"
+        'result (set-map d (lambda(v)(hash-ref val>id v)))
         'env (hash-ref env>id rho))]
       [`(,form .,_)
        (hash
@@ -420,9 +465,11 @@
   
   (hash
    'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
-   ;'state-graph state-trans
+   'state-graph (hash 'start (hash-ref state>id initial-state) 'graph state-trans)
    'funcs (for/hash ([f (hash-keys func>id)]) (values (func->sym f) (make-func f)))
+   'func-graph (hash 'start (hash-ref func>id initial-func) 'graph func-trans)
    'configs (for/hash ([c (hash-keys conf>id)]) (values (conf->sym c) (make-config c)))
+   'func-conf-graphs func-conf-graphs
    'envs (for/hash ([e (hash-keys env>id)]) (values (env->sym e) (make-env e)))
    'instr (for/hash ([i (hash-keys instr>id)]) (values (instr->sym i) (make-instr i)))
    'konts (for/hash ([k (hash-keys kont>id)]) (values (kont->sym k) (make-kont k)))
