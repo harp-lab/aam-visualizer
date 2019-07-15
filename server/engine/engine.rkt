@@ -54,7 +54,7 @@
 (define state-graph (full-state-graph analysis-states data-tables))
 (match-define (list func-graph func-detail-graphs store)
   (function-graphs analysis-states analysis-groupings data-tables))
-(define items (all-items analysis-states analysis-groupings data-tables))
+(define items (all-items initial-state analysis-states analysis-groupings data-tables))
 
 
 
