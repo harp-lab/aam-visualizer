@@ -1,20 +1,16 @@
 import AbstractGraph from './AbstractGraph';
 import ParentNode from './ParentNode';
 
+const finalForms = ['halt', 'not found', 'non-func', 'unknown'];
+
 class SummaryGraph extends AbstractGraph {
-  processNode(data, refData, id) {
-    let node;
-    switch (refData.form) {
-      case 'halt':
-      case 'exit':
-      case 'no-return':
-        node = new ParentNode(refData.form, undefined, data, refData.expr);
-        break;
-      default:
-        node = new ParentNode(refData.form, undefined, data, refData.expr);
-        node.detail = id;
-        break;
-    }
+  processNode(children, refData, nodeId) {
+    const {form, expr } = refData;
+    const node = new ParentNode(form, undefined, children, expr);
+
+    if (!finalForms.includes(form))
+      node.detail = nodeId; // nodeId matches graphId
+
     return node;
   }
 }

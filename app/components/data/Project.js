@@ -3,10 +3,6 @@ import DefaultGraph from './DefaultGraph';
 import SummaryGraph from './SummaryGraph';
 import CodePos from './CodePos';
 
-const GRAPHS = {
-  ast: 'ast'
-};
-
 class Project {
   constructor() {
     this.code = '';
@@ -29,50 +25,28 @@ class Project {
     this.code = data.code;
     this.analysis = data.analysis
     if (this.status == this.STATUSES.done) {
-      //this.importGraphs(data.graphs);
       this.store = data.store;
       this.items = data.items;
-      this.importGraphs2();
+      this.generateGraphs();
       this.importAst(data.ast);
     }
   }
-  importGraphs(graphs) {
-    for (const [id, data] of Object.entries(graphs)) {
-      switch (id) {
+  generateGraphs() {
+    const { graphs, funcs, states, configs } = this.items;
+    for (const [graphId, graphData] of Object.entries(graphs)) {
+      switch (graphId) {
         case 'funcs':
-          this.graphs[id] = new SummaryGraph(data);
+          this.graphs[graphId] = new SummaryGraph(graphData, funcs);
+          break;
+        case 'states':
+          this.graphs[graphId] = new DefaultGraph(graphData, states);
           break;
         default:
-          const type = data.type;
-          switch (type) {
-            case GRAPHS.ast:
-              this.graphs[id] = new AstGraph(data);
-              break;
-            default:
-              this.graphs[id] = new DefaultGraph(data);
-              break;
-          }
+          this.graphs[graphId] = new DefaultGraph(graphData, configs);
           break;
       }
     }
 
-    this.mainGraphId = 'funcs';
-  }
-  importGraphs2() {
-    for (const [graphId, graph] of Object.entries(this.items.graphs)) {
-      switch (graphId) {
-        case 'funcs':
-          this.graphs[graphId] = new SummaryGraph(graph, this.items.funcs);
-          break;
-        case 'states':
-          this.graphs[graphId] = new DefaultGraph(graph, this.items.states);
-          break;
-        default:
-          this.graphs[graphId] = new DefaultGraph(graph, this.items.configs);
-          break;
-      }
-    }
-    console.log(this.graphs);
     this.mainGraphId = 'funcs';
   }
   importAst(ast) {
@@ -96,12 +70,14 @@ class Project {
   }
   get subGraphId() {
     const graph = this.mainGraph;
-    const nodeId = graph.metadata.selectedNode;
     let graphId;
-    if (nodeId)
-      graphId = graph.nodes[nodeId].detail
-    else
-      graphId = 'states';
+    if (graph) {
+      const nodeId = graph.metadata.selectedNode;
+      if (nodeId)
+        graphId = graph.nodes[nodeId].detail
+      else
+        graphId = 'states';
+    }
     return graphId;
   }
 }
