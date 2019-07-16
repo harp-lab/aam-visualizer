@@ -1,87 +1,82 @@
-import React, { Component } from 'react';
+import React, { useState, useRef } from 'react';
 
-class Resizer extends Component {
-  render() {
-    let style = { backgroundColor: 'darkgray', };
-    if (this.props.horizontal) {
-      style.height = 5;
-      style.cursor = 'ns-resize';
-    }
-    else {
-      style.width = 5;
-      style.cursor = 'ew-resize';
-    }
-    return <div
-      style={ style }
-      onMouseDown={ this.props.onMouseDown } />
-  }
+function Resizer(props) {
+  let style = { backgroundColor: 'darkgray' };
+  if (props.horizontal)
+    style = { ...style, ...{
+      height: 5,
+      cursor: 'ns-resize'
+    }};
+  else
+    style = { ...style, ...{
+      width: 5,
+      cursor: 'ew-resize'
+    }};
+  return <div
+    style={ style }
+    onMouseDown={ props.onMouseDown } />
 }
 
-class SplitPane extends Component {
-  constructor(props) {
-    super(props);
+function SplitPane(props) {
+  const splitElem = useRef(undefined);
+  const [resize, setResize] = useState(false);
 
-    const size = 50;
-    const resize = false;
-    this.state = { resize, size };
+  const childProps = props.children[0].props;
+  const childSize = parseInt(childProps.width || childProps.height);
+  const [size, setSize] = useState(childSize);
 
-    this.drag = this.drag.bind(this);
-    this.startDrag = this.startDrag.bind(this);
-    this.stopDrag = this.stopDrag.bind(this);
-  }
-  drag(event) {
-    if (this.state.resize) {
-      this.unfocus();
+  function drag(event) {
+    if (resize) {
+      unfocus();
       let size;
-      const bounds = this.spRef.getBoundingClientRect();
-      if (this.props.horizontal)
+      const bounds = splitElem.current.getBoundingClientRect();
+      if (props.horizontal)
         size = (event.clientY - bounds.y) / bounds.height * 100;
       else
         size = (event.clientX - bounds.x) / bounds.width * 100;
-      this.setState({ size });
+      setSize(size);
     }
   }
-  startDrag() { this.setState({ resize: true }); }
-  stopDrag() {
-    if (this.state.resize)
-      this.setState({ resize: false });
+  function startDrag() { setResize(true) }
+  function stopDrag() {
+    if (resize)
+      setResize(false);
   }
-  unfocus() {
+  function unfocus() {
     const selection = window.getSelection();
     if (selection)
       selection.removeAllRanges();
   }
-  render() {
-    const otherSize = 100 - this.state.size;
-    let leftPane, rightPane, resizer, cursor;
-    if (this.props.horizontal) {
-      leftPane = React.cloneElement(this.props.children[0], { height: `${this.state.size}%` });
-      rightPane = React.cloneElement(this.props.children[1], { height: `${otherSize}%` });
-      resizer = <Resizer horizontal onMouseDown={ this.startDrag } />;
-      cursor = 'ns-resize';
-    } else {
-      leftPane = React.cloneElement(this.props.children[0], { width: `${this.state.size}%` });
-      rightPane = React.cloneElement(this.props.children[1], { width: `${otherSize}%` });
-      resizer = <Resizer vertical onMouseDown={ this.startDrag } />;
-      cursor = 'ew-resize';
-    }
-    return <div
-      ref={ ref => this.spRef = ref }
-      style={ {
-        display: 'flex',
-        flexDirection: (this.props.horizontal ? 'column' : 'row'),
-        flex: '1 1 auto',
-        minHeight: 0,
-        cursor: (this.state.resize ? cursor : 'default')
-      } }
-      onMouseMove={ this.drag }
-      onMouseUp={ this.stopDrag }
-      onMouseLeave={ this.stopDrag }>
-      { leftPane }
-      { resizer }
-      { rightPane }
-    </div>;
+
+  const otherSize = 100 - size;
+  let leftPane, rightPane, resizer, cursor;
+  if (props.horizontal) {
+    leftPane = React.cloneElement(props.children[0], { height: `${size}%` });
+    rightPane = React.cloneElement(props.children[1], { height: `${otherSize}%` });
+    resizer = <Resizer horizontal onMouseDown={ startDrag } />;
+    cursor = 'ns-resize';
+  } else {
+    leftPane = React.cloneElement(props.children[0], { width: `${size}%` });
+    rightPane = React.cloneElement(props.children[1], { width: `${otherSize}%` });
+    resizer = <Resizer vertical onMouseDown={ startDrag } />;
+    cursor = 'ew-resize';
   }
+  return <div
+    ref={ splitElem }
+    style={ {
+      display: 'flex',
+      flexDirection: (props.horizontal ? 'column' : 'row'),
+      flex: '1 1 auto',
+      minHeight: 0,
+      cursor: (resize ? cursor : 'default')
+    } }
+    onMouseMove={ drag }
+    onMouseUp={ stopDrag }
+    onMouseLeave={ stopDrag }>
+    { leftPane }
+    { resizer }
+    { rightPane }
+  </div>;
 }
 
 export default SplitPane;
