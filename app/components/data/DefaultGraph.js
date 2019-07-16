@@ -2,13 +2,11 @@ import AbstractGraph from './AbstractGraph';
 import ParentNode from './ParentNode';
 
 class DefaultGraph extends AbstractGraph {
-  processNode(data) {
+  processNode(data, refData, id) {
     let node;
-    switch (data.form) {
+    switch (refData.form) {
       default:
-        node = new ParentNode(data.form, data.data, data.children, data.astLink);
-        node.env = data.env;
-        node.states = data.states;
+        node = new ParentNode(refData.form, undefined, data, refData.expr);
         break;
     }
     return node;

@@ -29,9 +29,10 @@ class Project {
     this.code = data.code;
     this.analysis = data.analysis
     if (this.status == this.STATUSES.done) {
-      this.importGraphs(data.graphs);
+      //this.importGraphs(data.graphs);
       this.store = data.store;
       this.items = data.items;
+      this.importGraphs2();
       this.importAst(data.ast);
     }
   }
@@ -55,6 +56,23 @@ class Project {
       }
     }
 
+    this.mainGraphId = 'funcs';
+  }
+  importGraphs2() {
+    for (const [graphId, graph] of Object.entries(this.items.graphs)) {
+      switch (graphId) {
+        case 'funcs':
+          this.graphs[graphId] = new SummaryGraph(graph, this.items.funcs);
+          break;
+        case 'states':
+          this.graphs[graphId] = new DefaultGraph(graph, this.items.states);
+          break;
+        default:
+          this.graphs[graphId] = new DefaultGraph(graph, this.items.configs);
+          break;
+      }
+    }
+    console.log(this.graphs);
     this.mainGraphId = 'funcs';
   }
   importAst(ast) {

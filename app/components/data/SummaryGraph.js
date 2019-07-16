@@ -2,14 +2,17 @@ import AbstractGraph from './AbstractGraph';
 import ParentNode from './ParentNode';
 
 class SummaryGraph extends AbstractGraph {
-  processNode(data) {
+  processNode(data, refData, id) {
     let node;
-    switch (data.form) {
+    switch (refData.form) {
+      case 'halt':
+      case 'exit':
+      case 'no-return':
+        node = new ParentNode(refData.form, undefined, data, refData.expr);
+        break;
       default:
-        node = new ParentNode(data.form, data.data, data.children, data.astLink);
-        node.detail = data.detail;
-        node.env = data.env;
-        node.states = data.states;
+        node = new ParentNode(refData.form, undefined, data, refData.expr);
+        node.detail = id;
         break;
     }
     return node;

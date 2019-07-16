@@ -145,7 +145,8 @@ function Project(props) {
   function addConfig(graphId, nodeId) {
     const configs = project.metadata.configs || [];
     const configId = nodeId;
-    const nodeConfig = project.graphs[graphId].nodes[nodeId].states;
+    //const nodeConfig = project.graphs[graphId].nodes[nodeId].states;
+    const nodeConfig = project.items.configs[nodeId];
     const match = configs.find(config => config.id == configId);
     if (nodeConfig && !match) {
       configs.unshift({

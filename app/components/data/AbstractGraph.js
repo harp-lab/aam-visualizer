@@ -1,12 +1,12 @@
 import Edge from './Edge';
 
 class AbstractGraph {
-  constructor(data) {
+  constructor(data, refData) {
     this.nodes = {};
     this.edges = {};
     this.metadata = {};
 
-    this.import(data.graph);
+    this.import(data.graph, refData);
     this.start = data.start;
     if (data.subGraphType)
       this.subGraphType = data.subGraphType;
@@ -16,19 +16,20 @@ class AbstractGraph {
   }
 
 
-  processNode(data) {}
+  processNode(data, refData) {}
 
 
-  import(graph) {
-    for (const [id, data] of Object.entries(graph)) {
-      const node = this.processNode(data);
-      this.nodes[id] = node;
+  import(graphData, refData) {
+    for (const [id, data] of Object.entries(graphData)) {
+      const node = this.processNode(data, refData[id], id);
       
       const children = node.children;
       if (children) {
         for (const [childId, edgeData] of Object.entries(children))
           this.edges[`${id}-${childId}`] = new Edge(id, childId, edgeData);
       }
+      
+      this.nodes[id] = node;
     }
   }
   export() {
