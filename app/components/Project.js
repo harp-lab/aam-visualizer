@@ -8,7 +8,6 @@ import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
 import Editor from './Editor';
-import Graph from './Graph';
 import FunctionGraph from './FunctionGraph';
 import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
@@ -16,20 +15,22 @@ import Context from './Context';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const project = props.project;
+  const { id: projectId, project } = props;
+  const { mainGraphId, mainGraph, subGraphId, subGraph } = project;
   const timeout = useRef(undefined);
   const [focusedGraph, setFocusedGraph] = useState(undefined);
 
   // mount/unmount
   useEffect(() => {
-    switch (project.status) {
-      case project.STATUSES.edit:
-        if (project.code == '')
+    const { status, STATUSES, graphs, code } = project;
+    switch (status) {
+      case STATUSES.edit:
+        if (code == '')
           props.getCode(props.id);
         break;
-      case project.STATUSES.done:
-      case project.STATUSES.error:
-        if (Object.keys(project.graphs).length == 0)
+      case STATUSES.done:
+      case STATUSES.error:
+        if (Object.keys(graphs).length == 0)
           getGraphs();
         break;
     }
@@ -51,7 +52,7 @@ function Project(props) {
           project.status = project.STATUSES.empty;
         project.code = code;
         props.onSave(project);
-        await fetch(`/api/projects/${props.id}/save`, {
+        await fetch(`/api/projects/${projectId}/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
@@ -61,7 +62,7 @@ function Project(props) {
   }
   async function processCode(code, options) {
     await saveCode(code);
-    const res = await fetch(`/api/projects/${props.id}/process`, {
+    const res = await fetch(`/api/projects/${projectId}/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
@@ -113,24 +114,21 @@ function Project(props) {
     saveGraphMetadata(graphId, { selectedNode: undefined });
   }
   function selectMainNode(nodeId) {
-    if (nodeId && nodeId !== project.mainGraph.metadata.selectedNode) {
+    if (nodeId && nodeId !== mainGraph.metadata.selectedNode) {
       // reset selected
-      const subGraph = project.subGraph;
       if (subGraph) {
         subGraph.resetSelected();
         props.onSave(project);
       }
 
-      selectNode(project.mainGraphId, nodeId);
-      suggestNodes(project.mainGraphId, undefined);
+      selectNode(mainGraphId, nodeId);
+      suggestNodes(mainGraphId, undefined);
       addHistory();
     }
   }
-  function unselectMainNode(nodeId) {
-    unselectNode(project.mainGraphId, nodeId);
-  }
-  function suggestNodes(graphId, nodeIds) { saveGraphMetadata(graphId, {suggestedNodes: nodeIds}); }
-  function hoverNodes(graphId, nodeIds) { saveGraphMetadata(graphId, { hoveredNodes: nodeIds }); }
+  function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
+  function suggestNodes(graphId, nodeIds) { saveGraphMetadata(graphId, {suggestedNodes: nodeIds}) }
+  function hoverNodes(graphId, nodeIds) { saveGraphMetadata(graphId, { hoveredNodes: nodeIds }) }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
     saveGraphMetadata(graphId, { selectedEdge });
@@ -140,12 +138,11 @@ function Project(props) {
     let suggestedNodeIds;
     if (edge)
       suggestedNodeIds = edge.calls;
-    suggestNodes(project.mainGraphId, suggestedNodeIds);
+    suggestNodes(mainGraphId, suggestedNodeIds);
   }
   function addConfig(graphId, nodeId) {
     const configs = project.metadata.configs || [];
     const configId = nodeId;
-    //const nodeConfig = project.graphs[graphId].nodes[nodeId].states;
     const nodeConfig = project.items.configs[nodeId];
     const match = configs.find(config => config.id == configId);
     if (nodeConfig && !match) {
@@ -158,30 +155,27 @@ function Project(props) {
     }
   }
   function cleanConfigs() {
-    const configs = project.metadata.configs;
-    if (configs) {
-      const cleanedConfigs = configs.filter(config => config.saved);
-      saveMetadata({ configs: cleanedConfigs });
-    }
+    clean('configs');
   }
-  function cleanEnvs() {
-    const envs = project.metadata.envs;
-    if (envs) {
-      const cleanedEnvs = envs.filter(env => env.saved);
-      saveMetadata({ envs: cleanedEnvs });
+  function cleanEnvs() { clean('envs') }
+  function clean(tag) {
+    const data = project.metadata[tag];
+    if (data) {
+      const cleanedData = data.filter(item => item.saved);
+      saveMetadata({ [tag]: cleanedData });
     }
   }
   function addHistory() {
     if (historyEnabled) {
-      const graphId = project.mainGraphId;
+      const graphId = mainGraphId;
   
       // add record to history
-      const metadata = project.mainGraph.metadata;
+      const metadata = mainGraph.metadata;
       if (!metadata.history)
         metadata.history = [];
       const data = {
-        mainNodeId: project.mainGraph.metadata.selectedNode,
-        subNodeId: (project.subGraph && project.subGraph.metadata.selectedNode)
+        mainNodeId: mainGraph.metadata.selectedNode,
+        subNodeId: (subGraph && subGraph.metadata.selectedNode)
       };
       metadata.history.push(data);
   
@@ -190,11 +184,11 @@ function Project(props) {
   }
   function history(index) {
     historyEnabled = false;
-    const graphId = project.mainGraphId;
-    const subGraphId = project.subGraphId;
+    const graphId = mainGraphId;
+    const subGraphId = subGraphId;
 
     // jump to index
-    const metadata = project.mainGraph.metadata;
+    const metadata = mainGraph.metadata;
     const record = metadata.history[index];
     metadata.history = metadata.history.slice(0, index + 1);
 
@@ -208,31 +202,32 @@ function Project(props) {
   }
 
   function render() {
+    const { status, STATUSES, code, graphs, error } = project;
     let viewElement;
-    switch (project.status) {
-      case project.STATUSES.empty:
-      case project.STATUSES.edit:
+    switch (status) {
+      case STATUSES.empty:
+      case STATUSES.edit:
         viewElement = <Editor
-          data={ project.code }
+          data={ code }
           processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
           onSave={ saveCode }
           onProcess={ processCode }
           edit />;
         break;
-      case project.STATUSES.process:
+      case STATUSES.process:
         viewElement = <Loading status='Processing' variant='circular'/>;
         break;
-      case project.STATUSES.done:
-        if (Object.keys(project.graphs).length == 0)
+      case STATUSES.done:
+        if (Object.keys(graphs).length == 0)
           viewElement = <Loading status='Downloading' variant='circular'/>;
         else
           viewElement = renderVisual();
         break;
-      case project.STATUSES.error:
+      case STATUSES.error:
         viewElement = <Editor
-          data={ project.code }
+          data={ code }
           error
-          errorContent={ project.error } />;
+          errorContent={ error } />;
         break;
     };
     return viewElement;
@@ -247,10 +242,10 @@ function Project(props) {
     return (
       <Context.Provider value={ project.items }>
         <SplitPane vertical>
-          <Pane width='50%'>
+          <Pane width='40%'>
             { graphElement }
           </Pane>
-          <Pane width='50%'>
+          <Pane width='60%'>
             <SplitPane horizontal>
               { editorElement }
               { propViewerElement }
@@ -260,7 +255,7 @@ function Project(props) {
       </Context.Provider>);
   }
   function renderHistory() {
-    const graphHistory = props.project.mainGraph.metadata.history;
+    const graphHistory = mainGraph.metadata.history;
     let links;
     if (graphHistory)
       links = graphHistory.map((data, index) => {
@@ -288,50 +283,28 @@ function Project(props) {
       
     return (
       <Select
-        value={ project.mainGraphId }
-        onChange={ event => {
-          project.mainGraphId = event.target.value;
+        value={ mainGraphId }
+        onChange={ evt => {
+          mainGraphId = evt.target.value;
           props.onSave(project);
         } }>
         { menuItems }
       </Select>);
   }
   function renderGraph() {
-    const mainGraphId = project.mainGraphId;
-    const mainGraph = project.graphs[mainGraphId];
-    let graphElement;
-    switch (mainGraphId) {
-      case 'funcs':
-        graphElement = <FunctionGraph
-          projectId={ props.id }
-          project={ props.project }
-          focused={ focusedGraph }
-          onFocus={ setFocusedGraph }
-          onNodeSelect={ selectNode }
-          onNodeUnselect={ unselectNode }
-          onMainNodeSelect={ selectMainNode }
-          onMainNodeUnselect={ unselectMainNode }
-          onEdgeSelect={ selectEdge }
-          onSave={ saveGraphMetadata } />;
-        break;
-      default:
-        graphElement = <Graph
-          projectId={ props.id }
-          graphId={ mainGraphId }
-          data={ mainGraph.export() }
-          metadata={ mainGraph.metadata }
-          onNodeSelect={ selectMainNode }
-          onSave={ saveGraphMetadata } />;
-        break;
-    }
-
-    return graphElement;
+    return <FunctionGraph
+      projectId={ projectId }
+      project={ project }
+      focused={ focusedGraph }
+      onFocus={ setFocusedGraph }
+      onNodeSelect={ selectNode }
+      onNodeUnselect={ unselectNode }
+      onMainNodeSelect={ selectMainNode }
+      onMainNodeUnselect={ unselectMainNode }
+      onEdgeSelect={ selectEdge }
+      onSave={ saveGraphMetadata } />;
   }
   function renderCodeViewer() {
-    const mainGraphId = project.mainGraphId;
-    const mainGraph = project.mainGraph;
-    const subGraphId = project.subGraphId;
-    const subGraph = project.subGraph;
 
     let graphIds = [mainGraphId];
     if (subGraphId)
@@ -343,30 +316,24 @@ function Project(props) {
       marks[id] = new CodeMark(data.start, data.end);
     function addMarks(graphId, graph) {
       for (const [id, node] of Object.entries(graph.nodes)) {
-        const astLink = node.astLink;
-        if (astLink)
-          marks[astLink].addNode(graphId, id);
+        const { expr } = node;
+        if (expr)
+          marks[expr].addNode(graphId, id);
       }
     }
     addMarks(mainGraphId, mainGraph);
     if (subGraphId)
       addMarks(subGraphId, subGraph);
 
-    let selected, selectFunc;
+    let selected;
     if (subGraphId) {
       const selectedNode = subGraph.metadata.selectedNode;
       if (selectedNode)
-        selected = subGraph.nodes[selectedNode].astLink;
-      selectFunc = (graphId, nodeId) => {
-        if (graphId == mainGraphId)
-          selectMainNode(nodeId);
-        else
-          selectNode(graphId, nodeId);
-      };
+        selected = subGraph.nodes[selectedNode].expr;
     } else {
       const selectedNode = mainGraph.metadata.selectedNode;
       if (selectedNode)
-        selected = mainGraph.nodes[selectedNode].astLink;
+        selected = mainGraph.nodes[selectedNode].expr;
     }
 
     // generate hovered asts
@@ -375,7 +342,7 @@ function Project(props) {
       const hoveredNodes = graph.metadata.hoveredNodes;
       if (hoveredNodes)
         hoveredNodes.forEach(nodeId => {
-          const astId = graph.nodes[nodeId].astLink;
+          const astId = graph.nodes[nodeId].expr;
           if (astId)
             hoveredSet.add(astId);
         })
@@ -388,7 +355,7 @@ function Project(props) {
     return (
       <Pane height='50%' overflow='auto'>
         <CodeViewer
-          id={ props.id }
+          id={ projectId }
           graphIds={ graphIds }
           code={ project.code }
           marks={ marks }
@@ -399,9 +366,6 @@ function Project(props) {
       </Pane>);
   }
   function renderPropViewer() {
-    const mainGraph = project.mainGraph;
-    const subGraph = project.subGraph;
-
     let graph = mainGraph;
     if (subGraph)
       graph = subGraph;
@@ -411,9 +375,8 @@ function Project(props) {
       <Pane height='50%' overflow='auto'>
         <PropViewer
           element={ element }
-          metadata={ props.project.metadata }
-          onSave={ saveMetadata }
-          store={ props.project.store } />
+          metadata={ project.metadata }
+          onSave={ saveMetadata } />
       </Pane>);
   }
 

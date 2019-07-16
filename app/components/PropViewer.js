@@ -70,16 +70,15 @@ function PropViewer(props) {
       }
     }
 
-    let dataElement;
+    /*let dataElement;
     if (element)
       dataElement = <DataViewer data={ element.data } />;
     else
-      dataElement = <Typography variant='h6'>No element selected</Typography>;
+      dataElement = <Typography variant='h6'>No element selected</Typography>;*/
 
     return (
       <SplitPane>
         <Pane width="50%" overflow='auto'>
-          { dataElement }
           <ConfigsViewer
             configs={ viewedConfigs }
             onSave={ configs => props.onSave({ configs }) }
