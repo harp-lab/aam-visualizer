@@ -70,7 +70,7 @@ function Graph(props) {
   const cy = cyRef.current;
   const metadata = props.metadata;
   const positions = metadata.positions;
-  const selectedNode = metadata.selectedNode;
+  const selectedNodes = metadata.selectedNodes || [];
   const selectedEdge = metadata.selectedEdge;
   const hoveredNodes = metadata.hoveredNodes;
   const suggestedNodes = metadata.suggestedNodes;
@@ -169,7 +169,7 @@ function Graph(props) {
     // mark nodes
     events.current = false;
     cy.batch(() => {
-      select([selectedNode, selectedEdge]);
+      select([...selectedNodes, selectedEdge]);
       addClass(suggestedNodes, 'suggested');
       addClass(hoveredNodes, 'hovered');
     });

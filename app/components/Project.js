@@ -105,16 +105,27 @@ function Project(props) {
   }
 
   function selectNode(graphId, nodeId) {
-    saveGraphMetadata(graphId, { selectedNode: nodeId });
+    //saveGraphMetadata(graphId, { selectedNode: nodeId });
+    const graph = project.graphs[graphId];
+    const nodes = graph.load('selectedNodes') || [];
+    graph.save('selectedNodes', [...nodes, nodeId]);
+    props.onSave(project);
+
     addConfig(graphId, nodeId);
   }
   function unselectNode(graphId, nodeId) {
     cleanConfigs();
     cleanEnvs();
-    saveGraphMetadata(graphId, { selectedNode: undefined });
+    //saveGraphMetadata(graphId, { selectedNode: undefined });
+    const graph = project.graphs[graphId];
+    const nodes = graph.load('selectedNodes') || [];
+    const cleanedNodes = nodes.filter(node => node !== nodeId);
+    graph.save('selectedNodes', cleanedNodes);
+    props.onSave(project);
   }
   function selectMainNode(nodeId) {
-    if (nodeId && nodeId !== mainGraph.metadata.selectedNode) {
+    const selected = mainGraph.metadata.selectedNodes || [];
+    if (nodeId && !selected.includes(nodeId)) {
       // reset selected
       if (subGraph) {
         subGraph.resetSelected();
@@ -123,7 +134,7 @@ function Project(props) {
 
       selectNode(mainGraphId, nodeId);
       suggestNodes(mainGraphId, undefined);
-      addHistory();
+      //addHistory();
     }
   }
   function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
@@ -316,9 +327,8 @@ function Project(props) {
       onSave={ saveGraphMetadata } />;
   }
   function renderCodeViewer() {
-
     let graphIds = [mainGraphId];
-    if (subGraphId)
+    if (subGraph)
       graphIds.push(subGraphId);
 
     // generate marks
@@ -328,40 +338,45 @@ function Project(props) {
     function addMarks(graphId, graph) {
       for (const [id, node] of Object.entries(graph.nodes)) {
         const { expr } = node;
-        if (expr)
+        if (expr && marks[expr]) {
           marks[expr].addNode(graphId, id);
+        }
       }
     }
     addMarks(mainGraphId, mainGraph);
-    if (subGraphId)
+    if (subGraph)
       addMarks(subGraphId, subGraph);
 
-    let selected;
-    if (subGraphId) {
-      const selectedNode = subGraph.metadata.selectedNode;
-      if (selectedNode)
-        selected = subGraph.nodes[selectedNode].expr;
-    } else {
-      const selectedNode = mainGraph.metadata.selectedNode;
-      if (selectedNode)
-        selected = mainGraph.nodes[selectedNode].expr;
+    // get selected asts
+    function getSelectedAsts(graph) {
+      const asts = [];
+      const nodeIds = graph.load('selectedNodes') || [];
+      for (const nodeId of nodeIds) {
+        const ast = graph.nodes[nodeId].expr;
+        if (ast)
+          asts.push(ast);
+      }
+      return asts;
     }
+    let selected = getSelectedAsts(mainGraph);
+    if (subGraph)
+      selected = [...selected, ...getSelectedAsts(subGraph)];
 
-    // generate hovered asts
-    const hoveredSet = new Set();
-    function getHoveredAst(graph) {
-      const hoveredNodes = graph.metadata.hoveredNodes;
-      if (hoveredNodes)
-        hoveredNodes.forEach(nodeId => {
-          const astId = graph.nodes[nodeId].expr;
-          if (astId)
-            hoveredSet.add(astId);
-        })
+    // get hovered asts
+    function getHoveredAsts(graph) {
+      const asts = new Set();
+      const nodeIds = graph.load('hoveredNodes') || [];
+      nodeIds.forEach(nodeId => {
+        const ast = graph.nodes[nodeId].expr;
+        if (ast)
+          asts.add(ast);
+      })
+      return asts;
     }
-    getHoveredAst(mainGraph);
-    if (subGraphId)
-      getHoveredAst(subGraph);
-    const hovered = Array.from(hoveredSet);
+    let hoveredSet = getHoveredAsts(mainGraph);
+    if (subGraph)
+      hoveredSet = new Set([...hoveredSet, ...getHoveredAsts(subGraph)]);
+    const hovered = [...hoveredSet];
     
     return (
       <Pane height='50%' overflow='auto'>

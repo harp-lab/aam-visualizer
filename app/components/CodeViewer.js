@@ -5,6 +5,7 @@ import CodePos from './data/CodePos';
 import indigo from '@material-ui/core/colors/indigo';
 
 function CodeViewer(props) {
+  console.log(props);
   const [gutterWidth, setGutterWidth] = useState('auto');
   const theme = props.theme;
 
@@ -83,6 +84,8 @@ function CodeViewer(props) {
 
       const hovered = props.hovered;
       const selected = props.selected;
+      const selectedMarks = selected
+        .map(id => marks[id]);
       let content = tok;
       if (hovered.length > 0) {
         const hoveredMarks = hovered.map(id => { return marks[id]; });
@@ -92,13 +95,14 @@ function CodeViewer(props) {
           start={ tokStart }
           end={ tokEnd }
           color={ theme.palette.hover.light  } />;
-      } else if (selected)
+      } else if (selected.length > 0) {
         content = <Token
           content={ tok }
-          marks={ [marks[selected]] }
+          marks={ selectedMarks }
           start={ tokStart }
           end={ tokEnd }
           color={ theme.palette.select.light } />;
+      }
 
       const markId = getMark(lineId, tokStart.ch);
       return <Span
