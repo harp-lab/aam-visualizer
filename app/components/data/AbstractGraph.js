@@ -42,6 +42,8 @@ class AbstractGraph {
     this.metadata.selectedNode = undefined;
     this.metadata.selectedEdge = undefined;
   }
+  save(tag, data) { this.metadata[tag] = data }
+  load(tag) { return this.metadata[tag] }
 }
 
 export default AbstractGraph;

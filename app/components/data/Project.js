@@ -72,10 +72,11 @@ class Project {
     const graph = this.mainGraph;
     let graphId;
     if (graph) {
-      const nodeId = graph.metadata.selectedNode;
-      if (nodeId)
-        graphId = graph.nodes[nodeId].detail
-      else
+      const selectedNodes = graph.metadata.selectedNodes || [];
+      const nodeId = selectedNodes[0];
+      if (nodeId) {
+        graphId = graph.nodes[nodeId].detail;
+      } else
         graphId = 'states';
     }
     return graphId;
