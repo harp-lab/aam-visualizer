@@ -143,7 +143,18 @@ function Project(props) {
   function addConfig(graphId, nodeId) {
     const configs = project.metadata.configs || [];
     const configId = nodeId;
-    const nodeConfig = project.items.configs[nodeId];
+    let nodeConfig;
+    switch (graphId) {
+      case 'states':
+        nodeConfig = {
+          form: project.items.states[nodeId].form,
+          states: [nodeId]
+        };
+        break;
+      default:
+        nodeConfig = project.items.configs[nodeId];
+        break;
+    }
     const match = configs.find(config => config.id == configId);
     if (nodeConfig && !match) {
       configs.unshift({
