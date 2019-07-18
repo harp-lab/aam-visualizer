@@ -331,10 +331,13 @@ function Project(props) {
     if (subGraph)
       graphIds.push(subGraphId);
 
-    // generate marks
+    // get marks
     const marks = {};
     for (const [id, data] of Object.entries(project.items.ast))
       marks[id] = new CodeMark(data.start, data.end);
+    addMarks(mainGraphId, mainGraph);
+    if (subGraph)
+      addMarks(subGraphId, subGraph);
     function addMarks(graphId, graph) {
       for (const [id, node] of Object.entries(graph.nodes)) {
         const { expr } = node;
@@ -343,40 +346,26 @@ function Project(props) {
         }
       }
     }
-    addMarks(mainGraphId, mainGraph);
-    if (subGraph)
-      addMarks(subGraphId, subGraph);
 
-    // get selected asts
-    function getSelectedAsts(graph) {
-      const asts = [];
-      const nodeIds = graph.load('selectedNodes') || [];
-      for (const nodeId of nodeIds) {
-        const ast = graph.nodes[nodeId].expr;
-        if (ast)
-          asts.push(ast);
-      }
-      return asts;
+    // get asts
+    const selected = getAsts('selectedNodes');
+    const hovered = getAsts('hoveredNodes');
+    function getAsts(tag) {
+      let set = getGraphAsts(tag, mainGraph);
+      if (subGraph)
+        set = new Set([...set, ...getGraphAsts(tag, subGraph)]);
+      return [...set];
     }
-    let selected = getSelectedAsts(mainGraph);
-    if (subGraph)
-      selected = [...selected, ...getSelectedAsts(subGraph)];
-
-    // get hovered asts
-    function getHoveredAsts(graph) {
+    function getGraphAsts(tag, graph) {
       const asts = new Set();
-      const nodeIds = graph.load('hoveredNodes') || [];
+      const nodeIds = graph.load(tag) || [];
       nodeIds.forEach(nodeId => {
         const ast = graph.nodes[nodeId].expr;
         if (ast)
           asts.add(ast);
-      })
+      });
       return asts;
     }
-    let hoveredSet = getHoveredAsts(mainGraph);
-    if (subGraph)
-      hoveredSet = new Set([...hoveredSet, ...getHoveredAsts(subGraph)]);
-    const hovered = [...hoveredSet];
     
     return (
       <Pane height='50%' overflow='auto'>

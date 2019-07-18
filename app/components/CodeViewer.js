@@ -5,7 +5,6 @@ import CodePos from './data/CodePos';
 import indigo from '@material-ui/core/colors/indigo';
 
 function CodeViewer(props) {
-  console.log(props);
   const [gutterWidth, setGutterWidth] = useState('auto');
   const theme = props.theme;
 
