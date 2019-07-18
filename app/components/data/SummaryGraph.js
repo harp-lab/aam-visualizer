@@ -5,8 +5,9 @@ const finalForms = ['halt', 'not found', 'non-func', 'unknown'];
 
 class SummaryGraph extends AbstractGraph {
   processNode(children, refData, nodeId) {
-    const {form, expr } = refData;
-    const node = new ParentNode(form, undefined, children, expr);
+    const {form, expr, astLink } = refData;
+    const asts = astLink || (expr ? [expr] : []);
+    const node = new ParentNode(form, undefined, children, asts);
 
     if (!finalForms.includes(form))
       node.detail = nodeId; // nodeId matches graphId

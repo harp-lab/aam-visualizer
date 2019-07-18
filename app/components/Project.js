@@ -112,6 +112,13 @@ function Project(props) {
     props.onSave(project);
 
     addConfig(graphId, nodeId);
+    add(mainGraphId, mainGraph);
+    if (subGraph)
+      add(subGraphId, subGraph);
+    function add(graphId, graph) {
+      const nodes = graph.load('selectedNodes') || [];
+      nodes.forEach(nodeId => addConfig(graphId, nodeId));
+    }
   }
   function unselectNode(graphId, nodeId) {
     cleanConfigs();
@@ -340,10 +347,11 @@ function Project(props) {
       addMarks(subGraphId, subGraph);
     function addMarks(graphId, graph) {
       for (const [id, node] of Object.entries(graph.nodes)) {
-        const { expr } = node;
-        if (expr && marks[expr]) {
-          marks[expr].addNode(graphId, id);
-        }
+        const { asts } = node;
+        asts.forEach(ast => {
+          if (marks[ast])
+            marks[ast].addNode(graphId, id);
+        });
       }
     }
 
@@ -360,9 +368,9 @@ function Project(props) {
       const asts = new Set();
       const nodeIds = graph.load(tag) || [];
       nodeIds.forEach(nodeId => {
-        const ast = graph.nodes[nodeId].expr;
-        if (ast)
-          asts.add(ast);
+        graph.nodes[nodeId]
+          .asts
+          .forEach(ast => asts.add(ast));
       });
       return asts;
     }
