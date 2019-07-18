@@ -3,8 +3,9 @@ import ParentNode from './ParentNode';
 
 class DefaultGraph extends AbstractGraph {
   processNode(children, refData) {
-    const { form, expr } = refData;
-    return new ParentNode(form, undefined, children, expr);
+    const { form, expr, astLink } = refData;
+    const asts = astLink || (expr ? [expr] : []);
+    return new ParentNode(form, undefined, children, asts);
   }
 }
 

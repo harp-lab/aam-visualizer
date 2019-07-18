@@ -1,10 +1,10 @@
 import CodePos from './CodePos';
 
 class LeafNode {
-  constructor(form, data, expr) {
+  constructor(form, data, asts) {
     this.form = form;
     this.data = data;
-    this.expr = expr;
+    this.asts = asts;
   }
   export(id) {
     return {
