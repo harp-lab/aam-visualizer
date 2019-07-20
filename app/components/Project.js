@@ -1,9 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import Typography from '@material-ui/core/Typography';
-import Breadcrumbs from '@material-ui/core/Breadcrumbs';
-import Link from '@material-ui/core/Link';
 import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -15,7 +10,7 @@ import Context from './Context';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const { id: projectId, project } = props;
+  const { userId, projectId, project } = props;
   const { mainGraphId, mainGraph, subGraphId, subGraph } = project;
   const timeout = useRef(undefined);
   const [focusedGraph, setFocusedGraph] = useState(undefined);
@@ -26,7 +21,7 @@ function Project(props) {
     switch (status) {
       case STATUSES.edit:
         if (code == '')
-          props.getCode(props.id);
+          props.getCode(projectId);
         break;
       case STATUSES.done:
       case STATUSES.error:
@@ -40,9 +35,6 @@ function Project(props) {
     };
   }, []);
 
-
-  let historyEnabled = true;
-
   async function saveCode(code) {
     switch (project.status) {
       case project.STATUSES.empty:
@@ -52,7 +44,7 @@ function Project(props) {
           project.status = project.STATUSES.empty;
         project.code = code;
         props.onSave(project);
-        await fetch(`/api/projects/${projectId}/save`, {
+        await fetch(`/api/${userId}/projects/${projectId}/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
@@ -62,7 +54,7 @@ function Project(props) {
   }
   async function processCode(code, options) {
     await saveCode(code);
-    const res = await fetch(`/api/projects/${projectId}/process`, {
+    const res = await fetch(`/api/${userId}/projects/${projectId}/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
@@ -79,7 +71,7 @@ function Project(props) {
     }
   }
   async function getGraphs() {
-    const res = await fetch(`/api/projects/${props.id}/data`, { method: 'GET' });
+    const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
     switch (res.status) {
       case 200:
         const data = await res.json();
@@ -105,7 +97,6 @@ function Project(props) {
   }
 
   function selectNode(graphId, nodeId) {
-    //saveGraphMetadata(graphId, { selectedNode: nodeId });
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     graph.save('selectedNodes', [...nodes, nodeId]);
@@ -123,7 +114,6 @@ function Project(props) {
   function unselectNode(graphId, nodeId) {
     cleanConfigs();
     cleanEnvs();
-    //saveGraphMetadata(graphId, { selectedNode: undefined });
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     const cleanedNodes = nodes.filter(node => node !== nodeId);
@@ -141,7 +131,6 @@ function Project(props) {
 
       selectNode(mainGraphId, nodeId);
       suggestNodes(mainGraphId, undefined);
-      //addHistory();
     }
   }
   function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
@@ -194,41 +183,6 @@ function Project(props) {
       saveMetadata({ [tag]: cleanedData });
     }
   }
-  function addHistory() {
-    if (historyEnabled) {
-      const graphId = mainGraphId;
-  
-      // add record to history
-      const metadata = mainGraph.metadata;
-      if (!metadata.history)
-        metadata.history = [];
-      const data = {
-        mainNodeId: mainGraph.metadata.selectedNode,
-        subNodeId: (subGraph && subGraph.metadata.selectedNode)
-      };
-      metadata.history.push(data);
-  
-      saveGraphMetadata(graphId, { history: metadata.history });
-    }
-  }
-  function history(index) {
-    historyEnabled = false;
-    const graphId = mainGraphId;
-    const subGraphId = subGraphId;
-
-    // jump to index
-    const metadata = mainGraph.metadata;
-    const record = metadata.history[index];
-    metadata.history = metadata.history.slice(0, index + 1);
-
-    // select node
-    selectMainNode(record.mainNodeId);
-    if (record.subNodeId)
-      selectNode(subGraphId, record.subNodeId);
-    
-    saveGraphMetadata(graphId, { history: metadata.history });
-    historyEnabled = true;
-  }
 
   function render() {
     const { status, STATUSES, code, graphs, error } = project;
@@ -262,66 +216,7 @@ function Project(props) {
     return viewElement;
   }
   function renderVisual() {
-    const historyElement = renderHistory();
-    const selectElement = renderSelect();
-    const graphElement = renderGraph();
-    const editorElement = renderCodeViewer();
-    const propViewerElement = renderPropViewer();
-
-    return (
-      <Context.Provider value={ project.items }>
-        <SplitPane vertical>
-          <Pane width='40%'>
-            { graphElement }
-          </Pane>
-          <Pane width='60%'>
-            <SplitPane horizontal>
-              { editorElement }
-              { propViewerElement }
-            </SplitPane>
-          </Pane>
-        </SplitPane>
-      </Context.Provider>);
-  }
-  function renderHistory() {
-    const graphHistory = mainGraph.metadata.history;
-    let links;
-    if (graphHistory)
-      links = graphHistory.map((data, index) => {
-        const mainNodeId = data.mainNodeId;
-        return (
-          <Link
-            key={ `${mainNodeId}` }
-            onClick={ () => history(index) }>
-            { mainNodeId }
-          </Link>);
-      });
-    
-    return (
-      <Breadcrumbs>
-        <Typography>History</Typography>
-        { links }
-      </Breadcrumbs>);
-  }
-  function renderSelect() {
-    const menuItems = Object.entries(project.graphs)
-      .filter(([graphId, graph]) => !graph.hasOwnProperty('subGraphType'))
-      .map(([graphId, graph]) => {
-        return <MenuItem key={ graphId } value={ graphId }>{ graphId }</MenuItem>
-      });
-      
-    return (
-      <Select
-        value={ mainGraphId }
-        onChange={ evt => {
-          mainGraphId = evt.target.value;
-          props.onSave(project);
-        } }>
-        { menuItems }
-      </Select>);
-  }
-  function renderGraph() {
-    return <FunctionGraph
+    const graphElement = <FunctionGraph
       projectId={ projectId }
       project={ project }
       focused={ focusedGraph }
@@ -332,6 +227,28 @@ function Project(props) {
       onMainNodeUnselect={ unselectMainNode }
       onEdgeSelect={ selectEdge }
       onSave={ saveGraphMetadata } />;
+    const codeViewerElem = renderCodeViewer();
+    const propViewerElem = (
+      <Pane height='50%' overflow='auto'>
+        <PropViewer
+          metadata={ project.metadata }
+          onSave={ saveMetadata } />
+      </Pane>);
+
+    return (
+      <Context.Provider value={ project.items }>
+        <SplitPane vertical>
+          <Pane width='40%'>
+            { graphElement }
+          </Pane>
+          <Pane width='60%'>
+            <SplitPane horizontal>
+              { codeViewerElem }
+              { propViewerElem }
+            </SplitPane>
+          </Pane>
+        </SplitPane>
+      </Context.Provider>);
   }
   function renderCodeViewer() {
     let graphIds = [mainGraphId];
@@ -386,20 +303,6 @@ function Project(props) {
           hovered={ hovered }
           onNodeSelect={ selectNode }
           onCodeHover={ hoverNodes } />
-      </Pane>);
-  }
-  function renderPropViewer() {
-    let graph = mainGraph;
-    if (subGraph)
-      graph = subGraph;
-    const element = graph.nodes[graph.metadata.selectedNode];
-
-    return (
-      <Pane height='50%' overflow='auto'>
-        <PropViewer
-          element={ element }
-          metadata={ project.metadata }
-          onSave={ saveMetadata } />
       </Pane>);
   }
 

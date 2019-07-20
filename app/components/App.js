@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Fragment, useState, useEffect, useRef } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
@@ -7,13 +7,16 @@ import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
+
 import Theme from './Theme';
 import Loading from './Loading';
+import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import ProjectData from './data/Project'
 
 const VIEWS = {
+  login: 'login',
   load: 'load',
   list: 'list',
   project: 'project'
@@ -21,26 +24,29 @@ const VIEWS = {
 
 function App(props) {
   const [load, setLoad] = useState(false);
-  const [view, setView] = useState(VIEWS.list);
+  const [view, setView] = useState(VIEWS.user);
   const [snackbarQueue, setSnackbarQueue] = useState([]);
+  const [userId, setUserId] = useState(undefined);
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const [projects, setProjects] = useState({});
   const refProjects = useRef(projects);
+
   useEffect(() => { refProjects.current = projects; });
+  useEffect(() => { setProjects({}) }, [userId]);
 
   async function createProject() {
-    const res = await fetch('/api/create', { method: 'GET' });
+    const res = await fetch(`/api/${userId}/create`, { method: 'GET' });
     const data = await res.json();
 
     const projectId = data.id;
-    saveLocalProject(projectId, new ProjectData());
+    saveLocalProject(projectId, new ProjectData(userId));
     setView(VIEWS.list);
     setSelectedProjectId(undefined);
 
     return projectId;
   }
   async function cancelProject(projectId) {
-    const res = await fetch(`/api/projects/${projectId}/cancel`, { method: 'POST' });
+    const res = await fetch(`/api/${userId}/projects/${projectId}/cancel`, { method: 'POST' });
     switch (res.status) {
       case 200:
         const project = projects[projectId];
@@ -56,7 +62,7 @@ function App(props) {
     }
   }
   async function deleteProject(projectId) {
-    const res = await fetch(`/api/projects/${projectId}/delete`, { method: 'POST' });
+    const res = await fetch(`/api/${userId}/projects/${projectId}/delete`, { method: 'POST' });
     switch (res.status) {
       case 205:
         deleteLocalProject(projectId);
@@ -83,7 +89,7 @@ function App(props) {
     setView(VIEWS.project);
   }
   async function getProjectCode(projectId) {
-    const response = await fetch(`/api/projects/${projectId}/code`, { method: 'GET' });
+    const response = await fetch(`/api/${userId}/projects/${projectId}/code`, { method: 'GET' });
     const data = await response.json();
 
     const project = projects[projectId];
@@ -112,14 +118,42 @@ function App(props) {
     setSnackbarQueue(rest);
   }
 
-  let viewElement, title, buttonsElement;
+  function ProjectListButton(props) {
+    return <AppBarButton
+      content='project list'
+      onClick={ deselectProject }/>;
+  }
+  function LogoutButton(props) {
+    return <AppBarButton
+      content='logout'
+      onClick={ () => {
+        setUserId(undefined);
+        setView(VIEWS.user);
+      }} />;
+  }
+  let viewElem, title, leftElems, rightElems;
   switch (view) {
+    case VIEWS.user:
+      viewElem = <Login 
+        onSubmit={ userId => {
+          setUserId(userId);
+          setView(VIEWS.list);
+        }} />;
+      break;
     case VIEWS.list:
-      buttonsElement = <NewProjectButton onClick={ createProject } />;
+      leftElems = <ProjectListButton />;
+      rightElems = (
+        <Fragment>
+          <LogoutButton />
+          <AppBarButton
+            content='new project'
+            onClick={ createProject } />
+        </Fragment>);
       if (load)
-        viewElement = <Loading status='Getting projects' variant='linear'/>;
+        viewElem = <Loading status='Getting projects' variant='linear'/>;
       else
-        viewElement = <ProjectList
+        viewElem = <ProjectList
+            userId={ userId }
             projects={ projects }
             onClick={ selectProject }
             onProjectsUpdate={ setProjects }
@@ -132,9 +166,17 @@ function App(props) {
     case VIEWS.project:
       const project = getSelectedProject();
       title = project.name || selectedProjectId;
-      buttonsElement = <ForkProjectButton onClick={ () => forkProject(selectedProjectId) } />;
-      viewElement = <Project
-        id={ selectedProjectId }
+      leftElems = <ProjectListButton />;
+      rightElems = (
+        <Fragment>
+          <LogoutButton />
+          <AppBarButton
+            content='fork project'
+            onClick={ () => forkProject(selectedProjectId) } />
+        </Fragment>);
+      viewElem = <Project
+        userId={ userId }
+        projectId={ selectedProjectId }
         project = { getSelectedProject() }
         onSave={ project => saveLocalProject(selectedProjectId, project) }
         onNotify={ queueSnackbar }
@@ -142,40 +184,38 @@ function App(props) {
       break;
   }
 
-  let messageElement;
-  if (process.env.NODE_ENV == 'development')
-    messageElement = <Message
-      content='Development Server'/>;
   
-  const appbarElement = (
+  const appbarElem = (
     <AppBar position='static'>
       <Toolbar>
-        <ProjectListButton onClick={ deselectProject }/>
+        { leftElems }
         <Typography
           variant='h6'
           color='inherit'
-          style={ {
+          style={{
             flex: '1 1 auto',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             textAlign: 'center'
-          } }>
+          }}>
           { title }
         </Typography>
-        { buttonsElement }
+        { rightElems }
       </Toolbar>
     </AppBar>);
   
   return (
     <ThemeProvider theme={ Theme }>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden' }}>
-        { messageElement }
-        { appbarElement}
-        { viewElement }
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden'
+        }}>
+        { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
+        { appbarElem}
+        { viewElem }
         <NotifySnackbar
           queue={ snackbarQueue }
           onClose={ nextSnackbar } />
@@ -196,40 +236,19 @@ function Message(props) {
     </Typography>);
 }
 
-function ProjectListButton(props) {
-  return <Button
-    onClick={ (event) => {
-      event.stopPropagation();
-      props.onClick();
-    }}
-    color='inherit'>
-    project list
-  </Button>;
-}
-function NewProjectButton(props) {
-  return <Button
-    onClick={ (event) => {
-      event.stopPropagation();
-      props.onClick();
-    }}
-    color='inherit'
-    variant='outlined'>
-    new project
-  </Button>;
-}
-function ForkProjectButton(props) {
-  return <Button
-    onClick={ event => {
-      props.onClick();
-    }}
-    color='inherit'
-    variant='outlined'>
-    fork project
-  </Button>;
+function AppBarButton(props) {
+  const { content, onClick } = props;
+  return (
+    <Button
+      onClick={ onClick }
+      color='inherit'
+      variant='outlined'>
+      { content }
+    </Button>);
 }
 
 function NotifySnackbar(props) {
-  function handleClose(event, reason) {
+  function handleClose(evt, reason) {
     if (reason !== 'clickaway')
       props.onClose();
   }
@@ -243,7 +262,7 @@ function NotifySnackbar(props) {
     action={[
       <IconButton
         key='close'
-        onClick={onClose}
+        onClick={ onClose }
         color='inherit' >
         <CloseIcon />
       </IconButton>

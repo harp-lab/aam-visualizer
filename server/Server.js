@@ -32,33 +32,23 @@ class Server {
       next();
     });
 
-    app.get('/api/all', (req, res) => {
-      res.json(this.getProjectList())
-        .status(200).end();
-    });
-    app.get('/api/create', (req, res) => {
-      const projectId = this.createProject();
-      res.json({ id: projectId })
-        .status(201).end();
-    });
-    
     // handle project requests
     const projectRouter = express.Router({ mergeParams: true });
     projectRouter.all('*', (req, res, next) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       if (this.projects[projectId])
         next();
       else
         res.status(404).end();
     });
     projectRouter.get('/code', (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const project = this.projects[projectId];
       res.json({ id: projectId, code: project.code })
         .status(200).end();
     });
     projectRouter.get('/data', (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.done:
@@ -75,13 +65,13 @@ class Server {
       }
     });
     projectRouter.post('/save', async (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const data = req.body;
       await this.saveProject(projectId, data);
       res.status(202).end();
     });
     projectRouter.post('/process', async (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.edit:
@@ -96,7 +86,7 @@ class Server {
       }
     });
     projectRouter.post('/cancel', async (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.process:
@@ -112,7 +102,7 @@ class Server {
       }
     });
     projectRouter.post('/delete', async (req, res) => {
-      const projectId = req.params.id;
+      const projectId = req.params.projectId;
       const project = this.projects[projectId];
       switch (project.status) {
         case project.STATUSES.process:
@@ -125,7 +115,21 @@ class Server {
       }
     });
     
-    app.use('/api/projects/:id', projectRouter);
+    // handle user requests
+    const userRouter = express.Router({ mergeParams: true });
+    userRouter.get('/all', (req, res) => {
+      res.json(this.getProjectList(req.params.userId))
+        .status(200).end();
+    });
+    userRouter.get('/create', (req, res) => {
+      const projectId = this.createProject(req.params.userId);
+      res.json({ id: projectId })
+        .status(201).end();
+    });
+    userRouter.use('/projects/:projectId', projectRouter);
+    
+    
+    app.use('/api/:userId', userRouter);
     app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
   initWatcher() {
@@ -163,10 +167,10 @@ class Server {
     });
   }
 
-  createProject() {
+  createProject(userId) {
     const projectId = `${Date.now()}`;
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - create`);
-    this.projects[projectId] = new Project();
+    this.projects[projectId] = new Project(userId);
     return projectId;
   }
   async saveProject(projectId, data) {
@@ -222,14 +226,15 @@ class Server {
         break;
     }
   }
-  getProjectList() {
+  getProjectList(userId) {
     const list = {};
     for (const [id, project] of Object.entries(this.projects)) {
-      list[id] = {
-        status: project.status,
-        name: project.name,
-        analysis: project.analysis
-      }
+      if (project.userId == userId)
+        list[id] = {
+          status: project.status,
+          name: project.name,
+          analysis: project.analysis
+        }
     }
     return list;
   }
