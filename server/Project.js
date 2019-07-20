@@ -2,7 +2,8 @@ const Consts = require('./Consts.js');
 const G = require('./Global.js');
 
 class Project {
-  constructor() {
+  constructor(userId) {
+    this.userId = userId;
     this.dirPath = Consts.SAVE_DIR;
     
     this.STATUSES = {
@@ -15,6 +16,7 @@ class Project {
     this.status = this.STATUSES.empty;
   }
   import(data) {
+    this.userId = data.userId;
     this.name = data.name;
     this.analysis = data.analysis;
     this.importCode(data.code);
@@ -58,6 +60,7 @@ class Project {
   }
   export() {
     return {
+      userId: this.userId,
       status: this.status,
       error: this.error,
       code: this.code,

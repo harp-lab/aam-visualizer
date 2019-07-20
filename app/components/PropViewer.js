@@ -3,9 +3,6 @@ import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Link from '@material-ui/core/Link';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
@@ -34,7 +31,7 @@ function arrayFind(array, id) { return array.find(elem => elem.id == id); }
 function arrayDelete(arr, id) { return arr.filter(elem => elem.id !== id); }
 
 function PropViewer(props) {
-    const { element, metadata } = props;
+    const { metadata } = props;
     const items = useContext(Context);
     const { configs, states } = items;
 
@@ -70,12 +67,6 @@ function PropViewer(props) {
       }
     }
 
-    /*let dataElement;
-    if (element)
-      dataElement = <DataViewer data={ element.data } />;
-    else
-      dataElement = <Typography variant='h6'>No element selected</Typography>;*/
-
     return (
       <SplitPane>
         <Pane width="50%" overflow='auto'>
@@ -91,28 +82,6 @@ function PropViewer(props) {
             onSave={ envs => props.onSave({ envs }) } />
         </Pane>
       </SplitPane>);;
-}
-
-function DataViewer(props) {
-  const data = props.data;
-  let element;
-  if (data) {
-    const dataItems = Object.entries(data)
-    .map(([id, data]) => {
-      const string = typeof data == 'object' ? data.toString() : data;
-      const output = string || 'undefined';
-      return (
-        <ListItem key={ id }>
-          <ListItemText
-            primary={ id }
-            secondary={ output } />
-        </ListItem>);
-    });
-    element = <List>{ dataItems }</List>;
-  } else
-    element = <PaneMessage content='No data available' />
-
-  return element;
 }
 
 function ConfigsViewer(props) {
@@ -189,7 +158,9 @@ function ConfigsViewer(props) {
   return (
     <Fragment>
       <ViewerLabel content='Configurations' />
-      { element }
+      <div style={{ overflowY: 'auto' }}>
+        { element }
+      </div>
     </Fragment>);
 }
 function EnvsViewer(props) {
@@ -254,7 +225,9 @@ function EnvsViewer(props) {
   return (
     <Fragment>
       <ViewerLabel content='Environments' />
-      { element }
+      <div style={{ overflowY: 'auto' }}>
+        { element }
+      </div>
     </Fragment>);
 }
 
