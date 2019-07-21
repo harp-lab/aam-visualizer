@@ -352,10 +352,7 @@ function EnvItem(props) {
   const entries = env
     .map(entry => {
       const instrEntries = instr[entry.instr]
-        .exprStrings
-        .map(expr => {
-          return <Typography key={ expr }>{ expr }</Typography>;
-        });
+        .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
           const { astString, env } = vals[valId];
@@ -366,7 +363,7 @@ function EnvItem(props) {
               </Tooltip>
             </Typography>);
         });
-      return [entry.varString, instrEntries, storeEntries]
+      return [entry.varString, `[ ${instrEntries} ]`, storeEntries]
     });
   return <Item
     labels={ labels }
