@@ -127,8 +127,23 @@ function Graph(props) {
     }
   }, [focus]);
   function keyDown(evt) {
-    // TODO switch statement for arrow keys
-    console.log(`${graphId} key down`);
+    const selectedNodes = cy.$('node:selected');
+    switch (evt.key) {
+      case 'ArrowLeft':
+        const prevNodes = selectedNodes.incomers().nodes();
+        if (prevNodes.length == 1) {
+          selectedNodes.unselect();
+          prevNodes.select();
+        }
+        break;
+      case 'ArrowRight':
+        const nextNodes = selectedNodes.outgoers().nodes();
+        if (nextNodes.length == 1) {
+          selectedNodes.unselect();
+          nextNodes.select();
+        }
+        break;
+    }
   }
 
   // graph change
