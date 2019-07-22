@@ -174,6 +174,12 @@ function Project(props) {
   }
   function cleanConfigs() {
     clean('configs');
+    const mainNodes = mainGraph.load('selectedNodes') || [];
+    mainNodes.forEach(nodeId => addConfig(mainGraphId, nodeId));
+    if (subGraph) {
+      const subNodes = subGraph.load('selectedNodes') || [];
+      subNodes.forEach(nodeId => addConfig(subGraphId, nodeId));
+    }
   }
   function cleanEnvs() { clean('envs') }
   function clean(tag) {
