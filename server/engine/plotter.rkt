@@ -446,13 +446,14 @@
       [(? boolean?)
        (hash
         'type "bool"
-        'val v)]
+        'val v
+        'valString (~a v))]
       [`(clo ,xs ,e ,rho)
        (hash
         'type "closure"
         'ast (func-id e id>lambda)
         'astString (format "λ~a~a" (map (lambda(x)(~a (only-syntax x))) xs) (~a (only-syntax e)))
-        'form (~a (car (get-li e)))
+        'name (~a (car (get-li e)))
         'env (hash-ref env>id rho))]))
 
   ;hash - temporary
