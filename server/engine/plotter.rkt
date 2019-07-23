@@ -427,7 +427,7 @@
        (hash
         'id id
         'form (hash-ref first-state 'form)
-        'astLink (flatten (map (lambda(s)(hash-ref s 'astLink (list))) states-info))
+        'astLink (flatten (map (lambda(s)(hash-ref s 'expr (list))) states-info))
         'states state-ids)]))
 
   ;list of hashs
