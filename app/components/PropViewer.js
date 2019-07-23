@@ -36,7 +36,7 @@ function PropViewer(props) {
     const { configs, states } = items;
 
     const viewedConfigs = metadata.configs || [];
-    const viewedEnvs = metadata.envs || [];
+    const viewedEnvs = [];
     if (viewedConfigs)
       viewedConfigs
         .filter(config => config.selected)
@@ -62,8 +62,7 @@ function PropViewer(props) {
         viewedEnvs.unshift({
           label: envId,
           id: envId
-        });
-        props.onSave({ envs: viewedEnvs });
+        })
       }
     }
 

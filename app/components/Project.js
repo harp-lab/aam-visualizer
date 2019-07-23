@@ -102,17 +102,17 @@ function Project(props) {
     graph.save('selectedNodes', [...nodes, nodeId]);
     props.onSave(project);
 
-    addConfig(graphId, nodeId);
+    /*addConfig(graphId, nodeId);
     add(mainGraphId, mainGraph);
     if (subGraph)
       add(subGraphId, subGraph);
     function add(graphId, graph) {
       const nodes = graph.load('selectedNodes') || [];
       nodes.forEach(nodeId => addConfig(graphId, nodeId));
-    }
+    }*/
   }
   function unselectNode(graphId, nodeId) {
-    cleanConfigs();
+    //cleanConfigs();
     cleanEnvs();
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
@@ -234,12 +234,7 @@ function Project(props) {
       onEdgeSelect={ selectEdge }
       onSave={ saveGraphMetadata } />;
     const codeViewerElem = renderCodeViewer();
-    const propViewerElem = (
-      <Pane height='50%' overflow='auto'>
-        <PropViewer
-          metadata={ project.metadata }
-          onSave={ saveMetadata } />
-      </Pane>);
+    const propViewerElem = renderPropViewer();
 
     return (
       <Context.Provider value={ project.items }>
@@ -309,6 +304,52 @@ function Project(props) {
           hovered={ hovered }
           onNodeSelect={ selectNode }
           onCodeHover={ hoverNodes } />
+      </Pane>);
+  }
+  function renderPropViewer() {
+    let configs = [];
+    if (project.metadata.configs)
+      configs = [...project.metadata.configs];
+    getConfigs(mainGraphId, mainGraph);
+    if (subGraph)
+      getConfigs(subGraphId, subGraph);
+
+    function getConfigs(graphId, graph) {
+      const nodes = graph.load('selectedNodes') || [];
+      nodes.forEach(nodeId => {
+        const configId = nodeId;
+        let config;
+        switch (graphId) {
+          case 'states':
+            config = {
+              form: project.items.states[nodeId].form,
+              states: [nodeId]
+            };
+            break;
+          default:
+            config = project.items.configs[configId];
+            break;
+        }
+
+        const match = configs.find(config => config.id == configId);
+        if (config && !match) {
+          configs.unshift({
+            label: `${graphId}-${nodeId}`,
+            id: configId,
+            selected: true
+          });
+        }
+      });
+    }
+
+    const temp = project.metadata;
+    temp.configs = configs;
+
+    return (
+      <Pane height='50%' overflow='auto'>
+        <PropViewer
+          metadata={ project.metadata }
+          onSave={ saveMetadata } />
       </Pane>);
   }
 
