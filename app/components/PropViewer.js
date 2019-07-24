@@ -35,7 +35,7 @@ function PropViewer(props) {
     const items = useContext(Context);
     const { configs, states } = items;
 
-    const viewedConfigs = metadata.configs || [];
+    const viewedConfigs = props.configs;
     const viewedEnvs = [];
     if (viewedConfigs)
       viewedConfigs
@@ -71,6 +71,7 @@ function PropViewer(props) {
         <Pane width="50%" overflow='auto'>
           <ConfigsViewer
             configs={ viewedConfigs }
+            metadata={ metadata.configs || [] }
             onSave={ configs => props.onSave({ configs }) }
             onClean={ cleanEnvs } />
         </Pane>
@@ -80,7 +81,7 @@ function PropViewer(props) {
             onAdd={ addEnv }
             onSave={ envs => props.onSave({ envs }) } />
         </Pane>
-      </SplitPane>);;
+      </SplitPane>);
 }
 
 function ConfigsViewer(props) {
@@ -88,13 +89,32 @@ function ConfigsViewer(props) {
   const items = useContext(Context);
 
   function deleteConfig(configId) { props.onSave( arrayDelete(configs, configId) ); }
+  function getStored(configId) {
+    return props.metadata.find(config => config.id == configId);
+  }
+  function get(configId) {
+    return props.configs.find(config => config.id == configId);
+  }
+  function update(configId, callback) {
+    const stored = getStored(configId);
+    if (stored) {
+      callback(stored);
+      if (!stored.saved && stored.selected) {
+        props.onSave(props.metadata.filter(config => config.id == configId));
+      } else {
+        props.onSave(props.metadata);
+      }
+    } else {
+      const config = get(configId);
+      callback(config);
+      props.onSave([...props.metadata, config]);
+    }
+  }
   function save(configId) {
-    arrayFind(configs, configId).saved = true;
-    props.onSave(configs);
+    update(configId, config => config.saved = true);
   }
   function unsave(configId) {
-    arrayFind(configs, configId).saved = false;
-    props.onSave(configs);
+    update(configId, config => config.saved = undefined);
   }
   function select(configId) {
     arrayFind(configs, configId).selected = true;
