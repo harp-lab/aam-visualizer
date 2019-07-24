@@ -31,31 +31,37 @@ function arrayFind(array, id) { return array.find(elem => elem.id == id); }
 function arrayDelete(arr, id) { return arr.filter(elem => elem.id !== id); }
 
 function PropViewer(props) {
-    const { metadata } = props;
     const items = useContext(Context);
     const { configs, states } = items;
 
     const viewedConfigs = props.configs;
-    const viewedEnvs = [];
-    if (viewedConfigs)
-      viewedConfigs
-        .filter(config => config.visible)
-        .filter(config => config.selected)
-        .forEach(({ id }) => {
-          const config = configs[id];
+    const viewedEnvs = props.envs;
+    const viewedEnvIds = [];
+    viewedConfigs
+      .filter(config => config.visible)
+      .filter(config => config.selected)
+      .forEach(({ id }) => {
+        const config = configs[id];
+        if (config.states)
+          config.states
+            .forEach(stateId => {
+              const state = states[stateId];
 
-          if (config.states)
-            config.states
-              .forEach(stateId => {
-                const state = states[stateId];
-                if (state.env)
-                  addEnv(state.env);
-              });
-        });
+              // convert ids to strings
+              if (state.env)
+                viewedEnvIds.push(`${state.env}`);
+            });
+      });
+    viewedEnvs.forEach(env => {
+      if (viewedEnvIds.includes(env.id))
+        env.show();
+      else
+        env.hide();
+    });
     
     function cleanEnvs() {
       const cleanedEnvs = viewedEnvs.filter(env => env.saved);
-      props.onSave({ envs: cleanedEnvs });
+      //props.onSave({ envs: cleanedEnvs });
     }
     function addEnv(envId) {
       const match = arrayFind(viewedEnvs, envId);
@@ -220,6 +226,7 @@ function EnvsViewer(props) {
       .map(generatePanel);
     const unsavedElement = envs
       .filter(env => !env.saved)
+      .filter(env => env.visible)
       .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
