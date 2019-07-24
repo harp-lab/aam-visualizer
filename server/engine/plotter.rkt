@@ -218,11 +218,6 @@
   (define state>id (make-id-hash states))
   (define state->sym (make-data->symbol state>id))
   
-  (define state-trans (for/hash ([s states])
-                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
-                       (values (state->sym s) (for/hash ([tr st-tr])
-                                                       (values (state->sym tr)(hash))))))
-  
   (define addr>id (make-id-hash (list->set (hash-keys store))))
   (define addr->sym (make-data->symbol addr>id))
 
@@ -300,12 +295,17 @@
            (hash-keys (hash-ref f-trans c))))
         confs
         (hash-keys f-trans)))
-     (hash)
+     (for/hash ([s states])(values `(state ,s) (get-li s)))
      (hash-keys subs)))
 
   (define conf>id (make-id-hash (hash-keys confs>func)))
   (define conf->sym (make-data->symbol conf>id))
 
+  (define state-trans (for/hash ([s states])
+                       (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
+                       (values (conf->sym `(state ,s)) (for/hash ([tr st-tr])
+                                                       (values (conf->sym `(state ,tr))(hash))))))
+  
   (define func-conf-graphs (for/hash ([f (hash-keys subs)])
                              (match-define (list f-init f-trans) (hash-ref subs f))
                              (values (func->sym f)
@@ -416,6 +416,13 @@
         'id id
         'form (~a (car conf))
         'astLink (list (ast-id out-expr)))]
+      [`(state ,s)
+       (define state (make-state s))
+       (hash
+        'id id
+        'form (hash-ref state 'form)
+        'astLink (flatten (list (hash-ref state 'expr (list))))
+        'states (list (hash-ref state>id s)))]
       [states
        (define first-state (make-state (if (set? states) (set-first states) states)))
        (define state-ids (if (set? states)
