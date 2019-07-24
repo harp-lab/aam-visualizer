@@ -39,6 +39,7 @@ function PropViewer(props) {
     const viewedEnvs = [];
     if (viewedConfigs)
       viewedConfigs
+        .filter(config => config.visible)
         .filter(config => config.selected)
         .forEach(({ id }) => {
           const config = configs[id];
@@ -71,7 +72,6 @@ function PropViewer(props) {
         <Pane width="50%" overflow='auto'>
           <ConfigsViewer
             configs={ viewedConfigs }
-            metadata={ metadata.configs || [] }
             onSave={ configs => props.onSave({ configs }) }
             onClean={ cleanEnvs } />
         </Pane>
@@ -89,40 +89,23 @@ function ConfigsViewer(props) {
   const items = useContext(Context);
 
   function deleteConfig(configId) { props.onSave( arrayDelete(configs, configId) ); }
-  function getStored(configId) {
-    return props.metadata.find(config => config.id == configId);
-  }
-  function get(configId) {
-    return props.configs.find(config => config.id == configId);
-  }
-  function update(configId, callback) {
-    const stored = getStored(configId);
-    if (stored) {
-      callback(stored);
-      if (!stored.saved && stored.selected) {
-        props.onSave(props.metadata.filter(config => config.id == configId));
-      } else {
-        props.onSave(props.metadata);
-      }
-    } else {
-      const config = get(configId);
-      callback(config);
-      props.onSave([...props.metadata, config]);
-    }
-  }
   function save(configId) {
-    update(configId, config => config.saved = true);
+    const config = configs.find(config => config.id == configId);
+    config.save();
+    props.onSave(configs);
   }
   function unsave(configId) {
-    update(configId, config => config.saved = undefined);
+    const config = configs.find(config => config.id == configId);
+    config.unsave();
+    props.onSave(configs);
   }
   function select(configId) {
-    arrayFind(configs, configId).selected = true;
+    arrayFind(configs, configId).select();
     props.onSave(configs);
   }
   function unselect(configId) {
     props.onClean();
-    arrayFind(configs, configId).selected = false;
+    arrayFind(configs, configId).unselect();
     props.onSave(configs);
   }
 
@@ -169,6 +152,7 @@ function ConfigsViewer(props) {
       .map(generatePanel);
     const unsavedElement = configs
       .filter(config => !config.saved)
+      .filter(config => config.visible)
       .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
