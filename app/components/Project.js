@@ -8,6 +8,7 @@ import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
 import Context from './Context';
 import CodeMark from './data/CodeMark';
+import Config from './data/Config';
 
 function Project(props) {
   const { userId, projectId, project } = props;
@@ -307,6 +308,7 @@ function Project(props) {
       </Pane>);
   }
   function renderPropViewer() {
+    /*
     let configs = [];
     if (project.metadata.configs)
       configs = [...project.metadata.configs];
@@ -344,12 +346,24 @@ function Project(props) {
 
     const temp = project.metadata;
     //temp.configs = configs;
+*/
+    let configs = project.metadata.configs;
+    if (!configs)
+      configs = Object.keys(project.items.configs).map(configId => new Config(configId, configId));
+    
+    const nodeIds = subGraph.load('selectedNodes') || [];
+    const selectedConfigIds = nodeIds;
+    configs.forEach(config => {
+      if (selectedConfigIds.includes(config.id))
+        config.show()
+      else
+        config.hide();
+    });
 
     return (
       <Pane height='50%' overflow='auto'>
         <PropViewer
           configs={ configs }
-          metadata={ project.metadata }
           onSave={ saveMetadata } />
       </Pane>);
   }
