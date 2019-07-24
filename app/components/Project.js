@@ -9,6 +9,7 @@ import PropViewer from './PropViewer';
 import Context from './Context';
 import CodeMark from './data/CodeMark';
 import Config from './data/Config';
+import Env from './data/Env';
 
 function Project(props) {
   const { userId, projectId, project } = props;
@@ -308,49 +309,16 @@ function Project(props) {
       </Pane>);
   }
   function renderPropViewer() {
-    /*
-    let configs = [];
-    if (project.metadata.configs)
-      configs = [...project.metadata.configs];
-    getConfigs(mainGraphId, mainGraph);
-    if (subGraph)
-      getConfigs(subGraphId, subGraph);
-
-    function getConfigs(graphId, graph) {
-      const nodes = graph.load('selectedNodes') || [];
-      nodes.forEach(nodeId => {
-        const configId = nodeId;
-        let config;
-        switch (graphId) {
-          case 'states':
-            config = {
-              form: project.items.states[nodeId].form,
-              states: [nodeId]
-            };
-            break;
-          default:
-            config = project.items.configs[configId];
-            break;
-        }
-
-        const match = configs.find(config => config.id == configId);
-        if (config && !match) {
-          configs.unshift({
-            label: `${graphId}-${nodeId}`,
-            id: configId,
-            selected: true
-          });
-        }
-      });
-    }
-
-    const temp = project.metadata;
-    //temp.configs = configs;
-*/
-    let configs = project.metadata.configs;
+    let { configs, envs } = project.metadata;
+    // create metadata if undefined
     if (!configs)
-      configs = Object.keys(project.items.configs).map(configId => new Config(configId, configId));
+      configs = Object.keys(project.items.configs)
+        .map(configId => new Config(configId, configId));
+    if (!envs)
+      envs = Object.keys(project.items.envs)
+        .map(envId => new Env(envId, envId));
     
+    // show configs if node selected
     const nodeIds = subGraph.load('selectedNodes') || [];
     const selectedConfigIds = nodeIds;
     configs.forEach(config => {
@@ -364,6 +332,7 @@ function Project(props) {
       <Pane height='50%' overflow='auto'>
         <PropViewer
           configs={ configs }
+          envs={ envs }
           onSave={ saveMetadata } />
       </Pane>);
   }
