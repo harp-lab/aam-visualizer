@@ -343,11 +343,12 @@ function Project(props) {
     }
 
     const temp = project.metadata;
-    temp.configs = configs;
+    //temp.configs = configs;
 
     return (
       <Pane height='50%' overflow='auto'>
         <PropViewer
+          configs={ configs }
           metadata={ project.metadata }
           onSave={ saveMetadata } />
       </Pane>);
