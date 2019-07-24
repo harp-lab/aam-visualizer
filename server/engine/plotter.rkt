@@ -213,7 +213,7 @@
   (define (make-data->symbol id-hash)
     (lambda (val) (string->symbol (~a (hash-ref id-hash val)))))
   (define (make-id-hash set)
-    (for/hash ([s set][id (range (set-count set))]) (values s id)))
+    (for/hash ([s set][id (range (set-count set))]) (values s (~a id))))
 
   (define state>id (make-id-hash states))
   (define state->sym (make-data->symbol state>id))
