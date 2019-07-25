@@ -39,7 +39,7 @@ class Project {
           this.graphs[graphId] = new SummaryGraph(graphData, funcs);
           break;
         case 'states':
-          this.graphs[graphId] = new DefaultGraph(graphData, states);
+          this.graphs[graphId] = new DefaultGraph(graphData, configs);
           break;
         default:
           this.graphs[graphId] = new DefaultGraph(graphData, configs);
