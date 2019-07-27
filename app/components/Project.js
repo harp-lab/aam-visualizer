@@ -114,13 +114,12 @@ function Project(props) {
     }*/
   }
   function unselectNode(graphId, nodeId) {
-    //cleanConfigs();
-    cleanEnvs();
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     const cleanedNodes = nodes.filter(node => node !== nodeId);
     graph.save('selectedNodes', cleanedNodes);
     props.onSave(project);
+    cleanEnvs();
   }
   function selectMainNode(nodeId) {
     const selected = mainGraph.metadata.selectedNodes || [];
@@ -187,8 +186,8 @@ function Project(props) {
   function clean(tag) {
     const data = project.metadata[tag];
     if (data) {
-      const cleanedData = data.filter(item => item.saved);
-      saveMetadata({ [tag]: cleanedData });
+      data.forEach(item => item.hide());
+      saveMetadata({ [tag]: data });
     }
   }
 
@@ -319,14 +318,16 @@ function Project(props) {
         .map(envId => new Env(envId, envId));
     
     // show configs if node selected
-    const nodeIds = subGraph.load('selectedNodes') || [];
-    const selectedConfigIds = nodeIds;
-    configs.forEach(config => {
-      if (selectedConfigIds.includes(config.id))
-        config.show()
-      else
-        config.hide();
-    });
+    if (subGraph) {
+      const nodeIds = subGraph.load('selectedNodes') || [];
+      const selectedConfigIds = nodeIds;
+      configs.forEach(config => {
+        if (selectedConfigIds.includes(config.id))
+          config.show()
+        else
+          config.hide();
+      });
+    }
 
     return (
       <Pane height='50%' overflow='auto'>

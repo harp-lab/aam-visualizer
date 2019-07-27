@@ -41,36 +41,30 @@ function PropViewer(props) {
       .filter(config => config.visible)
       .filter(config => config.selected)
       .forEach(({ id }) => {
-        const config = configs[id];
-        if (config.states)
-          config.states
-            .forEach(stateId => {
-              const state = states[stateId];
-
-              // convert ids to strings
-              if (state.env)
-                viewedEnvIds.push(`${state.env}`);
-            });
+        const configStates = configs[id].states;
+        if (configStates)
+          configStates.forEach(stateId => {
+            const state = states[stateId];
+            const env = state.env;
+            if (env)
+              viewedEnvIds.push(`${env}`); //TODO remove string conversion when is string already
+          });
       });
+
     viewedEnvs.forEach(env => {
       if (viewedEnvIds.includes(env.id))
         env.show();
-      else
-        env.hide();
+      //else
+      //  env.hide();
     });
     
     function cleanEnvs() {
-      const cleanedEnvs = viewedEnvs.filter(env => env.saved);
-      //props.onSave({ envs: cleanedEnvs });
+      viewedEnvs.forEach(env => env.hide());
+      props.onSave({ envs: viewedEnvs });
     }
     function addEnv(envId) {
-      const match = arrayFind(viewedEnvs, envId);
-      if (!match) {
-        viewedEnvs.unshift({
-          label: envId,
-          id: envId
-        })
-      }
+      arrayFind(viewedEnvs, envId).show();
+      props.onSave({ envs: viewedEnvs });
     }
 
     return (
@@ -94,15 +88,16 @@ function ConfigsViewer(props) {
   const configs = props.configs;
   const items = useContext(Context);
 
-  function deleteConfig(configId) { props.onSave( arrayDelete(configs, configId) ); }
+  function deleteConfig(configId) {
+    arrayFind(configs, configId).hide();
+    props.onSave(configs);
+  }
   function save(configId) {
-    const config = configs.find(config => config.id == configId);
-    config.save();
+    arrayFind(configs, configId).save();
     props.onSave(configs);
   }
   function unsave(configId) {
-    const config = configs.find(config => config.id == configId);
-    config.unsave();
+    arrayFind(configs, configId).unsave();
     props.onSave(configs);
   }
   function select(configId) {
@@ -176,21 +171,24 @@ function EnvsViewer(props) {
   const envs = props.envs;
   const items = useContext(Context);
 
-  function deleteEnv(envId) { props.onSave( arrayDelete(envs, envId) ); }
+  function deleteEnv(envId) {
+    arrayFind(envs, envId).hide();
+    props.onSave(envs);
+  }
   function save(envId) {
-    arrayFind(envs, envId).saved = true;
+    arrayFind(envs, envId).save();
     props.onSave(envs);
   }
   function unsave(envId) {
-    arrayFind(envs, envId).saved = false;
+    arrayFind(envs, envId).unsave();
     props.onSave(envs);
   }
   function select(envId) {
-    arrayFind(envs, envId).selected = true;
+    arrayFind(envs, envId).select();
     props.onSave(envs);
   }
   function unselect(envId) {
-    arrayFind(envs, envId).selected = false;
+    arrayFind(envs, envId).unselect();
     props.onSave(envs);
   }
 
