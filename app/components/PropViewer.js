@@ -26,58 +26,90 @@ import SplitPane from './SplitPane';
 import Pane from './Pane';
 import PaneMessage from './PaneMessage';
 import Context from './Context';
-
-function arrayFind(array, id) { return array.find(elem => elem.id == id); }
-function arrayDelete(arr, id) { return arr.filter(elem => elem.id !== id); }
+import PanelData from './data/Panel';
 
 function PropViewer(props) {
+    const { selectedNodes, metadata } = props;
     const items = useContext(Context);
-    const { configs, states } = items;
 
-    const viewedConfigs = props.configs;
-    const viewedEnvs = props.envs;
-    const viewedEnvIds = [];
-    viewedConfigs
-      .filter(config => config.visible)
-      .filter(config => config.selected)
-      .forEach(({ id }) => {
-        const configStates = configs[id].states;
-        if (configStates)
-          configStates.forEach(stateId => {
-            const state = states[stateId];
-            const env = state.env;
-            if (env)
-              viewedEnvIds.push(`${env}`); //TODO remove string conversion when is string already
+    let configs = metadata.configs || {};
+    let envs = metadata.envs || {};
+    useEffect(() => {
+      if (Object.entries(configs).length == 0)
+        Object.entries(items.configs)
+          .forEach(([configId, config]) => {
+            const configPanel = new PanelData(configId);
+
+            configPanel.noItems = true;
+            configPanel.noEnvs = true;
+
+            const stateIds = config.states;
+            if (stateIds) {
+              configPanel.noItems = false;
+
+              for (const stateId of stateIds) {
+                const envId = items.states[stateId].env;
+                if (envId)
+                  configPanel.noEnvs = false;
+              }
+            }
+            configs[configId] = configPanel;
           });
-      });
+      if (Object.entries(envs).length == 0)
+        Object.keys(items.envs)
+          .forEach(envId => envs[envId] = new PanelData(envId));
+      props.onSave({ configs, envs });
+    }, []);
 
-    viewedEnvs.forEach(env => {
-      if (viewedEnvIds.includes(env.id))
-        env.show();
-      //else
-      //  env.hide();
-    });
+    // TODO make below code only run on selectedNodes change
+    // show configs if node selected
+    const selectedConfigIds = selectedNodes;
+    for (const [configId, config] of Object.entries(configs)) {
+      if (selectedConfigIds.includes(configId)) {
+        if (items.configs[configId].form !== 'not found')  // TODO remove check for not adding 'not found' state configs
+          config.show();
+      } else
+        config.hide();
+    }
+
+    // show envs of visible and selected configs
+    for (const [configId, config] of Object.entries(configs)) {
+      if (config.visible && config.selected) {
+        // get states
+        const statesIds = items.configs[configId].states;
+        if (statesIds)
+          for (const stateId of statesIds) {
+            const state = items.states[stateId];
+            // get env
+            const envId = state.env;
+            if (envId)
+              envs[envId].show();
+          }
+      }
+    }
+
     
     function cleanEnvs() {
-      viewedEnvs.forEach(env => env.hide());
-      props.onSave({ envs: viewedEnvs });
+      for (const env of Object.values(envs))
+        env.hide();
+      props.onSave({ envs: envs });
     }
     function addEnv(envId) {
-      arrayFind(viewedEnvs, envId).show();
-      props.onSave({ envs: viewedEnvs });
+      envs[envId].show();
+      props.onSave({ envs: envs });
     }
 
     return (
       <SplitPane>
         <Pane width="50%" overflow='auto'>
           <ConfigsViewer
-            configs={ viewedConfigs }
+            configs={ configs }
             onSave={ configs => props.onSave({ configs }) }
             onClean={ cleanEnvs } />
         </Pane>
         <Pane width="50%" overflow='auto'>
           <EnvsViewer
-            envs={ viewedEnvs }
+            envs={ envs }
             onAdd={ addEnv }
             onSave={ envs => props.onSave({ envs }) } />
         </Pane>
@@ -86,74 +118,64 @@ function PropViewer(props) {
 
 function ConfigsViewer(props) {
   const configs = props.configs;
-  const items = useContext(Context);
 
   function deleteConfig(configId) {
-    arrayFind(configs, configId).hide();
+    configs[configId].hide();
     props.onSave(configs);
   }
   function save(configId) {
-    arrayFind(configs, configId).save();
+    configs[configId].save();
     props.onSave(configs);
   }
   function unsave(configId) {
-    arrayFind(configs, configId).unsave();
+    configs[configId].unsave();
     props.onSave(configs);
   }
   function select(configId) {
-    arrayFind(configs, configId).select();
+    configs[configId].select();
     props.onSave(configs);
   }
   function unselect(configId) {
-    props.onClean();
-    arrayFind(configs, configId).unselect();
+    //props.onClean();
+    configs[configId].unselect();
     props.onSave(configs);
   }
 
   let element;
-  if (configs && configs.length > 0) {
-    function generatePanel(config) {
-      const { label, id, selected, saved } = config;
+  if (configs) {
+    function generatePanel([configId, config]) {
+      const { label, selected, saved } = config;
 
       const panelProps = {};
       if (saved)
-        panelProps.onUnsave = () => unsave(id);
+        panelProps.onUnsave = () => unsave(configId);
       else
-        panelProps.onSave = () => save(id);
+        panelProps.onSave = () => save(configId);
       if (selected)
-        panelProps.onUnselect = () => unselect(id);
+        panelProps.onUnselect = () => unselect(configId);
       else
-        panelProps.onSelect = () => select(id);
+        panelProps.onSelect = () => select(configId);
       
-      const states = items.configs[id].states;
-      let noEnvs = true;
-      if (states)
-        states.forEach(stateId => {
-          const env = items.states[stateId].env;
-          if (env)
-            noEnvs = false;
-        });
-      if (noEnvs) {
+      if (config.noEnvs) {
         panelProps.disableSelect = true;
         panelProps.disableSelectMsg = 'No environments';
       }
 
       return (
         <Panel
-          key={ id }
-          label={ ( states ? label : `${label} (empty)`) }
+          key={ configId }
+          label={ ( config.noItems ? label : `${label} (empty)`) }
           { ...panelProps }
-          onDelete={ () => deleteConfig(id) }>
-          <ConfigItem configId={ id } />
+          onDelete={ () => deleteConfig(configId) }>
+          <ConfigItem configId={ configId } />
         </Panel>);
     }
 
-    const savedElement = configs
-      .filter(config => config.saved)
+    const savedElement = Object.entries(configs)
+      .filter(([configId, config]) => config.saved)
       .map(generatePanel);
-    const unsavedElement = configs
-      .filter(config => !config.saved)
-      .filter(config => config.visible)
+    const unsavedElement = Object.entries(configs)
+      .filter(([configId, config]) => !config.saved && config.visible)
       .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
@@ -172,59 +194,58 @@ function EnvsViewer(props) {
   const items = useContext(Context);
 
   function deleteEnv(envId) {
-    arrayFind(envs, envId).hide();
+    envs[envId].hide();
     props.onSave(envs);
   }
   function save(envId) {
-    arrayFind(envs, envId).save();
+    envs[envId].save();
     props.onSave(envs);
   }
   function unsave(envId) {
-    arrayFind(envs, envId).unsave();
+    envs[envId].unsave();
     props.onSave(envs);
   }
   function select(envId) {
-    arrayFind(envs, envId).select();
+    envs[envId].select();
     props.onSave(envs);
   }
   function unselect(envId) {
-    arrayFind(envs, envId).unselect();
+    envs[envId].unselect();
     props.onSave(envs);
   }
 
   let element;
-  if (envs && envs.length > 0) {
-    function generatePanel(env) {
-      const { label, id, selected, saved } = env;
+  if (envs) {
+    function generatePanel([envId, env]) {
+      const { label, selected, saved } = env;
 
       const panelProps = {};
       if (saved)
-        panelProps.onUnsave = () => unsave(id);
+        panelProps.onUnsave = () => unsave(envId);
       else
-        panelProps.onSave = () => save(id);
+        panelProps.onSave = () => save(envId);
       if (selected)
-        panelProps.onUnselect = () => unselect(id);
+        panelProps.onUnselect = () => unselect(envId);
       else
-        panelProps.onSelect = () => select(id);
+        panelProps.onSelect = () => select(envId);
 
       return (
         <Panel
-          key={ id }
-          label={ items.envs[id].length > 0 ? label : `${label} (empty)` }
+          key={ envId }
+          label={ items.envs[envId].length > 0 ? label : `${label} (empty)` }
           { ...panelProps }
-          onDelete={ () => deleteEnv(id) }>
+          onDelete={ () => deleteEnv(envId) }>
           <EnvItem
-            envId={ id }
+            envId={ envId }
             onAdd={ props.onAdd } />
         </Panel>);
     }
 
-    const savedElement = envs
-      .filter(env => env.saved)
+    const savedElement = Object.entries(envs)
+      .filter(([envId, env]) => env.saved)
       .map(generatePanel);
-    const unsavedElement = envs
-      .filter(env => !env.saved)
-      .filter(env => env.visible)
+    const unsavedElement = Object.entries(envs)
+      .filter(([envId, env]) => !env.saved && env.visible)
       .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
@@ -339,13 +360,10 @@ function ConfigItem(props) {
       .map(stateId => {
         const state = states[stateId];
         const instrEntries = instr[state.instr]
-          .exprStrings
-          .map(expr => {
-            return <Typography key={ expr }>{ expr }</Typography>;
-          });
+          .exprStrings.join(', ');
         const kontEntries = konts[state.kont].string
           .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-        return [state.exprString, instrEntries, kontEntries]
+        return [state.exprString, `[ ${instrEntries} ]`, kontEntries]
       });
   return <Item
     labels={ labels }

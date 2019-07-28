@@ -1,6 +1,5 @@
-class Env {
-  constructor(id, label) {
-    this.id = id;
+class Panel {
+  constructor(label) {
     this.label = label;
 
     this.saved = false;
@@ -17,4 +16,4 @@ class Env {
   get default() { return this.selected && !this.saved }
 }
 
-export default Env;
+export default Panel;

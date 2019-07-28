@@ -8,8 +8,6 @@ import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
 import Context from './Context';
 import CodeMark from './data/CodeMark';
-import Config from './data/Config';
-import Env from './data/Env';
 
 function Project(props) {
   const { userId, projectId, project } = props;
@@ -97,21 +95,17 @@ function Project(props) {
     graph.metadata = {...graph.metadata, ...metadata};
     props.onSave(project);
   }
+  function saveGraph(graphId, tag, data) {
+    const graph = project.graphs[graphId];
+    graph.save(tag, data);
+    props.onSave(project);
+  }
 
   function selectNode(graphId, nodeId) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     graph.save('selectedNodes', [...nodes, nodeId]);
     props.onSave(project);
-
-    /*addConfig(graphId, nodeId);
-    add(mainGraphId, mainGraph);
-    if (subGraph)
-      add(subGraphId, subGraph);
-    function add(graphId, graph) {
-      const nodes = graph.load('selectedNodes') || [];
-      nodes.forEach(nodeId => addConfig(graphId, nodeId));
-    }*/
   }
   function unselectNode(graphId, nodeId) {
     const graph = project.graphs[graphId];
@@ -136,7 +130,10 @@ function Project(props) {
   }
   function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
   function suggestNodes(graphId, nodeIds) { saveGraphMetadata(graphId, {suggestedNodes: nodeIds}) }
-  function hoverNodes(graphId, nodeIds) { saveGraphMetadata(graphId, { hoveredNodes: nodeIds }) }
+  function hoverNodes(graphId, nodeIds) {
+    //saveGraphMetadata(graphId, { hoveredNodes: nodeIds });
+    saveGraph(graphId, 'hoveredNodes', nodeIds);
+  }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
     saveGraphMetadata(graphId, { selectedEdge });
@@ -186,7 +183,7 @@ function Project(props) {
   function clean(tag) {
     const data = project.metadata[tag];
     if (data) {
-      data.forEach(item => item.hide());
+      Object.values(data).forEach(item => item.hide());
       saveMetadata({ [tag]: data });
     }
   }
@@ -308,32 +305,16 @@ function Project(props) {
       </Pane>);
   }
   function renderPropViewer() {
-    let { configs, envs } = project.metadata;
-    // create metadata if undefined
-    if (!configs)
-      configs = Object.keys(project.items.configs)
-        .map(configId => new Config(configId, configId));
-    if (!envs)
-      envs = Object.keys(project.items.envs)
-        .map(envId => new Env(envId, envId));
-    
     // show configs if node selected
-    if (subGraph) {
-      const nodeIds = subGraph.load('selectedNodes') || [];
-      const selectedConfigIds = nodeIds;
-      configs.forEach(config => {
-        if (selectedConfigIds.includes(config.id))
-          config.show()
-        else
-          config.hide();
-      });
-    }
+    let nodeIds = [];
+    if (subGraph)
+      nodeIds = subGraph.load('selectedNodes') || [];
 
     return (
       <Pane height='50%' overflow='auto'>
         <PropViewer
-          configs={ configs }
-          envs={ envs }
+          selectedNodes={ nodeIds }
+          metadata={ project.metadata }
           onSave={ saveMetadata } />
       </Pane>);
   }
