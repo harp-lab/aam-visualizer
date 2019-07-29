@@ -4,6 +4,8 @@ import TextField from '@material-ui/core/TextField';
 
 function Login(props) {
   const [user, setUser] = useState('guest');
+  const re = /^\w+$/;
+  const error = !re.test(user);
   return (<div
       style={{
         display: 'flex',
@@ -16,8 +18,14 @@ function Login(props) {
       <TextField
         label='username'
         value={ user }
-        onChange={ evt => setUser(evt.target.value) } />
-      <Button onClick={ () => props.onSubmit(user || 'guest') }>login</Button>
+        onChange={ evt => setUser(evt.target.value) }
+        error={ error }
+        helperText={ 'You can use letters, numbers, & underscores' } />
+      <Button
+        onClick={ () => props.onSubmit(user) }
+        disabled={ error }>
+        login
+      </Button>
     </div>);
 }
 
