@@ -86,31 +86,34 @@ function Project(props) {
         break;
     }
   }
+  function save() { props.onSave(project) }
   function saveMetadata(data) {
     project.metadata = {...project.metadata, ...data};
-    props.onSave(project);
+    save();
   }
-  function saveGraph(graphId, tag, data) {
+  function saveGraphMetadata(graphId, tag, data) {
+    setGraphMetadata(graphId, tag, data);
+    save();
+  }
+  function setGraphMetadata(graphId, tag, data) {
     const graph = project.graphs[graphId];
     graph.save(tag, data);
-    props.onSave(project);
   }
 
   function selectNode(graphId, nodeId) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     graph.save('selectedNodes', [...nodes, nodeId]);
-    if (graphId == subGraphId)
-      refreshProps();
-    props.onSave(project);
+    refreshProps();
+    save();
   }
   function unselectNode(graphId, nodeId) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     const cleanedNodes = nodes.filter(node => node !== nodeId);
     graph.save('selectedNodes', cleanedNodes);
-    props.onSave(project);
-    cleanEnvs();
+    refreshProps();
+    save();
   }
   function selectMainNode(nodeId) {
     const selected = mainGraph.metadata.selectedNodes || [];
@@ -120,21 +123,19 @@ function Project(props) {
         subGraph.resetSelected();
         props.onSave(project);
       }
-
-      selectNode(mainGraphId, nodeId);
       suggestNodes(mainGraphId, undefined);
+      selectNode(mainGraphId, nodeId);
     }
   }
   function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
-  function suggestNodes(graphId, nodeIds) {
-    saveGraph(graphId, 'suggestedNodes', nodeIds);
-  }
+  function suggestNodes(graphId, nodeIds) { setGraphMetadata(graphId, 'suggestedNodes', nodeIds) }
   function hoverNodes(graphId, nodeIds) {
-    saveGraph(graphId, 'hoveredNodes', nodeIds);
+    setGraphMetadata(graphId, 'hoveredNodes', nodeIds);
+    save();
   }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
-    saveGraph(graphId, 'selectedEdge', selectedEdge);
+    setGraphMetadata(graphId, 'selectedEdge', selectedEdge);
 
     const graph = project.graphs[graphId];
     const edge = graph.edges[edgeId];
@@ -142,13 +143,16 @@ function Project(props) {
     if (edge)
       suggestedNodeIds = edge.calls;
     suggestNodes(mainGraphId, suggestedNodeIds);
+    save();
   }
   function refreshProps() {
-    refreshConfigs();
-    refreshEnvs();
+    if (subGraph) {
+      refreshConfigs();
+      refreshEnvs();
+    }
   }
   function refreshConfigs() {
-    const selectedNodes = subGraph.load('selectedNodes');
+    const selectedNodes = subGraph.load('selectedNodes') || [];
     const selectedConfigIds = selectedNodes;
     const { configs } = project.metadata;
     for (const [configId, config] of Object.entries(configs)) {
@@ -181,14 +185,6 @@ function Project(props) {
         env.show();
       else
         env.hide();
-    }
-  }
-  function cleanEnvs() { clean('envs') }
-  function clean(tag) {
-    const data = project.metadata[tag];
-    if (data) {
-      Object.values(data).forEach(item => item.hide());
-      saveMetadata({ [tag]: data });
     }
   }
 
@@ -234,7 +230,7 @@ function Project(props) {
       onMainNodeSelect={ selectMainNode }
       onMainNodeUnselect={ unselectMainNode }
       onEdgeSelect={ selectEdge }
-      onSave={ saveGraph } />;
+      onSave={ saveGraphMetadata } />;
     const codeViewerElem = renderCodeViewer();
     const propViewerElem = renderPropViewer();
 
@@ -309,15 +305,9 @@ function Project(props) {
       </Pane>);
   }
   function renderPropViewer() {
-    // show configs if node selected
-    let nodeIds = [];
-    if (subGraph)
-      nodeIds = subGraph.load('selectedNodes') || [];
-
     return (
       <Pane height='50%' overflow='auto'>
         <PropViewer
-          selectedNodes={ nodeIds }
           metadata={ project.metadata }
           onRefreshEnvs={ refreshEnvs }
           onSave={ saveMetadata } />

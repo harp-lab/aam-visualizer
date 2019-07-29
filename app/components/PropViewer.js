@@ -31,11 +31,6 @@ function PropViewer(props) {
     const { metadata } = props;
     const { configs, envs } = metadata;
     
-    function cleanEnvs() {
-      for (const env of Object.values(envs))
-        env.hide();
-      props.onSave({ envs: envs });
-    }
     function addEnv(envId) {
       envs[envId].show();
       props.onSave({ envs: envs });

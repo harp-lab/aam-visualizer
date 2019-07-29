@@ -92,11 +92,9 @@ function Graph(props) {
     const node = evt.target;
     if (hoveredNodes !== [node.id()])
       props.onSave(graphId, 'hoveredNodes', [node.id()]);
-      //props.onSave(graphId, { hoveredNodes: [node.id()] });
   });
   cy.on('mouseout', 'node', evt => {
     props.onSave(graphId, 'hoveredNodes', []);
-    //props.onSave(graphId, { hoveredNodes: undefined });
   });
   if (props.onEdgeSelect) {
     cy.on('select', 'edge', evt => {
