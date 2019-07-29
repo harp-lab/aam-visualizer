@@ -90,11 +90,6 @@ function Project(props) {
     project.metadata = {...project.metadata, ...data};
     props.onSave(project);
   }
-  function saveGraphMetadata(graphId, metadata) {
-    const graph = project.graphs[graphId];
-    graph.metadata = {...graph.metadata, ...metadata};
-    props.onSave(project);
-  }
   function saveGraph(graphId, tag, data) {
     const graph = project.graphs[graphId];
     graph.save(tag, data);
@@ -105,6 +100,8 @@ function Project(props) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     graph.save('selectedNodes', [...nodes, nodeId]);
+    if (graphId == subGraphId)
+      refreshProps();
     props.onSave(project);
   }
   function unselectNode(graphId, nodeId) {
@@ -129,14 +126,15 @@ function Project(props) {
     }
   }
   function unselectMainNode(nodeId) { unselectNode(mainGraphId, nodeId) }
-  function suggestNodes(graphId, nodeIds) { saveGraphMetadata(graphId, {suggestedNodes: nodeIds}) }
+  function suggestNodes(graphId, nodeIds) {
+    saveGraph(graphId, 'suggestedNodes', nodeIds);
+  }
   function hoverNodes(graphId, nodeIds) {
-    //saveGraphMetadata(graphId, { hoveredNodes: nodeIds });
     saveGraph(graphId, 'hoveredNodes', nodeIds);
   }
   function selectEdge(graphId, edgeId) {
     const selectedEdge = edgeId;
-    saveGraphMetadata(graphId, { selectedEdge });
+    saveGraph(graphId, 'selectedEdge', selectedEdge);
 
     const graph = project.graphs[graphId];
     const edge = graph.edges[edgeId];
@@ -145,38 +143,44 @@ function Project(props) {
       suggestedNodeIds = edge.calls;
     suggestNodes(mainGraphId, suggestedNodeIds);
   }
-  function addConfig(graphId, nodeId) {
-    const configs = project.metadata.configs || [];
-    const configId = nodeId;
-    let nodeConfig;
-    switch (graphId) {
-      case 'states':
-        nodeConfig = {
-          form: project.items.states[nodeId].form,
-          states: [nodeId]
-        };
-        break;
-      default:
-        nodeConfig = project.items.configs[nodeId];
-        break;
-    }
-    const match = configs.find(config => config.id == configId);
-    if (nodeConfig && !match) {
-      configs.unshift({
-        label: `${graphId}-${nodeId}`,
-        id: configId,
-        selected: true // default
-      });
-      saveMetadata({ configs });
+  function refreshProps() {
+    refreshConfigs();
+    refreshEnvs();
+  }
+  function refreshConfigs() {
+    const selectedNodes = subGraph.load('selectedNodes');
+    const selectedConfigIds = selectedNodes;
+    const { configs } = project.metadata;
+    for (const [configId, config] of Object.entries(configs)) {
+      if (selectedConfigIds.includes(configId)) {
+        if (project.items.configs[configId].form !== 'not found') // TODO remove check for not adding 'not found' state configs
+          config.show();
+      } else
+        config.hide();
     }
   }
-  function cleanConfigs() {
-    clean('configs');
-    const mainNodes = mainGraph.load('selectedNodes') || [];
-    mainNodes.forEach(nodeId => addConfig(mainGraphId, nodeId));
-    if (subGraph) {
-      const subNodes = subGraph.load('selectedNodes') || [];
-      subNodes.forEach(nodeId => addConfig(subGraphId, nodeId));
+  function refreshEnvs() {
+    const { configs, envs } = project.metadata;
+    const visibleEnvs = [];
+    for (const [configId, config] of Object.entries(configs)) {
+      if (config.visible && config.selected) {
+        // get states
+        const statesIds = project.items.configs[configId].states;
+        if (statesIds)
+          for (const stateId of statesIds) {
+            const state = project.items.states[stateId];
+            // get env
+            const envId = state.env;
+            if (envId)
+              visibleEnvs.push(`${envId}`); // TODO remove string conversion
+          }
+      }
+    }
+    for (const [envId, env] of Object.entries(envs)) {
+      if (visibleEnvs.includes(envId))
+        env.show();
+      else
+        env.hide();
     }
   }
   function cleanEnvs() { clean('envs') }
@@ -230,7 +234,7 @@ function Project(props) {
       onMainNodeSelect={ selectMainNode }
       onMainNodeUnselect={ unselectMainNode }
       onEdgeSelect={ selectEdge }
-      onSave={ saveGraphMetadata } />;
+      onSave={ saveGraph } />;
     const codeViewerElem = renderCodeViewer();
     const propViewerElem = renderPropViewer();
 
@@ -315,6 +319,7 @@ function Project(props) {
         <PropViewer
           selectedNodes={ nodeIds }
           metadata={ project.metadata }
+          onRefreshEnvs={ refreshEnvs }
           onSave={ saveMetadata } />
       </Pane>);
   }

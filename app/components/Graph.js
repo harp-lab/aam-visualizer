@@ -91,10 +91,12 @@ function Graph(props) {
   cy.on('mouseover', 'node', evt => {
     const node = evt.target;
     if (hoveredNodes !== [node.id()])
-      props.onSave(graphId, { hoveredNodes: [node.id()] });
+      props.onSave(graphId, 'hoveredNodes', [node.id()]);
+      //props.onSave(graphId, { hoveredNodes: [node.id()] });
   });
   cy.on('mouseout', 'node', evt => {
-    props.onSave(graphId, { hoveredNodes: undefined });
+    props.onSave(graphId, 'hoveredNodes', []);
+    //props.onSave(graphId, { hoveredNodes: undefined });
   });
   if (props.onEdgeSelect) {
     cy.on('select', 'edge', evt => {
@@ -167,7 +169,7 @@ function Graph(props) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$(`#${nodeId}`).position();
       })
-      props.onSave(graphId, { positions });
+      props.onSave(graphId, 'positions', positions);
 
       // remove nodes
       cy.nodes().remove();
