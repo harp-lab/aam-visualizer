@@ -2,6 +2,7 @@ import AstGraph from './AstGraph';
 import DefaultGraph from './DefaultGraph';
 import SummaryGraph from './SummaryGraph';
 import CodePos from './CodePos';
+import Panel from './Panel';
 
 class Project {
   constructor() {
@@ -28,6 +29,7 @@ class Project {
       this.store = data.store;
       this.items = data.items;
       this.generateGraphs();
+      this.generateMetadata();
       this.importAst(data.ast);
     }
   }
@@ -48,6 +50,41 @@ class Project {
     }
 
     this.mainGraphId = 'funcs';
+  }
+  generateMetadata() {
+    this.generateConfigs();
+    this.generateEnvs();
+  }
+  generateConfigs() {
+    const items = this.items;
+    const configs = {};
+    Object.entries(items.configs)
+      .forEach(([configId, config]) => {
+        const configPanel = new Panel(configId);
+
+        configPanel.noItems = true;
+        configPanel.noEnvs = true;
+
+        const stateIds = config.states;
+        if (stateIds) {
+          configPanel.noItems = false;
+
+          for (const stateId of stateIds) {
+            const envId = items.states[stateId].env;
+            if (envId)
+              configPanel.noEnvs = false;
+          }
+        }
+        configs[configId] = configPanel;
+      });
+    this.metadata.configs = configs;
+  }
+  generateEnvs() {
+    const items = this.items;
+    const envs = {};
+    Object.keys(items.envs)
+      .forEach(envId => envs[envId] = new Panel(envId));
+    this.metadata.envs = envs;
   }
   importAst(ast) {
     const items = this.items;

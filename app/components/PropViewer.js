@@ -26,68 +26,10 @@ import SplitPane from './SplitPane';
 import Pane from './Pane';
 import PaneMessage from './PaneMessage';
 import Context from './Context';
-import PanelData from './data/Panel';
 
 function PropViewer(props) {
-    const { selectedNodes, metadata } = props;
-    const items = useContext(Context);
-
-    let configs = metadata.configs || {};
-    let envs = metadata.envs || {};
-    useEffect(() => {
-      if (Object.entries(configs).length == 0)
-        Object.entries(items.configs)
-          .forEach(([configId, config]) => {
-            const configPanel = new PanelData(configId);
-
-            configPanel.noItems = true;
-            configPanel.noEnvs = true;
-
-            const stateIds = config.states;
-            if (stateIds) {
-              configPanel.noItems = false;
-
-              for (const stateId of stateIds) {
-                const envId = items.states[stateId].env;
-                if (envId)
-                  configPanel.noEnvs = false;
-              }
-            }
-            configs[configId] = configPanel;
-          });
-      if (Object.entries(envs).length == 0)
-        Object.keys(items.envs)
-          .forEach(envId => envs[envId] = new PanelData(envId));
-      props.onSave({ configs, envs });
-    }, []);
-
-    // TODO make below code only run on selectedNodes change
-    // show configs if node selected
-    const selectedConfigIds = selectedNodes;
-    for (const [configId, config] of Object.entries(configs)) {
-      if (selectedConfigIds.includes(configId)) {
-        if (items.configs[configId].form !== 'not found')  // TODO remove check for not adding 'not found' state configs
-          config.show();
-      } else
-        config.hide();
-    }
-
-    // show envs of visible and selected configs
-    for (const [configId, config] of Object.entries(configs)) {
-      if (config.visible && config.selected) {
-        // get states
-        const statesIds = items.configs[configId].states;
-        if (statesIds)
-          for (const stateId of statesIds) {
-            const state = items.states[stateId];
-            // get env
-            const envId = state.env;
-            if (envId)
-              envs[envId].show();
-          }
-      }
-    }
-
+    const { metadata } = props;
+    const { configs, envs } = metadata;
     
     function cleanEnvs() {
       for (const env of Object.values(envs))
@@ -105,7 +47,7 @@ function PropViewer(props) {
           <ConfigsViewer
             configs={ configs }
             onSave={ configs => props.onSave({ configs }) }
-            onClean={ cleanEnvs } />
+            onRefresh={ props.onRefreshEnvs } />
         </Pane>
         <Pane width="50%" overflow='auto'>
           <EnvsViewer
@@ -133,11 +75,12 @@ function ConfigsViewer(props) {
   }
   function select(configId) {
     configs[configId].select();
+    props.onRefresh();
     props.onSave(configs);
   }
   function unselect(configId) {
-    //props.onClean();
     configs[configId].unselect();
+    props.onRefresh();
     props.onSave(configs);
   }
 
