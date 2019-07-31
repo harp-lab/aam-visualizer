@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
 import CodePos from './data/CodePos';
@@ -6,7 +6,7 @@ import indigo from '@material-ui/core/colors/indigo';
 
 function CodeViewer(props) {
   const [gutterWidth, setGutterWidth] = useState('auto');
-  const theme = props.theme;
+  const { hovered, selected, theme } = props;
 
   // filter marks that do not have linked nodes
   const marks = {};
@@ -76,37 +76,32 @@ function CodeViewer(props) {
       const tokEnd = new CodePos(lineId, ch + tok.length);
       ch += tok.length;
 
+      // color prims
       const isPrim = tok.match(/lambda|let|if|\#t|\#f/);
       let textColor = 'inherit';
       if (isPrim)
         textColor = indigo[800];
 
-      const hovered = props.hovered;
-      const selected = props.selected;
-      const selectedMarks = selected
-        .map(id => marks[id]);
+      const hoveredMarks = hovered.map(id => marks[id]);
+      const selectedMarks = selected.map(id => marks[id]);
+      const hoveredMark = hoveredMarks.find(mark => mark.includes(tokStart, tokEnd));
+      const selectedMark = selectedMarks.find(mark => mark.includes(tokStart, tokEnd));
+
       let content = tok;
-      if (hovered.length > 0) {
-        const hoveredMarks = hovered.map(id => { return marks[id]; });
-        content = <Token
+      if (selectedMark) {
+        content = <Token 
           content={ tok }
-          marks={ hoveredMarks }
-          start={ tokStart }
-          end={ tokEnd }
-          color={ theme.palette.hover.light  } />;
-      } else if (selected.length > 0) {
-        content = <Token
-          content={ tok }
-          marks={ selectedMarks }
-          start={ tokStart }
-          end={ tokEnd }
           color={ theme.palette.select.light } />;
+      } else if (hoveredMark) {
+        content = <Token 
+          content={ tok }
+          color={ theme.palette.hover.light } />;
       }
 
       const markId = getMark(lineId, tokStart.ch);
       return <Span
         key={ tokId }
-        content={content}
+        content={ content }
         textColor={ textColor }
         onMouseOver={ () => hover(markId) }
         onClick={ () => click(markId) }
@@ -160,39 +155,11 @@ function CodeViewer(props) {
 CodeViewer = withTheme(CodeViewer);
 
 function Token(props) {
-  const {content, color, start, end} = props;
-
-  // select mark with largest coverage
-  const marks = props.marks.sort((a, b) => {
-    return b.coverage(start, end) - a.coverage(start, end);
-  });
-  const mark = marks[0];
-
-  let element;
-  if (mark.includes(start, end)) {
-    element = <Span
-      content={ content }
-      color={ color } />;
-  } else if (mark.startsIn(start, end)) {
-    element = (
-      <Fragment>
-        { content.substr(0, start.ch) }
-        <Span
-          content={ content.substr(start.ch) }
-          color={ color } />
-      </Fragment>);
-  } else if (mark.endsIn(start, end)) {
-    element = (
-      <Fragment>
-        <Span
-          content={ content.substr(0, end.ch) }
-          color={ color } />
-        { content.substr(end.ch) }
-      </Fragment>);
-  } else
-    element = <Fragment>{content}</Fragment>;
-
-  return element;
+  const {content, color} = props;
+  
+  return <Span
+    content={ content }
+    color={ color } />;
 }
 
 function Span(props) {
