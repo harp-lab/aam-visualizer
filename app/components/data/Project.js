@@ -30,8 +30,19 @@ class Project {
       this.items = data.items;
       this.generateGraphs();
       this.generateMetadata();
+      this.ast = data.ast;
       this.importAst(data.ast);
     }
+  }
+  export() {
+    const filter = ['status', 'error', 'code', 'analysis', 'store', 'items', 'ast'];
+    const data = Object.entries(this).reduce((accumulator, currentValue) => {
+      const [prop, value] = currentValue;
+      if (filter.includes(prop))
+        accumulator[prop] = value;
+      return accumulator;
+    }, {});
+    return data;
   }
   generateGraphs() {
     const { graphs, funcs, states, configs } = this.items;

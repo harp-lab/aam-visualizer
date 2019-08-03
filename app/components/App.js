@@ -96,6 +96,28 @@ function App(props) {
     project.code = data.code;
     saveLocalProject(projectId, project);
   }
+  async function getProjectData(projectId) {
+    const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
+    switch (res.status) {
+      case 200:
+        const data = await res.json();
+        const project = projects[projectId];
+        project.import(data);
+        saveLocalProject(projectId, project);
+        break;
+      case 204:
+        queueSnackbar('Project still processing');
+        break;
+      case 412:
+        queueSnackbar('Project data request rejected');
+        break;
+    }
+  }
+  function importProject(projectId, data) {
+    const project = new ProjectData(userId);
+    project.import(data);
+    saveLocalProject(projectId, project);
+  }
 
   function getSelectedProject() { return projects[selectedProjectId]; }
   function selectProject(projectId) {
@@ -121,7 +143,7 @@ function App(props) {
   function ProjectListButton(props) {
     return <AppBarButton
       content='project list'
-      onClick={ deselectProject }/>;
+      onClick={ deselectProject } />;
   }
   function LogoutButton(props) {
     return <AppBarButton
@@ -145,6 +167,7 @@ function App(props) {
       rightElems = (
         <Fragment>
           <LogoutButton />
+          <ImportButton onImport={ importProject } />
           <AppBarButton
             content='new project'
             onClick={ createProject } />
@@ -161,6 +184,7 @@ function App(props) {
             onFork={ forkProject }
             onCancel={ cancelProject }
             onDelete={ deleteProject }
+            onGet={ getProjectData }
             onLoad={ setLoad } />;
       break;
     case VIEWS.project:
@@ -183,7 +207,6 @@ function App(props) {
         getCode={ () => getProjectCode(selectedProjectId) } />;
       break;
   }
-
   
   const appbarElem = (
     <AppBar position='static'>
@@ -245,6 +268,34 @@ function AppBarButton(props) {
       variant='outlined'>
       { content }
     </Button>);
+}
+
+function ImportButton(props) {
+  const input = useRef(undefined);
+
+  function change(file) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const json = JSON.parse(fr.result);
+      const re = /aam-vis-(.*)\.js/;
+      const projectId = file.name.match(re)[1];
+      props.onImport(projectId, json);
+    };
+    fr.readAsText(file);
+    input.current.value = '';
+  }
+
+  return (
+    <Fragment>
+      <AppBarButton
+        content='import'
+        onClick={ () => input.current.click() } />
+      <input
+        ref={ input }
+        onChange={ () => change(input.current.files[0]) }
+        type='file'
+        hidden />
+    </Fragment>);
 }
 
 function NotifySnackbar(props) {
