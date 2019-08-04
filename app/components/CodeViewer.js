@@ -88,16 +88,16 @@ function CodeViewer(props) {
       const selectedMark = selectedMarks.find(mark => mark.includes(tokStart, tokEnd));
 
       let content = tok;
-      if (selectedMark) {
-        content = <Token 
-          content={ tok }
-          color={ theme.palette.select.light } />;
-      } else if (hoveredMark) {
+      if (hoveredMark) {
         content = <Token 
           content={ tok }
           color={ theme.palette.hover.light } />;
+      } else if (selectedMark) {
+        content = <Token 
+          content={ tok }
+          color={ theme.palette.select.light } />;
       }
-
+      
       const markId = getMark(lineId, tokStart.ch);
       return <Span
         key={ tokId }
