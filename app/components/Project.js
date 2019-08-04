@@ -176,7 +176,7 @@ function Project(props) {
             // get env
             const envId = state.env;
             if (envId)
-              visibleEnvs.push(`${envId}`); // TODO remove string conversion
+              visibleEnvs.push(envId);
           }
       }
     }

@@ -7,7 +7,7 @@ function Graph(props) {
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  const { graphId, focus, theme } = props;
+  const { projectId, graphId, data, metadata, focus, theme } = props;
 
   const config = {
     style: [
@@ -68,48 +68,9 @@ function Graph(props) {
   }
   const cyRef = useRef(cytoscape(config));
   const cy = cyRef.current;
-  const metadata = props.metadata;
-  const positions = metadata.positions;
   const selectedNodes = metadata.selectedNodes || [];
-  const selectedEdge = metadata.selectedEdge;
-  const hoveredNodes = metadata.hoveredNodes;
-  const suggestedNodes = metadata.suggestedNodes;
+  const { positions, selectedEdge, hoveredNodes, suggestedNodes } = metadata;
 
-  // event handlers
-  ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
-  cy.on('tap', () => props.onFocus(graphId));
-  cy.on('select', 'node', evt => {
-    const node = evt.target;
-    if (events.current)
-      props.onNodeSelect(node.id());
-  });
-  cy.on('unselect', 'node', evt => {
-    const node = evt.target;
-    if (events.current)
-      props.onNodeUnselect(node.id());
-  });
-  cy.on('mouseover', 'node', evt => {
-    const node = evt.target;
-    if (hoveredNodes !== [node.id()])
-      props.onSave(graphId, 'hoveredNodes', [node.id()]);
-  });
-  cy.on('mouseout', 'node', evt => {
-    props.onSave(graphId, 'hoveredNodes', []);
-  });
-  if (props.onEdgeSelect) {
-    cy.on('select', 'edge', evt => {
-      const edge = evt.target;
-      if (events.current) {
-        edge.unselect();
-        props.onEdgeSelect(edge.id());
-      }
-    });
-    cy.on('unselect', 'edge', evt => {
-      if (events.current)
-        props.onEdgeSelect(undefined);
-    });
-  } else
-    cy.on('select', 'edge', evt => evt.target.unselect());
   
   // mount/unmount
   useEffect(() => {
@@ -148,8 +109,44 @@ function Graph(props) {
 
   // graph change
   useEffect(() => {
+    // event handlers
+    ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
+    cy.on('tap', () => props.onFocus(graphId));
+    cy.on('select', 'node', evt => {
+      const node = evt.target;
+      if (events.current)
+        props.onNodeSelect(node.id());
+    });
+    cy.on('unselect', 'node', evt => {
+      const node = evt.target;
+      if (events.current)
+        props.onNodeUnselect(node.id());
+    });
+    cy.on('mouseover', 'node', evt => {
+      const node = evt.target;
+      if (hoveredNodes !== [node.id()])
+        props.onSave(graphId, 'hoveredNodes', [node.id()]);
+    });
+    cy.on('mouseout', 'node', evt => {
+      props.onSave(graphId, 'hoveredNodes', []);
+    });
+    if (props.onEdgeSelect) {
+      cy.on('select', 'edge', evt => {
+        const edge = evt.target;
+        if (events.current) {
+          edge.unselect();
+          props.onEdgeSelect(edge.id());
+        }
+      });
+      cy.on('unselect', 'edge', evt => {
+        if (events.current)
+          props.onEdgeSelect(undefined);
+      });
+    } else
+      cy.on('select', 'edge', evt => evt.target.unselect());
+    
     // add nodes 
-    cy.add(props.data);
+    cy.add(data);
 
     // load node positions
     if (positions) {
@@ -163,7 +160,7 @@ function Graph(props) {
     return () => {
       // save node positions
       const positions = {};
-      props.data.forEach(node => {
+      data.forEach(node => {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$(`#${nodeId}`).position();
       })
@@ -172,21 +169,13 @@ function Graph(props) {
       // remove nodes
       cy.nodes().remove();
     };
-  }, [props.projectId, graphId]);
-
-  // resize on bound changes
+  }, [projectId, graphId]);
+  
+  // marking nodes
   useEffect(() => {
-    cy.resize();
-  }, [bounds.current]);
-
-  // update
-  useEffect(() => {
-    // mark nodes
     events.current = false;
     cy.batch(() => {
       select([...selectedNodes, selectedEdge]);
-      addClass(suggestedNodes, 'suggested');
-      addClass(hoveredNodes, 'hovered');
     });
     function select(elementIds) {
       cy.nodes().unselect();
@@ -196,6 +185,14 @@ function Graph(props) {
           cy.$(`#${elementId}`).select();
       });
     }
+    events.current = true;
+  }, [selectedNodes, selectedEdge]);
+  useEffect(() => {
+    events.current = false;
+    cy.batch(() => {
+      addClass(suggestedNodes, 'suggested');
+      addClass(hoveredNodes, 'hovered');
+    });
     function addClass(nodeIds, className) {
       cy.nodes().removeClass(className);
       if (nodeIds) {
@@ -205,7 +202,15 @@ function Graph(props) {
       }
     }
     events.current = true;
+  }, [suggestedNodes, hoveredNodes]);
 
+  // resize on bound changes
+  useEffect(() => {
+    cy.resize();
+  }, [bounds.current]);
+
+  // update
+  useEffect(() => {
     // update bounds
     bounds.current = cyElem.current.getBoundingClientRect();
   });
