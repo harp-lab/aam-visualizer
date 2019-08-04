@@ -68,8 +68,13 @@ function Graph(props) {
   }
   const cyRef = useRef(cytoscape(config));
   const cy = cyRef.current;
-  const selectedNodes = metadata.selectedNodes || [];
-  const { positions, selectedEdge, hoveredNodes, suggestedNodes } = metadata;
+  const {
+    positions,
+    selectedNodes = [], 
+    selectedEdge = [],
+    hoveredNodes = [],
+    suggestedNodes = []
+  } = metadata;
 
   
   // mount/unmount
@@ -162,7 +167,7 @@ function Graph(props) {
       const positions = {};
       data.forEach(node => {
         const nodeId = node.data.id;
-        positions[nodeId] = cy.$(`#${nodeId}`).position();
+        positions[nodeId] = cy.$id(nodeId).position();
       })
       props.onSave(graphId, 'positions', positions);
 
@@ -177,31 +182,52 @@ function Graph(props) {
     cy.batch(() => {
       select([...selectedNodes, selectedEdge]);
     });
-    function select(elementIds) {
-      cy.nodes().unselect();
-      cy.edges().unselect();
-      elementIds.forEach(elementId => {
-        if (elementId)
-          cy.$(`#${elementId}`).select();
+    events.current = true;
+
+    function select(elemIds) {
+      elemIds.forEach(elemId => {
+        cy.$id(elemId).select();
       });
     }
-    events.current = true;
+    function unselect(elemIds) {
+      elemIds.forEach(elemId => {
+        cy.$id(elemId).unselect();
+      })
+    }
+
+    return () => {
+      events.current = false;
+      unselect([...selectedNodes, selectedEdge]);
+      events.current = true;
+    };
   }, [selectedNodes, selectedEdge]);
   useEffect(() => {
     events.current = false;
     cy.batch(() => {
-      addClass(suggestedNodes, 'suggested');
       addClass(hoveredNodes, 'hovered');
+      addClass(suggestedNodes, 'suggested');
     });
-    function addClass(nodeIds, className) {
-      cy.nodes().removeClass(className);
-      if (nodeIds) {
-        nodeIds.forEach(nodeId => {
-          cy.$(`#${nodeId}`).addClass(className);
-        })
-      }
-    }
     events.current = true;
+
+    function addClass(nodeIds, className) {
+      nodeIds.forEach(nodeId => {
+        cy.$id(nodeId).addClass(className);
+      })
+    }
+    function removeClass(nodeIds, className) {
+      nodeIds.forEach(nodeId => {
+        cy.$id(nodeId).removeClass(className);
+      })
+    }
+    
+    return () => {
+      events.current = false;
+      cy.batch(() => {
+        removeClass(hoveredNodes, 'hovered');
+        removeClass(suggestedNodes, 'suggested');
+      })
+      events.current = true;
+    };
   }, [suggestedNodes, hoveredNodes]);
 
   // resize on bound changes
