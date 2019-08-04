@@ -12,6 +12,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
@@ -319,12 +320,26 @@ function EnvItem(props) {
         .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const { astString, env } = vals[valId];
+          const { env, type, astString, valString } = vals[valId];
+          let string;
+          switch (type) {
+            case 'closure':
+              string = astString;
+              break;
+            case 'bool':
+              string = valString;
+              break;
+            default:
+              string = `'${type}' value type unsupported`;
+              break;
+          }
           return (
             <Typography key={ valId }>
-              <Tooltip title='View environment'>
-                <Link onClick={ () => onAdd(env) }>{ astString }</Link>
-              </Tooltip>
+              { string }
+              <Button
+                icon={ <AddCircleIcon /> }
+                tooltip='View environment'
+                onClick={ () => onAdd(env) } />
             </Typography>);
         });
       return [entry.varString, `[ ${instrEntries} ]`, storeEntries]
