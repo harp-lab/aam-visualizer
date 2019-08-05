@@ -8,11 +8,12 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 
-import Theme from './Theme';
+import DropMenu from './DropMenu';
 import Loading from './Loading';
 import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
+import Theme from './Theme';
 import ProjectData from './data/Project'
 
 const VIEWS = {
@@ -140,19 +141,17 @@ function App(props) {
     setSnackbarQueue(rest);
   }
 
+  function logout() {
+    setUserId(undefined);
+    setView(VIEWS.user);
+  }
+
   function ProjectListButton(props) {
     return <AppBarButton
       content='project list'
       onClick={ deselectProject } />;
   }
-  function LogoutButton(props) {
-    return <AppBarButton
-      content='logout'
-      onClick={ () => {
-        setUserId(undefined);
-        setView(VIEWS.user);
-      }} />;
-  }
+
   let viewElem, title, leftElems, rightElems;
   switch (view) {
     case VIEWS.user:
@@ -166,11 +165,14 @@ function App(props) {
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
-          <LogoutButton />
           <ImportButton onImport={ importProject } />
           <AppBarButton
             content='new project'
             onClick={ createProject } />
+          <DropMenu
+            items={ [
+              { label: 'Logout', callback: logout }
+            ] } />
         </Fragment>);
       if (load)
         viewElem = <Loading status='Getting projects' variant='linear'/>;
@@ -193,10 +195,13 @@ function App(props) {
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
-          <LogoutButton />
           <AppBarButton
             content='fork project'
             onClick={ () => forkProject(selectedProjectId) } />
+          <DropMenu
+            items={ [
+              { label: 'Logout', callback: logout }
+            ] } />
         </Fragment>);
       viewElem = <Project
         userId={ userId }
