@@ -4,19 +4,18 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
-import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import CallSplitIcon from '@material-ui/icons/CallSplit';
 import CancelIcon from '@material-ui/icons/Cancel';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Tooltip from '@material-ui/core/Tooltip';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
 
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+
+import DropMenu from './DropMenu';
 
 import ProjectData from './data/Project'
 
@@ -156,9 +155,11 @@ function ProjectList(props) {
         </Tooltip>);
     const actionsElem = (
       <ListItemSecondaryAction>
-        <ProjectMenu
-          onRename={ () => openRenameDialog(id) }
-          onExport={ () => exportProject(id) } />
+        <DropMenu
+          items={ [
+            {label: 'Rename', callback: () => openRenameDialog(id)},
+            {label: 'Export', callback: () => exportProject(id)}
+          ] } />
         <Tooltip title='Fork'>
           <IconButton onClick={ () => props.onFork(id) }>
             <CallSplitIcon />
@@ -199,42 +200,6 @@ function ProjectList(props) {
         { projectList }
       </List>
       { dialog }
-    </React.Fragment>);
-}
-
-function ProjectMenu(props) {
-  const [anchor, setAnchor] = useState(undefined);
-
-  function open(evt) { setAnchor(evt.currentTarget); }
-  function close() { setAnchor(undefined); }
-
-  return (
-    <React.Fragment>
-      <Tooltip title='More'>
-        <IconButton onClick={ open }>
-          <MoreHorizIcon />
-        </IconButton>
-      </Tooltip>
-
-      <Menu
-        anchorEl={ anchor }
-        open={ Boolean(anchor) }
-        onClose={ close } >
-        <MenuItem
-          onClick={ () => {
-            close();
-            props.onRename();
-          }}>
-          Rename
-        </MenuItem>
-        <MenuItem
-          onClick={ () => {
-            close();
-            props.onExport();
-          }}>
-          Export
-        </MenuItem>
-      </Menu>
     </React.Fragment>);
 }
 
