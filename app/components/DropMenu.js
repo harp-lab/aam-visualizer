@@ -4,14 +4,16 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Tooltip from '@material-ui/core/Tooltip';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 function DropMenu(props) {
-  const { items } = props;
+  const { items, vertical } = props;
   const [anchor, setAnchor] = useState(undefined);
 
   function open(evt) { setAnchor(evt.currentTarget); }
   function close() { setAnchor(undefined); }
 
+  const icon = vertical ? <MoreVertIcon /> : <MoreHorizIcon />;
   const elems = items.map(item => {
     const { label, callback } = item;
     return (
@@ -28,8 +30,10 @@ function DropMenu(props) {
   return (
     <Fragment>
       <Tooltip title='More'>
-        <IconButton onClick={ open }>
-          <MoreHorizIcon />
+        <IconButton
+          color='inherit'
+          onClick={ open }>
+          <MoreVertIcon />
         </IconButton>
       </Tooltip>
       <Menu
