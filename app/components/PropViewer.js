@@ -110,11 +110,15 @@ function ConfigsViewer(props) {
         </Panel>);
     }
 
+    const items = useContext(Context);
+
     const savedElement = Object.entries(configs)
       .filter(([configId, config]) => config.saved)
+      .filter(([configId, config]) => !['not found', 'non-func'].includes(items.configs[configId].form)) // TODO remove special state config filtering
       .map(generatePanel);
     const unsavedElement = Object.entries(configs)
       .filter(([configId, config]) => !config.saved && config.visible)
+      .filter(([configId, config]) => !['not found', 'non-func'].includes(items.configs[configId].form)) // TODO remove special state config filtering
       .map(generatePanel);
 
     element = savedElement.concat(unsavedElement);
