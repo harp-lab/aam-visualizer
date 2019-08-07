@@ -121,8 +121,8 @@ class Server {
       res.json(this.getProjectList(req.params.userId))
         .status(200).end();
     });
-    userRouter.get('/create', (req, res) => {
-      const projectId = this.createProject(req.params.userId);
+    userRouter.get('/create', async (req, res) => {
+      const projectId = await this.createProject(req.params.userId);
       res.json({ id: projectId })
         .status(201).end();
     });
@@ -167,21 +167,21 @@ class Server {
     });
   }
 
-  createProject(userId) {
+  async createProject(userId) {
     const projectId = `${Date.now()}`;
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - create`);
     this.projects[projectId] = new Project(userId);
+    await this.writeProject(projectId);
     return projectId;
   }
   async saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - save`);
     const project  = this.projects[projectId];
-    const name = data.name;
-    const code = data.code;
+    const { name, code } = data;
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        if (code)
+        if (code !== undefined)
           project.importCode(code);
       default:
         if (name)
