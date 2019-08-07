@@ -20,9 +20,9 @@ class Project {
     this.name = data.name;
     this.analysis = data.analysis;
     this.importCode(data.code);
-    if (data.graphs) {
+    if (data.items) {
       this.status = this.STATUSES.process;
-      this.importGraphs(data.graphs);
+      this.importItems(data.items);
       this.ast = data.ast;
     }
     this.status = data.status;
@@ -47,14 +47,14 @@ class Project {
         break;
     }
   }
-  importGraphs(graphs) {
+  importItems(items) {
     switch (this.status) {
       case this.STATUSES.process:
-        this.graphs = graphs;
+        this.items = items;
         this.status = this.STATUSES.done;
         break;
       default:
-        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project graphs import rejected - immutable');
+        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project items import rejected - immutable');
         break;
     }
   }

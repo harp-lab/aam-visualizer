@@ -64,12 +64,6 @@
   (hash-set* proj-hash
     'status "done"
     'items items
-    'store store
-    'graphs (hash-union (hash
-      'states (hash
-        'graph state-graph)
-      'funcs func-graph
-    ) func-detail-graphs)
     'ast code-ast))
 
 (define out
