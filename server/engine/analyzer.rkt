@@ -356,7 +356,7 @@
       [`(eval ,(ast/loc `(let . ,_) _ _ _) . ,_) i]
       [`(eval ,(ast/loc `(if . ,_) _ _ _) . ,_) i]
       [`(eval ,(? atomic?) . ,_) i]
-      [`(eval ,(ast/loc `(,e0 . ,_) _ _ _) . ,_) (take (cons e0 i) size)]
+      [`(eval ,(ast/loc `(,e0 . ,_) _ _ _) . ,_) (take (cons (cadr state) i) size)]
       [else i]))
   (define (tick2 i fi state) (cons fi fi))
   (list tick tick2))
