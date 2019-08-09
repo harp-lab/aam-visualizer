@@ -349,10 +349,11 @@
         'env (hash-ref env>id rho)
         'instr (hash-ref instr>id i)
         'kont (hash-ref kont>id kappa))]
-      [`(halt ,dn, rho)
+      [`(halt ,d, rho)
        (hash
         'id (hash-ref state>id s)
-        'form "not found"
+        'results (set-map d (lambda(v)(hash-ref val>id v)))
+        'form "halt"
         'env (hash-ref env>id rho))]
       [`(non-func ,clo)
        (hash
@@ -386,7 +387,7 @@
        (hash
         'id id
         'form "halt"
-        'result (set-map d (lambda(v)(hash-ref val>id v)))
+        'results (set-map d (lambda(v)(hash-ref val>id v)))
         'env (hash-ref env>id rho))]
       [`(,form .,_)
        (hash
@@ -406,10 +407,12 @@
   (define (make-config conf)
     (define id (hash-ref conf>id conf))
     (match conf
-      [`(halt . ,_)
+      [`(halt ,d, rho)
        (hash
         'id id
-        'form "halt")]
+        'results (set-map d (lambda(v)(hash-ref val>id v)))
+        'form "halt"
+        'env (hash-ref env>id rho))]
       [`(,(or 'exit 'no-return) ,lid)
        (define out-expr (hash-ref id>lambda lid))
        (hash
