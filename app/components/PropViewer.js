@@ -39,13 +39,13 @@ function PropViewer(props) {
 
     return (
       <SplitPane>
-        <Pane width="50%" overflow='auto'>
+        <Pane width="70%" overflow='auto'>
           <ConfigsViewer
             configs={ configs }
             onSave={ configs => props.onSave({ configs }) }
             onRefresh={ props.onRefreshEnvs } />
         </Pane>
-        <Pane width="50%" overflow='auto'>
+        <Pane width="30%" overflow='auto'>
           <EnvsViewer
             envs={ envs }
             onAdd={ addEnv }
@@ -83,7 +83,7 @@ function ConfigsViewer(props) {
   let element;
   if (configs) {
     function generatePanel([configId, config]) {
-      const { label, selected, saved } = config;
+      const { label, selected, saved, noItems } = config;
 
       const panelProps = {};
       if (saved)
@@ -103,7 +103,7 @@ function ConfigsViewer(props) {
       return (
         <Panel
           key={ configId }
-          label={ ( config.noItems ? label : `${label} (empty)`) }
+          label={ (noItems ? `${label} (empty)` : label) }
           { ...panelProps }
           onDelete={ () => deleteConfig(configId) }>
           <ConfigItem configId={ configId } />
@@ -325,6 +325,7 @@ function EnvItem(props) {
       const storeEntries = store[entry.addr]
         .map(valId => {
           const { env, type, astString, valString } = vals[valId];
+          
           let string;
           switch (type) {
             case 'closure':
@@ -337,13 +338,22 @@ function EnvItem(props) {
               string = `'${type}' value type unsupported`;
               break;
           }
+
+          let addEnvLink;
+          if (env)
+            addEnvLink = (
+              <Tooltip title='View environment'>
+                <Link onClick={ () => onAdd(env) }>
+                  <sup>
+                    { env }
+                  </sup>
+                </Link>
+              </Tooltip>);
+
           return (
             <Typography key={ valId }>
               { string }
-              <Button
-                icon={ <AddCircleIcon /> }
-                tooltip='View environment'
-                onClick={ () => onAdd(env) } />
+              { addEnvLink }
             </Typography>);
         });
       return [entry.varString, `[ ${instrEntries} ]`, storeEntries]

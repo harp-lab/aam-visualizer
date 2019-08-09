@@ -292,7 +292,7 @@ function Project(props) {
     }
     
     return (
-      <Pane height='50%' overflow='auto'>
+      <Pane height='40%' overflow='auto'>
         <CodeViewer
           id={ projectId }
           graphIds={ graphIds }
@@ -306,7 +306,7 @@ function Project(props) {
   }
   function renderPropViewer() {
     return (
-      <Pane height='50%' overflow='auto'>
+      <Pane height='60%' overflow='auto'>
         <PropViewer
           metadata={ project.metadata }
           onRefreshEnvs={ refreshEnvs }
