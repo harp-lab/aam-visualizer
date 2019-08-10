@@ -122,6 +122,14 @@ function Project(props) {
     refreshProps();
     save();
   }
+  function unselectNodes(graphId, nodeIds) {
+    const graph = project.graphs[graphId];
+    const nodes = graph.load('selectedNodes') || [];
+    const cleanedNodes = nodes.filter(node => !nodeIds.includes(node));
+    graph.save('selectedNodes', cleanedNodes);
+    refreshProps();
+    save();
+  }
   function selectMainNode(nodeId) {
     const selected = mainGraph.metadata.selectedNodes || [];
     if (nodeId && !selected.includes(nodeId)) {
