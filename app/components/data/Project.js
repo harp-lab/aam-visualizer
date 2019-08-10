@@ -71,7 +71,15 @@ class Project {
     const configs = {};
     Object.entries(items.configs)
       .forEach(([configId, config]) => {
-        const configPanel = new Panel(configId);
+        let syntax;
+        const states = items.configs[configId].states;
+        if (states) {
+          const stateId = states[0];
+          syntax = items.states[stateId].exprString;
+        }
+        const label = `${configId}: ${syntax}`;
+
+        const configPanel = new Panel(label);
 
         configPanel.noItems = true;
         configPanel.noEnvs = true;
