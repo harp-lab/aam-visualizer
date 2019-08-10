@@ -107,6 +107,13 @@ function Project(props) {
     refreshProps();
     save();
   }
+  function selectNodes(graphId, nodeIds) {
+    const graph = project.graphs[graphId];
+    const nodes = graph.load('selectedNodes') || [];
+    graph.save('selectedNodes', [...nodes, ...nodeIds]);
+    refreshProps();
+    save();
+  }
   function unselectNode(graphId, nodeId) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
@@ -300,7 +307,7 @@ function Project(props) {
           marks={ marks }
           selected={ selected }
           hovered={ hovered }
-          onNodeSelect={ selectNode }
+          onNodesSelect={ selectNodes }
           onCodeHover={ hoverNodes } />
       </Pane>);
   }
