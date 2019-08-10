@@ -110,7 +110,9 @@ function Project(props) {
   function selectNodes(graphId, nodeIds) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
-    graph.save('selectedNodes', [...nodes, ...nodeIds]);
+    //graph.save('selectedNodes', [...nodes, ...nodeIds]);
+    // TODO this temp fix for codeviewer not having node deselection
+    graph.save('selectedNodes', nodeIds);
     refreshProps();
     save();
   }
@@ -118,14 +120,6 @@ function Project(props) {
     const graph = project.graphs[graphId];
     const nodes = graph.load('selectedNodes') || [];
     const cleanedNodes = nodes.filter(node => node !== nodeId);
-    graph.save('selectedNodes', cleanedNodes);
-    refreshProps();
-    save();
-  }
-  function unselectNodes(graphId, nodeIds) {
-    const graph = project.graphs[graphId];
-    const nodes = graph.load('selectedNodes') || [];
-    const cleanedNodes = nodes.filter(node => !nodeIds.includes(node));
     graph.save('selectedNodes', cleanedNodes);
     refreshProps();
     save();
