@@ -179,9 +179,7 @@ function Graph(props) {
   // marking nodes
   useEffect(() => {
     events.current = false;
-    cy.batch(() => {
-      select([...selectedNodes, selectedEdge]);
-    });
+    select([...selectedNodes, selectedEdge]);
     events.current = true;
 
     function select(elemIds) {
@@ -203,32 +201,53 @@ function Graph(props) {
   }, [selectedNodes, selectedEdge]);
   useEffect(() => {
     events.current = false;
-    cy.batch(() => {
-      addClass(hoveredNodes, 'hovered');
-      addClass(suggestedNodes, 'suggested');
-    });
+    addClass(suggestedNodes, 'suggested');
     events.current = true;
-
-    function addClass(nodeIds, className) {
-      nodeIds.forEach(nodeId => {
-        cy.$id(nodeId).addClass(className);
-      })
-    }
-    function removeClass(nodeIds, className) {
-      nodeIds.forEach(nodeId => {
-        cy.$id(nodeId).removeClass(className);
-      })
-    }
     
     return () => {
       events.current = false;
-      cy.batch(() => {
-        removeClass(hoveredNodes, 'hovered');
-        removeClass(suggestedNodes, 'suggested');
-      })
+      removeClass(suggestedNodes, 'suggested');
       events.current = true;
     };
-  }, [suggestedNodes, hoveredNodes]);
+  }, [suggestedNodes]);
+  useEffect(() => {
+    events.current = false;
+    addClass(hoveredNodes, 'hovered');
+    events.current = true;
+
+    return () => {
+      events.current = false;
+      removeClass(hoveredNodes, 'hovered');
+      events.current = true;
+    };
+  }, [hoveredNodes]);
+
+  function addClass(nodeIds, className) {
+    const nodes = cy.nodes();
+    const idFunc = node => node.id();
+    const callback = node => node.addClass(className);
+    perfArrayApply(nodes, nodeIds, idFunc, callback);
+  }
+  function removeClass(nodeIds, className) {
+    const nodes = cy.nodes();
+    const idFunc = node => node.id();
+    const callback = node => node.removeClass(className);
+    perfArrayApply(nodes, nodeIds, idFunc, callback);
+  }
+  function perfArrayApply(array, filter, idFunc, callback) {
+    let remElemIds = [...filter];
+    let i = 0;
+    while (i < array.length && remElemIds.length > 0) {
+      const elem = array[i];
+      const id = idFunc(elem);
+      const index = remElemIds.findIndex(elemId => elemId == id);
+      if (index !== -1) {
+        remElemIds.splice(index, 1);
+        callback(elem);
+      }
+      i++;
+    }
+  }
 
   // resize on bound changes
   useEffect(() => {
