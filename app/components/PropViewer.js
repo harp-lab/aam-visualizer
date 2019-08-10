@@ -55,7 +55,8 @@ function PropViewer(props) {
 }
 
 function ConfigsViewer(props) {
-  const configs = props.configs;
+  const { configs } = props;
+  const items = useContext(Context);
 
   function deleteConfig(configId) {
     configs[configId].hide();
