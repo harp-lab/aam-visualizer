@@ -48,8 +48,9 @@ function CodeViewer(props) {
     // only select node if unambiguous
     const mark = marks[markId];
     const nodes = mark.nodes;
-    const graphIds = Object.keys(mark.nodes);
-    if (graphIds.length == 1) {
+    const graphIds = Object.keys(mark.nodes)
+      .filter(graphId => graphId !== 'funcs');
+    if (graphIds.length > 0) {
       const graphId = graphIds[0];
       const graphNodes = nodes[graphId];
       props.onNodesSelect(graphId, graphNodes);
