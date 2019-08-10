@@ -9,11 +9,14 @@ function CodeViewer(props) {
   const { hovered, selected, theme } = props;
 
   // filter marks that do not have linked nodes
-  const marks = {};
-  Object.entries(props.marks).forEach(([id, mark]) => {
-    if (Object.keys(mark.nodes).length > 0)
-      marks[id] = mark;
-  });
+  const marks = Object.entries(props.marks)
+    .reduce((acc, curVal) => {
+      const [id, mark] = curVal;
+      const graphIds = Object.keys(mark.nodes);
+      if (graphIds.length > 0)
+        acc[id] = mark;
+      return acc;
+    }, {});
 
   function getMark(line, ch) {
     const pos = new CodePos(line, ch);
@@ -49,8 +52,7 @@ function CodeViewer(props) {
     if (graphIds.length == 1) {
       const graphId = graphIds[0];
       const graphNodes = nodes[graphId];
-      if (graphNodes.length == 1)
-        props.onNodeSelect(graphId, graphNodes[0]);
+      props.onNodesSelect(graphId, graphNodes);
     }
   }
   
