@@ -42,6 +42,7 @@ function PropViewer(props) {
         <Pane width="70%" overflow='auto'>
           <ConfigsViewer
             configs={ configs }
+            onHover={ props.onHover }
             onSave={ configs => props.onSave({ configs }) }
             onRefresh={ props.onRefreshEnvs } />
         </Pane>
@@ -105,6 +106,8 @@ function ConfigsViewer(props) {
         <Panel
           key={ configId }
           label={ (noItems ? `${label} (empty)` : label) }
+          onMouseOver={ () => props.onHover([configId]) }
+          onMouseOut={ () => props.onHover([]) }
           { ...panelProps }
           onDelete={ () => deleteConfig(configId) }>
           <ConfigItem configId={ configId } />
@@ -177,6 +180,8 @@ function EnvsViewer(props) {
         <Panel
           key={ envId }
           label={ items.envs[envId].length > 0 ? label : `${label} (empty)` }
+          onMouseOver={ () => {} } // TODO implement env hovering
+          onMouseOut={ () => {} }
           { ...panelProps }
           onDelete={ () => deleteEnv(envId) }>
           <EnvItem
@@ -253,7 +258,9 @@ function Panel(props) {
     tooltip='Delete'
     onClick={ props.onDelete } />;
   return (
-    <ExpansionPanel>
+    <ExpansionPanel
+      onMouseOver={ () => props.onMouseOver() }
+      onMouseOut={ () => props.onMouseOut() } >
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
         classes={{ content: props.classes.content }}>
