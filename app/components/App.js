@@ -169,10 +169,9 @@ function App(props) {
           <AppBarButton
             content='new project'
             onClick={ createProject } />
-          <DropMenu
-            items={ [
-              { label: 'Logout', callback: logout }
-            ] } />
+          <AppBarButton
+            content='logout'
+            onClick={ logout } />
         </Fragment>);
       if (load)
         viewElem = <Loading status='Getting projects' variant='linear'/>;
@@ -193,15 +192,20 @@ function App(props) {
       const project = getSelectedProject();
       title = project.name || selectedProjectId;
       leftElems = <ProjectListButton />;
+      /* for expansion
+        <DropMenu
+          items={ [
+            { label: 'Logout', callback: logout }
+          ] } />
+      */
       rightElems = (
         <Fragment>
           <AppBarButton
             content='fork project'
             onClick={ () => forkProject(selectedProjectId) } />
-          <DropMenu
-            items={ [
-              { label: 'Logout', callback: logout }
-            ] } />
+          <AppBarButton
+            content='logout'
+            onClick={ logout } />
         </Fragment>);
       viewElem = <Project
         userId={ userId }
@@ -270,7 +274,8 @@ function AppBarButton(props) {
     <Button
       onClick={ onClick }
       color='inherit'
-      variant='outlined'>
+      variant='outlined'
+      style={{ margin: Theme.spacing(1) }}>
       { content }
     </Button>);
 }
