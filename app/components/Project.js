@@ -319,6 +319,7 @@ function Project(props) {
         <PropViewer
           metadata={ project.metadata }
           onRefreshEnvs={ refreshEnvs }
+          onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
           onSave={ saveMetadata } />
       </Pane>);
   }
