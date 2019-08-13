@@ -126,8 +126,8 @@
           (json->ast jast (last parts) bindings last-lam-id)]
          [_
           (make-apply)])]))
-  (define ast (json->ast jast start (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
+  (define ast (json->ast jast start (hash) 'main))
+  (hash-set! id>lambda 'main (ast/loc `(lambda () ,ast) 'main (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 
@@ -173,8 +173,8 @@
        this-lam]
       [(? list? es)
        (ast/loc (map (lambda (ei) (syntax->ast ei bindings last-lam-id)) es) 'apply (gensym 'apply) last-lam-id)]))
-  (define ast (syntax->ast syntax (hash) 'top))
-  (hash-set! id>lambda 'top (ast/loc `(lambda () ,ast) 'top (ast/loc-loc ast) 'none))
+  (define ast (syntax->ast syntax (hash) 'main))
+  (hash-set! id>lambda 'main (ast/loc `(lambda () ,ast) 'main (ast/loc-loc ast) 'none))
   (list ast id>lambda))
   
 (define (store-include store key values)
@@ -405,7 +405,7 @@
              (for/set ([kont (hash-ref sigmak addr)])
                (match-define (list lid e+ i+)
                  (match kont
-                   ['halt (list 'top (lbody id>lambda 'top) '())]
+                   ['halt (list 'main (lbody id>lambda 'main) '())]
                    [(cons `(frame ,_ ,e ,_ ,_ ,_ ,_ ,fi) _) (list (ast/loc-lambda-id e) e fi)]
                    [addr
                     (define lid (car addr))
@@ -431,7 +431,7 @@
           (for/set ([kont (hash-ref sigmak addr)])
             (match-define (list lid e+ i+)
               (match kont
-                ['halt (list 'top (lbody id>lambda 'top) '())]
+                ['halt (list 'main (lbody id>lambda 'main) '())]
                 [(cons `(frame ,_ ,e ,_ ,_ ,_ ,_ ,fi) _) (list (ast/loc-lambda-id e) e fi)]
                 [addr
                  (define lid (car addr))
