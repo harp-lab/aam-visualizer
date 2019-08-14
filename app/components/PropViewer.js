@@ -310,11 +310,20 @@ function ConfigItem(props) {
     entries = config.states
       .map(stateId => {
         const state = states[stateId];
-        const instrEntries = instr[state.instr]
-          .exprStrings.join(', ');
-        const kontEntries = konts[state.kont].string
-          .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-        return [state.exprString, `[ ${instrEntries} ]`, kontEntries]
+        let entry;
+        switch (state.form) {
+          case 'halt':
+            entry = [];
+            break;
+          default:
+            const instrEntries = instr[state.instr]
+              .exprStrings.join(', ');
+            const kontEntries = konts[state.kont].string
+              .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
+            entry = [state.exprString, `[ ${instrEntries} ]`, kontEntries];
+            break;
+        }
+        return entry;
       });
   return <Item
     labels={ labels }
