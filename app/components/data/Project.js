@@ -80,12 +80,12 @@ class Project {
             case 'halt':
               const results = state.results
               .map(resultId => {
-                const { type, astString, valString } = items.vals[resultId];
+                const { type, name, valString } = items.vals[resultId];
 
                 let string;
                 switch (type) {
                   case 'closure':
-                    string = astString;
+                    string = name;
                     break;
                   case 'bool':
                     string = valString;

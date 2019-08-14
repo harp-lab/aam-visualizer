@@ -355,12 +355,12 @@ function EnvItem(props) {
         .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const { env, type, astString, valString } = vals[valId];
+          const { env, type, name, valString } = vals[valId];
           
           let string;
           switch (type) {
             case 'closure':
-              string = astString;
+              string = name;
               break;
             case 'bool':
               string = valString;
