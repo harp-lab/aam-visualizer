@@ -302,7 +302,7 @@ function Button(props) {
 
 function ConfigItem(props) {
   const items = useContext(Context);
-  const labels = ['syntax', 'instr', 'stack'];
+  const labels = ['syntax', 'instr', 'stack', 'env'];
   const config = items.configs[props.configId];
   let entries = [];
   if (config.states)
@@ -317,27 +317,19 @@ function ConfigItem(props) {
           default:
             const instrEntries = items.instr[instr]
               .exprStrings.join(', ');
-            const instrString = `[ ${instrEntries} ]`;
-            let addEnvLink;
+            let envElem;
             if (env)
-              addEnvLink = (
+              envElem = (
                 <Tooltip title='View environment'>
                   <Link onClick={ () => onAdd(env) }>
-                    <sup>
-                      { env }
-                    </sup>
+                    { env }
                   </Link>
                 </Tooltip>);
-            const instrElem = (
-              <Fragment>
-                { instrString }
-                { addEnvLink }
-              </Fragment>);
 
             const kontEntries = items.konts[kont].string
               .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
 
-            entry = [exprString, instrElem, kontEntries];
+            entry = [exprString, `[ ${instrEntries} ]`, kontEntries, envElem];
             break;
         }
         return entry;
