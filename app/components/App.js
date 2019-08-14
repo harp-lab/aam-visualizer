@@ -119,6 +119,30 @@ function App(props) {
     project.import(data);
     saveLocalProject(projectId, project);
   }
+  async function exportProject(projectId) {
+    const project = projects[projectId];
+    await getProjectData(projectId);
+
+    // get project data
+    const data = project.export();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+
+    // create elem
+    const href = URL.createObjectURL(blob);
+    const file = `aam-vis-${projectId}.json`
+    const elem = document.createElement('a');
+    Object.assign(elem, {
+      href,
+      download: file
+    });
+    document.body.appendChild(elem);
+    elem.click();
+
+    // cleanup
+    elem.remove();
+    URL.revokeObjectURL(href);
+  }
 
   function getSelectedProject() { return projects[selectedProjectId]; }
   function selectProject(projectId) {
@@ -185,7 +209,7 @@ function App(props) {
             onFork={ forkProject }
             onCancel={ cancelProject }
             onDelete={ deleteProject }
-            onGet={ getProjectData }
+            onExport={ exportProject }
             onLoad={ setLoad } />;
       break;
     case VIEWS.project:
@@ -203,6 +227,9 @@ function App(props) {
           <AppBarButton
             content='fork project'
             onClick={ () => forkProject(selectedProjectId) } />
+          <AppBarButton
+            content='export project'
+            onClick={ () => exportProject(selectedProjectId) } />
           <AppBarButton
             content='logout'
             onClick={ logout } />
