@@ -75,7 +75,31 @@ class Project {
         const states = items.configs[configId].states;
         if (states) {
           const stateId = states[0];
-          syntax = items.states[stateId].exprString;
+          const state = items.states[stateId];
+          switch (state.form) {
+            case 'halt':
+              const results = state.results
+              .map(resultId => {
+                const { type, astString, valString } = items.vals[resultId];
+
+                let string;
+                switch (type) {
+                  case 'closure':
+                    string = astString;
+                    break;
+                  case 'bool':
+                    string = valString;
+                    break;
+                }
+                return string;
+              })
+              .join(', ');
+              syntax = `[ ${results} ]`
+              break;
+            default:
+              syntax = state.exprString;
+              break;
+          }
         }
         const label = `${configId}: ${syntax}`;
 
