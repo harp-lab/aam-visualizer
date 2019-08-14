@@ -42,6 +42,7 @@ function PropViewer(props) {
         <Pane width="70%" overflow='auto'>
           <ConfigsViewer
             configs={ configs }
+            onAdd={ addEnv }
             onHover={ props.onHover }
             onSave={ configs => props.onSave({ configs }) }
             onRefresh={ props.onRefreshEnvs } />
@@ -110,7 +111,9 @@ function ConfigsViewer(props) {
           onMouseOut={ () => props.onHover([]) }
           { ...panelProps }
           onDelete={ () => deleteConfig(configId) }>
-          <ConfigItem configId={ configId } />
+          <ConfigItem
+            configId={ configId }
+            onAdd={ props.onAdd } />
         </Panel>);
     }
 
@@ -302,8 +305,10 @@ function Button(props) {
 
 function ConfigItem(props) {
   const items = useContext(Context);
+  const { configId, onAdd } = props;
+
   const labels = ['syntax', 'instr', 'stack', 'env'];
-  const config = items.configs[props.configId];
+  const config = items.configs[configId];
   let entries = [];
   if (config.states)
     entries = config.states
