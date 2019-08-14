@@ -303,24 +303,41 @@ function Button(props) {
 function ConfigItem(props) {
   const items = useContext(Context);
   const labels = ['syntax', 'instr', 'stack'];
-  const { configs, states, instr, konts } = items;
-  const config = configs[props.configId];
+  const config = items.configs[props.configId];
   let entries = [];
   if (config.states)
     entries = config.states
       .map(stateId => {
-        const state = states[stateId];
+        const { form, exprString, instr, kont, env } = items.states[stateId];
         let entry;
-        switch (state.form) {
+        switch (form) {
           case 'halt':
             entry = [];
             break;
           default:
-            const instrEntries = instr[state.instr]
+            const instrEntries = items.instr[instr]
               .exprStrings.join(', ');
-            const kontEntries = konts[state.kont].string
+            const instrString = `[ ${instrEntries} ]`;
+            let addEnvLink;
+            if (env)
+              addEnvLink = (
+                <Tooltip title='View environment'>
+                  <Link onClick={ () => onAdd(env) }>
+                    <sup>
+                      { env }
+                    </sup>
+                  </Link>
+                </Tooltip>);
+            const instrElem = (
+              <Fragment>
+                { instrString }
+                { addEnvLink }
+              </Fragment>);
+
+            const kontEntries = items.konts[kont].string
               .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-            entry = [state.exprString, `[ ${instrEntries} ]`, kontEntries];
+
+            entry = [exprString, instrElem, kontEntries];
             break;
         }
         return entry;
