@@ -92,30 +92,6 @@ function ProjectList(props) {
       body: JSON.stringify({ name })
     });
   }
-  async function exportProject(projectId) {
-    const project = projects[projectId];
-    await props.onGet(projectId);
-
-    // get project data
-    const data = project.export();
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-
-    // create elem
-    const href = URL.createObjectURL(blob);
-    const file = `aam-vis-${projectId}.json`
-    const elem = document.createElement('a');
-    Object.assign(elem, {
-      href,
-      download: file
-    });
-    document.body.appendChild(elem);
-    elem.click();
-
-    // cleanup
-    elem.remove();
-    URL.revokeObjectURL(href);
-  }
 
   const projectList = Object.entries(projects).map(([id, project]) => {
     const analysisElem = (
@@ -158,7 +134,7 @@ function ProjectList(props) {
         <DropMenu
           items={ [
             {label: 'Rename', callback: () => openRenameDialog(id)},
-            {label: 'Export', callback: () => exportProject(id)}
+            {label: 'Export', callback: () => props.onExport(id)}
           ] } />
         <Tooltip title='Fork'>
           <IconButton onClick={ () => props.onFork(id) }>
