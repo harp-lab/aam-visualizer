@@ -407,12 +407,16 @@
   (define (make-config conf)
     (define id (hash-ref conf>id conf))
     (match conf
-      [`(halt ,d, rho)
+      [(or
+        `(halt ,d, rho)
+        `(state (halt ,d ,rho)))
        (hash
         'id id
         'results (set-map d (lambda(v)(hash-ref val>id v)))
+        'env (hash-ref env>id rho)
+        'astLink (list)
         'form "halt"
-        'env (hash-ref env>id rho))]
+        'states (list (hash-ref state>id `(halt ,d ,rho))))]
       [`(,(or 'exit 'no-return) ,lid)
        (define out-expr (hash-ref id>lambda lid))
        (hash
