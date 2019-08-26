@@ -22,6 +22,8 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withTheme from '@material-ui/styles/withTheme';
 import withStyles from '@material-ui/styles/withStyles';
+import makeStyles from '@material-ui/styles/makeStyles';
+import createStyles from '@material-ui/styles/createStyles';
 
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -266,7 +268,10 @@ function Panel(props) {
       onMouseOut={ () => props.onMouseOut() } >
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
-        classes={{ content: props.classes.content }}>
+        classes={{
+          root: props.classes.root,
+          content: props.classes.content
+        }}>
         { selectButton }
         { saveButton }
         { deleteButton }
@@ -275,9 +280,13 @@ function Panel(props) {
       <ExpansionPanelDetails>{ props.children }</ExpansionPanelDetails>
     </ExpansionPanel>);
 }
-Panel = withStyles({
+Panel = withStyles(theme => ({
+  root: {
+    '&:hover': { backgroundColor: theme.palette.hover.light }
+  },
   content: { alignItems: 'center' }
-})(Panel);
+}))(Panel);
+
 function Button(props) {
   const { icon, tooltip, disabled, onClick } = props;
   const iconButtonProps = {};

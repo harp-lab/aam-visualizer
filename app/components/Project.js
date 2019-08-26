@@ -76,7 +76,7 @@ function Project(props) {
       case 200:
         const data = await res.json();
         project.import(data);
-        props.onSave(project);
+        save();
         break;
       case 204:
         timeout.current = setTimeout(() => getGraphs(), 5000);
