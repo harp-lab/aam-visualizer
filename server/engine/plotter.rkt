@@ -285,11 +285,33 @@
         'name (~a (car (get-li e)))
         'env (hash-ref env>id rho))]))
 
-  ;hash - temporary
+  ;hash forms(halt,frame,addr)
   (define (make-kont k)
-    (hash
-     'string (print-k k kstore)))
- 
+    (define descs (print-k k kstore))
+    (match k
+      ['halt
+       (hash
+        'form "halt"
+        'descs descs)]
+      [(cons `(frame ,cat ,e ,_vals ,_exps ,_other ,env ,instr) k)
+       (hash
+        'form "frame"
+        'descs descs
+        'type (~a cat)
+        'expr (ast-id e)
+        'exprString (~a (only-syntax e))
+        'env (hash-ref env>id env)
+        'instr (hash-ref instr>id instr)
+        'kont (hash-ref kont>id k))]
+      [addr
+       (hash
+        'form "addr"
+        'descs descs
+        'func (hash-ref func>id (car addr))
+        'env (hash-ref env>id (cadr addr))
+        'konts (set-map
+                (hash-ref kstore addr)
+                (lambda(k)(hash-ref kont>id k))))]))            
 
   ;store-entries are hash addr-id > (list val-id...)
   
