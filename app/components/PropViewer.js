@@ -22,6 +22,8 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withTheme from '@material-ui/styles/withTheme';
 import withStyles from '@material-ui/styles/withStyles';
+import makeStyles from '@material-ui/styles/makeStyles';
+import createStyles from '@material-ui/styles/createStyles';
 
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -39,7 +41,7 @@ function PropViewer(props) {
 
     return (
       <SplitPane>
-        <Pane width="70%" overflow='auto'>
+        <Pane width="50%" overflow='auto'>
           <ConfigsViewer
             configs={ configs }
             onAdd={ addEnv }
@@ -47,7 +49,7 @@ function PropViewer(props) {
             onSave={ configs => props.onSave({ configs }) }
             onRefresh={ props.onRefreshEnvs } />
         </Pane>
-        <Pane width="30%" overflow='auto'>
+        <Pane width="50%" overflow='auto'>
           <EnvsViewer
             envs={ envs }
             onAdd={ addEnv }
@@ -266,7 +268,10 @@ function Panel(props) {
       onMouseOut={ () => props.onMouseOut() } >
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
-        classes={{ content: props.classes.content }}>
+        classes={{
+          root: props.classes.root,
+          content: props.classes.content
+        }}>
         { selectButton }
         { saveButton }
         { deleteButton }
@@ -275,9 +280,13 @@ function Panel(props) {
       <ExpansionPanelDetails>{ props.children }</ExpansionPanelDetails>
     </ExpansionPanel>);
 }
-Panel = withStyles({
+Panel = withStyles(theme => ({
+  root: {
+    '&:hover': { backgroundColor: theme.palette.hover.light }
+  },
   content: { alignItems: 'center' }
-})(Panel);
+}))(Panel);
+
 function Button(props) {
   const { icon, tooltip, disabled, onClick } = props;
   const iconButtonProps = {};
@@ -307,13 +316,13 @@ function ConfigItem(props) {
   const items = useContext(Context);
   const { configId, onAdd } = props;
 
-  const labels = ['syntax', 'instr', 'stack', 'env'];
+  const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
   let entries = [];
   if (config.states)
     entries = config.states
       .map(stateId => {
-        const { form, exprString, instr, kont, env } = items.states[stateId];
+        const { form, instr, kont, env } = items.states[stateId];
         let entry;
         switch (form) {
           case 'halt':
@@ -334,7 +343,7 @@ function ConfigItem(props) {
             const kontEntries = items.konts[kont].string
               .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
 
-            entry = [exprString, `[ ${instrEntries} ]`, kontEntries, envElem];
+            entry = [`[ ${instrEntries} ]`, kontEntries, envElem];
             break;
         }
         return entry;
