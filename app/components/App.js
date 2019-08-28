@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useRef } from 'react';
+import React, { Fragment, useState, useEffect, useRef, useContext } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
@@ -8,6 +8,7 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 
+import Store, { StoreContext, useActions } from './Store';
 import DropMenu from './DropMenu';
 import Loading from './Loading';
 import Login from './Login';
@@ -23,13 +24,23 @@ const VIEWS = {
   project: 'project'
 };
 
+function AppWithStore(props) {
+  return (
+    <Store>
+      <App />
+    </Store>);
+}
 function App(props) {
   const [load, setLoad] = useState(false);
   const [view, setView] = useState(VIEWS.user);
   const [snackbarQueue, setSnackbarQueue] = useState([]);
   const [userId, setUserId] = useState(undefined);
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
-  const [projects, setProjects] = useState({});
+
+  const { store, dispatch } = useContext(StoreContext);
+  const { setProjects } = useActions(store, dispatch);
+  
+  const projects = store.projects;
   const refProjects = useRef(projects);
 
   useEffect(() => { refProjects.current = projects; });
@@ -83,7 +94,7 @@ function App(props) {
 
     // fork project
     const forkProjectId = await createProject();
-    const forkProject = refProjects.current[forkProjectId];
+    const forkProject = projects[forkProjectId];
     forkProject.code = projects[projectId].code;
     saveLocalProject(forkProjectId, forkProject);
     selectProject(forkProjectId);
@@ -153,10 +164,13 @@ function App(props) {
     setSelectedProjectId(undefined);
     setView(VIEWS.list);
   }
-  function saveLocalProject(projectId, project) { setProjects({...refProjects.current, [projectId]: project}); }
+  function saveLocalProject(projectId, project) {
+    projects[projectId] = project;
+    setProjects(projects);
+  }
   function deleteLocalProject(projectId) {
-    const {[projectId]: _, ...rest} = refProjects.current;
-    setProjects(rest);
+    delete projects[projectId];
+    setProjects(projects);
   }
 
   function queueSnackbar(message) { setSnackbarQueue([...snackbarQueue, message]); }
@@ -360,4 +374,4 @@ function NotifySnackbar(props) {
     anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }} />;
 }
 
-export default App;
+export default AppWithStore;

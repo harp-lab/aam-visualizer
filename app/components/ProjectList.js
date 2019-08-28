@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -17,6 +17,7 @@ import Button from '@material-ui/core/Button';
 
 import DropMenu from './DropMenu';
 
+import { StoreContext, useActions } from './Store';
 import ProjectData from './data/Project'
 
 function ProjectList(props) {
@@ -24,7 +25,10 @@ function ProjectList(props) {
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
-  const { userId, projects } = props;
+  const { userId } = props;
+  const { store, dispatch } = useContext(StoreContext);
+  const { setProjects } = useActions(store, dispatch);
+  const projects = store.projects;
 
   // mount/unmount
   useEffect(() => {
@@ -33,6 +37,8 @@ function ProjectList(props) {
       clearTimeout(timeout.current);
     };
   }, []);
+
+  // solution to bug, clear timeout when store is updated and reset
 
   async function getProjectList() {
     const res = await fetch(`/api/${userId}/all`, { method: 'GET' });
@@ -63,7 +69,7 @@ function ProjectList(props) {
           timeout.current = setTimeout(getProjectList, 1000);
 
         props.onLoad(false);
-        props.onProjectsUpdate(updatedProjects);
+        setProjects(updatedProjects);
         break;
       default:
         props.onLoad(true);
