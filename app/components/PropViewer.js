@@ -41,7 +41,7 @@ function PropViewer(props) {
 
     return (
       <SplitPane>
-        <Pane width="70%" overflow='auto'>
+        <Pane width="50%" overflow='auto'>
           <ConfigsViewer
             configs={ configs }
             onAdd={ addEnv }
@@ -49,7 +49,7 @@ function PropViewer(props) {
             onSave={ configs => props.onSave({ configs }) }
             onRefresh={ props.onRefreshEnvs } />
         </Pane>
-        <Pane width="30%" overflow='auto'>
+        <Pane width="50%" overflow='auto'>
           <EnvsViewer
             envs={ envs }
             onAdd={ addEnv }
@@ -316,13 +316,13 @@ function ConfigItem(props) {
   const items = useContext(Context);
   const { configId, onAdd } = props;
 
-  const labels = ['syntax', 'instr', 'stack', 'env'];
+  const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
   let entries = [];
   if (config.states)
     entries = config.states
       .map(stateId => {
-        const { form, exprString, instr, kont, env } = items.states[stateId];
+        const { form, instr, kont, env } = items.states[stateId];
         let entry;
         switch (form) {
           case 'halt':
@@ -343,7 +343,7 @@ function ConfigItem(props) {
             const kontEntries = items.konts[kont].string
               .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
 
-            entry = [exprString, `[ ${instrEntries} ]`, kontEntries, envElem];
+            entry = [`[ ${instrEntries} ]`, kontEntries, envElem];
             break;
         }
         return entry;

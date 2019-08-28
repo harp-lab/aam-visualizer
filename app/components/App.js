@@ -39,11 +39,9 @@ function App(props) {
 
   const { store, dispatch } = useContext(StoreContext);
   const { setProjects } = useActions(store, dispatch);
-  
-  const projects = store.projects;
-  const refProjects = useRef(projects);
 
-  useEffect(() => { refProjects.current = projects; });
+  const projects = store.projects;
+
   useEffect(() => { setProjects({}) }, [userId]);
 
   async function createProject() {
