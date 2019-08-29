@@ -200,10 +200,17 @@ function Project(props) {
   }
   function refreshKonts() {
     const selectedNodes = subGraph.load('selectedNodes') || [];
-    const selectedKontIds = selectedNodes.map(nodeId => project.items.states[nodeId].kont);
+    const visibleKonts = [];
+    for (const nodeId of selectedNodes) {
+      const stateIds = project.items.configs[nodeId].states;
+      for (const stateId of stateIds) {
+        const kontId = project.items.states[stateId].kont;
+        visibleKonts.push(kontId);
+      }
+    }
     const { konts } = project.metadata;
     for (const [kontId, kont] of Object.entries(konts)) {
-      if (selectedKontIds.includes(kontId))
+      if (visibleKonts.includes(kontId))
         kont.show();
       else
         kont.hide();
