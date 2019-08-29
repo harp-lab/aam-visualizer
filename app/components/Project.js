@@ -6,6 +6,7 @@ import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
 import CodeViewer from './CodeViewer';
 import PropViewer from './PropViewer';
+import KontViewer from './KontViewer';
 import Context from './Context';
 import CodeMark from './data/CodeMark';
 
@@ -158,6 +159,7 @@ function Project(props) {
     if (subGraph) {
       refreshConfigs();
       refreshEnvs();
+      refreshKonts();
     }
   }
   function refreshConfigs() {
@@ -194,6 +196,17 @@ function Project(props) {
         env.show();
       else
         env.hide();
+    }
+  }
+  function refreshKonts() {
+    const selectedNodes = subGraph.load('selectedNodes') || [];
+    const selectedKontIds = selectedNodes.map(nodeId => project.items.states[nodeId].kont);
+    const { konts } = project.metadata;
+    for (const [kontId, kont] of Object.entries(konts)) {
+      if (selectedKontIds.includes(kontId))
+        kont.show();
+      else
+        kont.hide();
     }
   }
 
@@ -242,6 +255,10 @@ function Project(props) {
       onSave={ saveGraphMetadata } />;
     const codeViewerElem = renderCodeViewer();
     const propViewerElem = renderPropViewer();
+    const kontViewerElem = <KontViewer 
+      konts={ project.metadata.konts }
+      onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
+      onSave={ saveMetadata } />;
 
     return (
       <Context.Provider value={ project.items }>
@@ -251,7 +268,16 @@ function Project(props) {
           </Pane>
           <Pane width='60%'>
             <SplitPane horizontal>
-              { codeViewerElem }
+              <Pane height='40%'>
+                <SplitPane vertical>
+                  <Pane width='50%' overflow='auto'>
+                    { codeViewerElem }
+                  </Pane>
+                  <Pane width='50%'>
+                    { kontViewerElem }
+                  </Pane>
+                </SplitPane>
+              </Pane>
               { propViewerElem }
             </SplitPane>
           </Pane>
@@ -300,18 +326,15 @@ function Project(props) {
       return asts;
     }
     
-    return (
-      <Pane height='40%' overflow='auto'>
-        <CodeViewer
-          id={ projectId }
-          graphIds={ graphIds }
-          code={ project.code }
-          marks={ marks }
-          selected={ selected }
-          hovered={ hovered }
-          onNodesSelect={ selectNodes }
-          onCodeHover={ hoverNodes } />
-      </Pane>);
+    return <CodeViewer
+      id={ projectId }
+      graphIds={ graphIds }
+      code={ project.code }
+      marks={ marks }
+      selected={ selected }
+      hovered={ hovered }
+      onNodesSelect={ selectNodes }
+      onCodeHover={ hoverNodes } />;
   }
   function renderPropViewer() {
     return (

@@ -65,6 +65,7 @@ class Project {
   generateMetadata() {
     this.generateConfigs();
     this.generateEnvs();
+    this.generateKonts();
   }
   generateConfigs() {
     const items = this.items;
@@ -128,6 +129,13 @@ class Project {
     Object.keys(items.envs)
       .forEach(envId => envs[envId] = new Panel(envId));
     this.metadata.envs = envs;
+  }
+  generateKonts() {
+    const items = this.items;
+    const konts = {};
+    Object.keys(items.konts)
+      .forEach(kontId => konts[kontId] = new Panel(kontId));
+    this.metadata.konts = konts;
   }
   importAst(ast) {
     const items = this.items;
