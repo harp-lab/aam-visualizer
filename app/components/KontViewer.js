@@ -9,6 +9,8 @@ import Panel from './Panel';
 import PanelViewer from './PanelViewer';
 import Context from './Context';
 
+import LayerData from './data/Layer';
+
 function KontViewer(props) {
   const { konts } = props;
   
@@ -71,14 +73,25 @@ function KontViewer(props) {
 }
 function Kont(props) {
   const { kontId } = props;
-  const [layerList, setLayerList] = useState([[kontId]]);
+  const [layerList, setLayerList] = useState([new LayerData([kontId])]);
   const items = useContext(Context);
 
-  const layersElem = layerList.map((layer, index) => <KontLayer key={ index } kontIds={ layer } />);
+  function setNextLayer(index, layer) {
+    const remList = layerList.slice(0, index + 1);
+    const newList = [...remList, layer];
+    setLayerList(newList);
+  }
+
+  const layersElem = layerList.map((layer, index) => {
+    return <KontLayer
+      key={ index }
+      layer={ layer }
+      onSet={ layer => setNextLayer(index, layer) } />;
+  });
 
   const lastLayer = layerList[layerList.length - 1];
   let nextLayer = [];
-  for (const kontId of lastLayer) {
+  for (const kontId of lastLayer.cards) {
     const { form, kont, konts } = items.konts[kontId];
     switch (form) {
       case 'addr':
@@ -112,8 +125,13 @@ function Kont(props) {
     </div>);
 }
 function KontLayer(props) {
-  const { kontIds } = props;
-  const layerElem = kontIds.map(kontId => <KontCard key={ kontId } kontId={ kontId } />);
+  const { layer } = props;
+  const layerElem = layer.cards.map(kontId => {
+    return <KontCard
+      key={ kontId }
+      kontId={ kontId }
+      onSet={ props.onSet } />;
+  });
 
   return (
     <div style={{ display: 'flex' }}>
@@ -124,24 +142,30 @@ function KontCard(props) {
   const { kontId } = props;
   const items = useContext(Context);
 
-  const { form, type } = items.konts[kontId];
-  let content;
+  const { form, type, kont, konts } = items.konts[kontId];
+  let content, nextLayer;
   switch (form) {
     case 'addr':
       content = `${kontId} ${form}`;
+      nextLayer = new LayerData(konts);
       break;
     case 'frame':
       content = `${kontId} ${form} - ${type}`;
+      nextLayer = new LayerData([kont]);
       break;
     default:
       content = `${kontId} ${form}`;
       break;
   }
+  const cardProps = {};
+  if (nextLayer)
+    cardProps.onClick = () => props.onSet(nextLayer);
 
   return (
     <Card
       key={ kontId }
-      classes={{ root: props.classes.root }}>
+      classes={{ root: props.classes.root }}
+      { ...cardProps }>
       <CardContent>
         { content }
       </CardContent>
