@@ -4,6 +4,7 @@ class Layer {
     this.selected = undefined;
   }
   select(cardId) { this.selected = cardId }
+  unselect(cardId) { this.selected = undefined }
   get cards() { return this.cardIds }
 }
 

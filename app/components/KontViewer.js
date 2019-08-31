@@ -4,6 +4,7 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 
 import withStyles from '@material-ui/styles/withStyles';
+import withTheme from '@material-ui/styles/withTheme';
 
 import Panel from './Panel';
 import PanelViewer from './PanelViewer';
@@ -76,42 +77,27 @@ function Kont(props) {
   const [layerList, setLayerList] = useState([new LayerData([kontId])]);
   const items = useContext(Context);
 
-  function setNextLayer(index, layer) {
-    const remList = layerList.slice(0, index + 1);
-    const newList = [...remList, layer];
-    setLayerList(newList);
+  function setNextLayer(index, kontId, layer) {
+    const remList = clearNextLayers(index);
+    const currLayer = remList[remList.length - 1];
+    currLayer.select(kontId);
+    setLayerList([...remList, layer]);
   }
+  function unsetNextLayer(index, kontId) {
+    const remList = clearNextLayers(index);
+    const currLayer = remList[remList.length - 1];
+    currLayer.unselect(kontId);
+    setLayerList(remList);
+  }
+  function clearNextLayers(index) { return layerList.slice(0, index + 1) }
 
   const layersElem = layerList.map((layer, index) => {
     return <KontLayer
       key={ index }
       layer={ layer }
-      onSet={ layer => setNextLayer(index, layer) } />;
+      onSet={ (kontId, layer) => setNextLayer(index, kontId, layer) }
+      onUnset={ kontId => unsetNextLayer(index, kontId) } />;
   });
-
-  const lastLayer = layerList[layerList.length - 1];
-  let nextLayer = [];
-  for (const kontId of lastLayer.cards) {
-    const { form, kont, konts } = items.konts[kontId];
-    switch (form) {
-      case 'addr':
-        nextLayer = [...nextLayer, ...konts];
-        break;
-      case 'frame':
-        nextLayer.push(kont);
-        break;
-    }
-  }
-  function more() { setLayerList([...layerList, nextLayer]) }
-  let moreButton;
-  if (nextLayer.length > 0)
-    moreButton = (
-      <Button
-        onClick={ more }
-        color='inherit'
-        variant='outlined'>
-        more
-      </Button>);
 
   return (
     <div
@@ -121,7 +107,6 @@ function Kont(props) {
         width: '100%'
       }}>
       { layersElem }
-      { moreButton }
     </div>);
 }
 function KontLayer(props) {
@@ -130,7 +115,9 @@ function KontLayer(props) {
     return <KontCard
       key={ kontId }
       kontId={ kontId }
-      onSet={ props.onSet } />;
+      selected={ layer.selected == kontId }
+      onSet={ props.onSet }
+      onUnset={ props.onUnset } />;
   });
 
   return (
@@ -139,7 +126,7 @@ function KontLayer(props) {
     </div>);
 }
 function KontCard(props) {
-  const { kontId } = props;
+  const { kontId, selected, theme, classes } = props;
   const items = useContext(Context);
 
   const { form, type, kont, konts } = items.konts[kontId];
@@ -158,21 +145,36 @@ function KontCard(props) {
       break;
   }
   const cardProps = {};
-  if (nextLayer)
-    cardProps.onClick = () => props.onSet(nextLayer);
+  const style = {
+    flex: '1 1 auto',
+    backgroundColor: selected ? theme.palette.select.light : undefined,
+    cursor: nextLayer ? 'pointer' : undefined
+  };
+  if (nextLayer) {
+    style.cursor = 'pointer';
+    cardProps.classes = { root: classes.enableHover };
+  }
+  cardProps.style = style;
+
+  if (selected)
+    cardProps.onClick = () => props.onUnset(kontId);
+  else if (nextLayer)
+    cardProps.onClick = () => props.onSet(kontId, nextLayer);
 
   return (
     <Card
       key={ kontId }
-      classes={{ root: props.classes.root }}
       { ...cardProps }>
       <CardContent>
         { content }
       </CardContent>
     </Card>);
 }
-KontCard = withStyles({
-  root: { flex: '1 1 auto' }
-})(KontCard);
+KontCard = withStyles(theme => ({
+  enableHover: {
+    '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
+  }
+}), { withTheme: true })(KontCard);
+//KontCard = withTheme(KontCard);
 
 export default KontViewer;
