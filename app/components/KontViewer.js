@@ -1,14 +1,11 @@
-import React, { Fragment, useState, useContext } from 'react';
-import Button from '@material-ui/core/Button';
+import React, { useState, useContext } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-
 import withStyles from '@material-ui/styles/withStyles';
-import withTheme from '@material-ui/styles/withTheme';
 
+import Context from './Context';
 import Panel from './Panel';
 import PanelViewer from './PanelViewer';
-import Context from './Context';
 
 import LayerData from './data/Layer';
 
@@ -77,7 +74,6 @@ function KontViewer(props) {
 function Kont(props) {
   const { kontId } = props;
   const [layerList, setLayerList] = useState([new LayerData([kontId])]);
-  const items = useContext(Context);
 
   function setNextLayer(index, kontId, layer) {
     const remList = clearNextLayers(index);
