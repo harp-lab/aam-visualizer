@@ -153,19 +153,20 @@ function KontCard(props) {
   };
   const cardProps = { style };
 
-  if (nextLayer)
+  if (nextLayer) {
     cardProps.classes = { root: classes.enableHover };
 
-  if (selected)
-    cardProps.onClick = () => props.onUnset(kontId);
-  else if (nextLayer)
-    cardProps.onClick = () => props.onSet(kontId, nextLayer);
+    if (selected)
+      cardProps.onClick = () => props.onUnset(kontId);
+    else
+      cardProps.onClick = () => props.onSet(kontId, nextLayer);
+  }
 
   return (
     <Card
       key={ kontId }
       { ...cardProps }>
-      <CardContent>
+      <CardContent style={{ padding: 8 }}>
         { content }
       </CardContent>
     </Card>);

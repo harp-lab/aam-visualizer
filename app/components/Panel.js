@@ -18,7 +18,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withStyles from '@material-ui/styles/withStyles';
 
 function Panel(props) {
-  const { defaultExpanded } = props;
+  const { label, children, defaultExpanded, classes } = props;
   let saveButton, selectButton;
   if (props.onSave)
     saveButton = <Button
@@ -59,22 +59,38 @@ function Panel(props) {
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
         classes={{
-          root: props.classes.root,
-          content: props.classes.content
+          root: classes.panelRoot,
+          content: classes.panelContent,
+          expandIcon: classes.panelExpandIcon,
+          expanded: classes.panelExpanded
         }}>
         { selectButton }
         { saveButton }
         { deleteButton }
-        <Typography variant='body2'>{ props.label }</Typography>
+        <Typography variant='body2'>{ label }</Typography>
       </ExpansionPanelSummary>
-      <ExpansionPanelDetails>{ props.children }</ExpansionPanelDetails>
+      <ExpansionPanelDetails>{ children }</ExpansionPanelDetails>
     </ExpansionPanel>);
 }
 Panel = withStyles(theme => ({
-  root: {
-    '&:hover': { backgroundColor: theme.palette.hover.light }
+  panelRoot: {
+    minHeight: 0,
+    '&:hover': { backgroundColor: theme.palette.hover.light },
+    '&$panelExpanded': {
+      minHeight: 0
+    }
   },
-  content: { alignItems: 'center' }
+  panelContent: {
+    alignItems: 'center',
+    margin: '5px 0',
+    '&$panelExpanded': {
+      margin: '8px 0'
+    }
+  },
+  panelExpandIcon: {
+    padding: '5px 12px'
+  },
+  panelExpanded: {}
 }))(Panel);
 
 function Button(props) {
