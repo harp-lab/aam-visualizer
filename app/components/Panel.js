@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import withStyles from '@material-ui/styles/withStyles';
 
 function Panel(props) {
+  const { defaultExpanded } = props;
   let saveButton, selectButton;
   if (props.onSave)
     saveButton = <Button
@@ -53,7 +54,8 @@ function Panel(props) {
   return (
     <ExpansionPanel
       onMouseOver={ () => props.onMouseOver() }
-      onMouseOut={ () => props.onMouseOut() } >
+      onMouseOut={ () => props.onMouseOut() }
+      { ...{ defaultExpanded } } >
       <ExpansionPanelSummary
         expandIcon={ <ExpandMoreIcon /> }
         classes={{

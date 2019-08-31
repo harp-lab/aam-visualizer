@@ -38,7 +38,9 @@ function KontViewer(props) {
   function onGenerate([kontId, kont]) {
     const { label, selected, saved } = kont;
 
-    const panelProps = {};
+    const panelProps = {
+      defaultExpanded: kont.default
+    };
     if (saved)
       panelProps.onUnsave = () => unsave(kontId);
     else
@@ -144,17 +146,15 @@ function KontCard(props) {
       content = `${kontId} ${form}`;
       break;
   }
-  const cardProps = {};
   const style = {
     flex: '1 1 auto',
     backgroundColor: selected ? theme.palette.select.light : undefined,
     cursor: nextLayer ? 'pointer' : undefined
   };
-  if (nextLayer) {
-    style.cursor = 'pointer';
+  const cardProps = { style };
+
+  if (nextLayer)
     cardProps.classes = { root: classes.enableHover };
-  }
-  cardProps.style = style;
 
   if (selected)
     cardProps.onClick = () => props.onUnset(kontId);
@@ -175,6 +175,5 @@ KontCard = withStyles(theme => ({
     '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
   }
 }), { withTheme: true })(KontCard);
-//KontCard = withTheme(KontCard);
 
 export default KontViewer;

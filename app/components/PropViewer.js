@@ -72,7 +72,9 @@ function ConfigsViewer(props) {
   function onGenerate([configId, config]) {
     const { label, selected, saved, noItems } = config;
 
-    const panelProps = {};
+    const panelProps = {
+      defaultExpanded: config.default
+    };
     if (saved)
       panelProps.onUnsave = () => unsave(configId);
     else
@@ -144,7 +146,9 @@ function EnvsViewer(props) {
   function onGenerate([envId, env]) {
     const { label, selected, saved } = env;
 
-    const panelProps = {};
+    const panelProps = {
+      defaultExpanded: env.default
+    };
     if (saved)
       panelProps.onUnsave = () => unsave(envId);
     else
