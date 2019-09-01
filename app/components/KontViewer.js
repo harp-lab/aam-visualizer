@@ -1,7 +1,12 @@
-import React, { useState, useContext } from 'react';
+import React, { Fragment, useState, useContext } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
+import IconButton from '@material-ui/core/IconButton';
+import Popover from '@material-ui/core/Popover';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/styles/withStyles';
+import InfoIcon from '@material-ui/icons/InfoOutlined';
 
 import Context from './Context';
 import Panel from './Panel';
@@ -119,7 +124,12 @@ function KontLayer(props) {
   });
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        margin: '5px 0'
+      }}>
       { layerElem }
     </div>);
 }
@@ -128,24 +138,27 @@ function KontCard(props) {
   const items = useContext(Context);
 
   const { form, type, kont, konts } = items.konts[kontId];
-  let content, nextLayer;
+  let label, content, nextLayer;
   switch (form) {
     case 'addr':
-      content = `${kontId} ${form}`;
+      label = `${kontId} ${form}`;
+      content = 'TODO';
       nextLayer = new LayerData(konts);
       break;
     case 'frame':
-      content = `${kontId} ${form} - ${type}`;
+      label = `${kontId} ${form} - ${type}`;
+      content = 'TODO';
       nextLayer = new LayerData([kont]);
       break;
     default:
-      content = `${kontId} ${form}`;
+      label = `${kontId} ${form}`;
       break;
   }
   const style = {
-    flex: '1 1 auto',
+    flex: '1 0 0',
     backgroundColor: selected ? theme.palette.select.light : undefined,
-    cursor: nextLayer ? 'pointer' : undefined
+    cursor: nextLayer ? 'pointer' : undefined,
+    minWidth: 100
   };
   const cardProps = { style };
 
@@ -157,13 +170,30 @@ function KontCard(props) {
     else
       cardProps.onClick = () => props.onSet(kontId, nextLayer);
   }
+  
+  let infoButton;
+  if (content)
+    infoButton=(
+      <KontInfo>
+        { content }
+      </KontInfo>);
 
   return (
     <Card
       key={ kontId }
       { ...cardProps }>
-      <CardContent style={{ padding: 8 }}>
-        { content }
+      <CardContent
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          padding: 8
+        }}>
+        <Typography>
+          { label }
+        </Typography>
+        { infoButton }
       </CardContent>
     </Card>);
 }
@@ -172,5 +202,35 @@ KontCard = withStyles(theme => ({
     '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
   }
 }), { withTheme: true })(KontCard);
+function KontInfo(props) {
+  const { children } = props;
+  const [anchor, setAnchor] = useState(undefined);
+
+  function open(evt) {
+    evt.stopPropagation();
+    setAnchor(evt.currentTarget);
+  }
+  function close(evt) { 
+    evt.stopPropagation();
+    setAnchor(undefined);
+  }
+
+  return (
+    <Fragment>
+      <Tooltip title='Show info'>
+        <IconButton
+          size='small'
+          onClick={ open }>
+          <InfoIcon />
+        </IconButton>
+      </Tooltip>
+      <Popover
+        open={ Boolean(anchor) }
+        anchorEl={ anchor }
+        onClose={ close }>
+        { children }
+      </Popover>
+    </Fragment>);
+}
 
 export default KontViewer;

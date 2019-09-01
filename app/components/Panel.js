@@ -101,8 +101,7 @@ function Button(props) {
     iconButtonProps.onClick = evt => {
       evt.stopPropagation();
     };
-  }
-  else {
+  } else {
     iconButtonProps.onClick = evt => {
       evt.stopPropagation();
       onClick();
