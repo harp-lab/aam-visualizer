@@ -38,22 +38,19 @@ function ProjectList(props) {
     };
   }, []);
 
-  // solution to bug, clear timeout when store is updated and reset
-
   async function getProjectList() {
     const res = await fetch(`/api/${userId}/all`, { method: 'GET' });
     switch (res.status) {
       case 200:
         const data = await res.json();
-        const updatedProjects = {...projects};
         let refresh = false;
         for (const [id, metadata] of Object.entries(data)) {
-          let project = updatedProjects[id];
+          let project = projects[id];
 
           // create project if undefined
           if (!project) {
             project = new ProjectData(userId);
-            updatedProjects[id] = project;
+            projects[id] = project;
           }
 
           project.status = metadata.status;
@@ -69,7 +66,7 @@ function ProjectList(props) {
           timeout.current = setTimeout(getProjectList, 1000);
 
         props.onLoad(false);
-        setProjects(updatedProjects);
+        setProjects(projects);
         break;
       default:
         props.onLoad(true);

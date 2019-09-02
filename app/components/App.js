@@ -38,7 +38,9 @@ function App(props) {
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
 
   const { store, dispatch } = useContext(StoreContext);
-  const { setProjects } = useActions(store, dispatch);
+  const {
+    setProjects, setProject, delProject
+  } = useActions(store, dispatch);
 
   const projects = store.projects;
 
@@ -49,7 +51,7 @@ function App(props) {
     const data = await res.json();
 
     const projectId = data.id;
-    saveLocalProject(projectId, new ProjectData(userId));
+    setProject(projectId, new ProjectData(userId));
     setView(VIEWS.list);
     setSelectedProjectId(undefined);
 
@@ -61,7 +63,7 @@ function App(props) {
       case 200:
         const project = projects[projectId];
         project.status = project.STATUSES.edit;
-        saveLocalProject(projectId, project);
+        setProject(projectId, project);
         break;
       case 409:
         queueSnackbar(`Project ${projectId} cancel request denied - already finished`)
@@ -75,7 +77,7 @@ function App(props) {
     const res = await fetch(`/api/${userId}/projects/${projectId}/delete`, { method: 'POST' });
     switch (res.status) {
       case 205:
-        deleteLocalProject(projectId);
+        delProject(projectId);
         if (selectedProjectId == projectId)
           setSelectedProjectId(undefined);
         break;
@@ -94,7 +96,7 @@ function App(props) {
     const forkProjectId = await createProject();
     const forkProject = projects[forkProjectId];
     forkProject.code = projects[projectId].code;
-    saveLocalProject(forkProjectId, forkProject);
+    setProject(forkProjectId, forkProject);
     selectProject(forkProjectId);
     setView(VIEWS.project);
   }
@@ -104,7 +106,7 @@ function App(props) {
 
     const project = projects[projectId];
     project.code = data.code;
-    saveLocalProject(projectId, project);
+    setProject(projectId, project);
   }
   async function getProjectData(projectId) {
     const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
@@ -113,7 +115,7 @@ function App(props) {
         const data = await res.json();
         const project = projects[projectId];
         project.import(data);
-        saveLocalProject(projectId, project);
+        setProject(projectId, project);
         break;
       case 204:
         queueSnackbar('Project still processing');
@@ -126,7 +128,7 @@ function App(props) {
   function importProject(projectId, data) {
     const project = new ProjectData(userId);
     project.import(data);
-    saveLocalProject(projectId, project);
+    setProject(projectId, project);
   }
   async function exportProject(projectId) {
     const project = projects[projectId];
@@ -161,14 +163,6 @@ function App(props) {
   function deselectProject(projectId) {
     setSelectedProjectId(undefined);
     setView(VIEWS.list);
-  }
-  function saveLocalProject(projectId, project) {
-    projects[projectId] = project;
-    setProjects(projects);
-  }
-  function deleteLocalProject(projectId) {
-    delete projects[projectId];
-    setProjects(projects);
   }
 
   function queueSnackbar(message) { setSnackbarQueue([...snackbarQueue, message]); }
@@ -217,7 +211,7 @@ function App(props) {
             projects={ projects }
             onClick={ selectProject }
             onProjectsUpdate={ setProjects }
-            onSave={ saveLocalProject }
+            onSave={ setProject }
             onFork={ forkProject }
             onCancel={ cancelProject }
             onDelete={ deleteProject }
@@ -250,7 +244,7 @@ function App(props) {
         userId={ userId }
         projectId={ selectedProjectId }
         project = { getSelectedProject() }
-        onSave={ project => saveLocalProject(selectedProjectId, project) }
+        onSave={ project => setProject(selectedProjectId, project) }
         onNotify={ queueSnackbar }
         getCode={ () => getProjectCode(selectedProjectId) } />;
       break;
