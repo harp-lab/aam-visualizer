@@ -37,7 +37,9 @@ function EnvViewer(props) {
     const { label, selected, saved } = env;
 
     const panelProps = {
-      defaultExpanded: env.default
+      defaultExpanded: env.default,
+      disableSelect: true,
+      disableSelectMsg: 'No action'
     };
     if (saved)
       panelProps.onUnsave = () => unsave(envId);

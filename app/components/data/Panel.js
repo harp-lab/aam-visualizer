@@ -13,7 +13,7 @@ class Panel {
   select() { this.selected = true }
   unselect() { this.selected = false }
   get visible() { return this.saved || (!this.saved && !this.hidden) }
-  get default() { return this.selected && !this.saved }
+  get default() { return !this.saved }
 }
 
 export default Panel;

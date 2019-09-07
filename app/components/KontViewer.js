@@ -44,7 +44,9 @@ function KontViewer(props) {
     const { label, selected, saved } = kont;
 
     const panelProps = {
-      defaultExpanded: kont.default
+      defaultExpanded: kont.default,
+      disableSelect: true,
+      disableSelectMsg: 'No action'
     };
     if (saved)
       panelProps.onUnsave = () => unsave(kontId);
@@ -265,7 +267,8 @@ function EnvLink(props) {
         onClick={ evt => {
           evt.stopPropagation();
           kontContext.onShowEnv(envId);
-        } }>
+        } }
+        style={{ margin: '0 5px' }}>
         { envId }
       </Link>
     </Tooltip>);
