@@ -50,10 +50,10 @@ function ConfigViewer(props) {
     else
       panelProps.onSelect = () => select(configId);
     
-    if (config.noEnvs) {
+    /*if (config.noEnvs) {
       panelProps.disableSelect = true;
       panelProps.disableSelectMsg = 'No environments';
-    }
+    }*/
 
     return (
       <Panel

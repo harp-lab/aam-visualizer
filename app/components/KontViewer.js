@@ -1,7 +1,8 @@
-import React, { Fragment, useState, useContext } from 'react';
+import React, { Fragment, useState, useContext, createContext } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import IconButton from '@material-ui/core/IconButton';
+import Link from '@material-ui/core/Link';
 import Popover from '@material-ui/core/Popover';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
@@ -14,8 +15,10 @@ import PanelViewer from './PanelViewer';
 
 import LayerData from './data/Layer';
 
+const KontContext = createContext();
+
 function KontViewer(props) {
-  const { konts } = props;
+  const { konts, onShowEnv } = props;
   
   function hide(kontId) {
     konts[kontId].hide();
@@ -60,7 +63,9 @@ function KontViewer(props) {
         onMouseOut={ () => {} }
         { ...panelProps }
         onDelete={ () => hide(kontId) }>
-        <Kont kontId={ kontId } />
+        <KontContext.Provider value={{ onShowEnv }}>
+          <Kont kontId={ kontId } />
+        </KontContext.Provider>
       </Panel>);
   }
   function onFilterSaved([kontId, kont]) {
@@ -137,21 +142,40 @@ function KontCard(props) {
   const { kontId, selected, theme, classes } = props;
   const items = useContext(Context);
 
-  const { form, type, kont, konts } = items.konts[kontId];
+  const kont = items.konts[kontId];
+  const { form, type } = kont;
   let label, content, nextLayer;
+
   switch (form) {
-    case 'addr':
-      label = `${kontId} ${form}`;
-      content = 'TODO';
-      nextLayer = new LayerData(konts);
+    case 'addr': {
+      const { func: funcId, env, konts: nextKontIds } = kont;
+      label = (
+        <Typography>
+          { `${kontId} ${form} func ${items.funcs[funcId].form}` }
+          <EnvLink envId={ env } />
+        </Typography>);
+      nextLayer = new LayerData(nextKontIds);
       break;
-    case 'frame':
-      label = `${kontId} ${form} - ${type}`;
-      content = 'TODO';
-      nextLayer = new LayerData([kont]);
+    }
+    case 'frame': {
+      const { env, instr, exprString, kont: nextKontId } = kont;
+      const instrEntries = items.instr[instr]
+        .exprStrings.join(', ');
+      label = (
+        <Typography>
+          { `${type}` }
+          <EnvLink envId={ env } />
+          { `[ ${instrEntries} ]` }
+        </Typography>);
+      content = (
+        <Typography>
+          { exprString }
+        </Typography>);
+      nextLayer = new LayerData([nextKontId]);
       break;
+    }
     default:
-      label = `${kontId} ${form}`;
+      label = <Typography>{ `${kontId} ${form}` }</Typography>;
       break;
   }
   const style = {
@@ -173,10 +197,7 @@ function KontCard(props) {
   
   let infoButton;
   if (content)
-    infoButton=(
-      <KontInfo>
-        { content }
-      </KontInfo>);
+    infoButton = <KontInfo>{ content }</KontInfo>;
 
   return (
     <Card
@@ -190,9 +211,7 @@ function KontCard(props) {
           flexWrap: 'wrap',
           padding: 8
         }}>
-        <Typography>
-          { label }
-        </Typography>
+        { label }
         { infoButton }
       </CardContent>
     </Card>);
@@ -203,7 +222,7 @@ KontCard = withStyles(theme => ({
   }
 }), { withTheme: true })(KontCard);
 function KontInfo(props) {
-  const { children } = props;
+  const { children, classes } = props;
   const [anchor, setAnchor] = useState(undefined);
 
   function open(evt) {
@@ -227,10 +246,29 @@ function KontInfo(props) {
       <Popover
         open={ Boolean(anchor) }
         anchorEl={ anchor }
-        onClose={ close }>
+        onClose={ close }
+        classes={{ paper: classes.paper }}>
         { children }
       </Popover>
     </Fragment>);
+}
+KontInfo = withStyles({
+  paper: { padding: '1em' }
+})(KontInfo);
+
+function EnvLink(props) {
+  const { envId } = props;
+  const kontContext = useContext(KontContext);
+  return (
+    <Tooltip title='View environment'>
+      <Link
+        onClick={ evt => {
+          evt.stopPropagation();
+          kontContext.onShowEnv(envId);
+        } }>
+        { envId }
+      </Link>
+    </Tooltip>);
 }
 
 export default KontViewer;

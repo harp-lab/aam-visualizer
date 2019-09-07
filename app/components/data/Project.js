@@ -104,10 +104,11 @@ class Project {
         }
         const label = `${configId}: ${syntax}`;
 
-        const configPanel = new Panel(label);
+        const configPanel = new Panel(label, true);
 
         configPanel.noItems = true;
         configPanel.noEnvs = true;
+        configPanel.noKonts = true;
 
         const stateIds = config.states;
         if (stateIds) {
@@ -117,6 +118,10 @@ class Project {
             const envId = items.states[stateId].env;
             if (envId)
               configPanel.noEnvs = false;
+            
+            const kontId = items.states[stateId].kont;
+            if (kontId)
+              configPanel.noKonts = false;
           }
         }
         configs[configId] = configPanel;
@@ -134,7 +139,10 @@ class Project {
     const items = this.items;
     const konts = {};
     Object.keys(items.konts)
-      .forEach(kontId => konts[kontId] = new Panel(kontId));
+      .forEach(kontId => {
+        const { descs } = items.konts[kontId];
+        konts[kontId] = new Panel(`${kontId} stack ${descs[0]}`);
+      });
     this.metadata.konts = konts;
   }
   importAst(ast) {

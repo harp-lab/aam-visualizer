@@ -1,10 +1,10 @@
 class Panel {
-  constructor(label) {
+  constructor(label, selected = false) {
     this.label = label;
 
     this.saved = false;
     this.hidden = true;
-    this.selected = true;
+    this.selected = selected;
   }
   save() { this.saved = true }
   unsave() { this.saved = false }

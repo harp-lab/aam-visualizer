@@ -5,7 +5,8 @@ import Pane from './Pane';
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
 import CodeViewer from './CodeViewer';
-import PropViewer from './PropViewer';
+import ConfigViewer from './ConfigViewer';
+import EnvViewer from './EnvViewer';
 import KontViewer from './KontViewer';
 import Context from './Context';
 import CodeMark from './data/CodeMark';
@@ -199,16 +200,17 @@ function Project(props) {
     }
   }
   function refreshKonts() {
-    const selectedNodes = subGraph.load('selectedNodes') || [];
+    const { configs, konts } = project.metadata;
     const visibleKonts = [];
-    for (const nodeId of selectedNodes) {
-      const stateIds = project.items.configs[nodeId].states;
-      for (const stateId of stateIds) {
-        const kontId = project.items.states[stateId].kont;
-        visibleKonts.push(kontId);
+    for (const [configId, config] of Object.entries(configs)) {
+      if (config.visible && config.selected) {
+        const stateIds = project.items.configs[configId].states;
+        for (const stateId of stateIds) {
+          const kontId = project.items.states[stateId].kont;
+          visibleKonts.push(kontId);
+        }
       }
     }
-    const { konts } = project.metadata;
     for (const [kontId, kont] of Object.entries(konts)) {
       if (visibleKonts.includes(kontId))
         kont.show();
@@ -260,12 +262,32 @@ function Project(props) {
       onMainNodeUnselect={ unselectMainNode }
       onEdgeSelect={ selectEdge }
       onSave={ saveGraphMetadata } />;
+
+    function onShowEnv(envId) {
+      const { envs } = project.metadata;
+      envs[envId].show();
+      saveMetadata(envs);
+    }
+
     const codeViewerElem = renderCodeViewer();
-    const propViewerElem = renderPropViewer();
+    const configViewerElem = <ConfigViewer
+      configs={ project.metadata.configs }
+      onAdd={ onShowEnv }
+      onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
+      onSave={ configs => saveMetadata({ configs }) }
+      onRefresh={ () => {
+        refreshEnvs();
+        refreshKonts();
+      } } />;
     const kontViewerElem = <KontViewer 
       konts={ project.metadata.konts }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
-      onSave={ saveMetadata } />;
+      onSave={ saveMetadata }
+      onShowEnv={ onShowEnv } />;
+    const envViewerElem = <EnvViewer
+      envs={ project.metadata.envs }
+      onAdd={ onShowEnv }
+      onSave={ envs => saveMetadata({ envs }) } />;
 
     return (
       <Context.Provider value={ project.items }>
@@ -285,7 +307,16 @@ function Project(props) {
                   </Pane>
                 </SplitPane>
               </Pane>
-              { propViewerElem }
+              <Pane height='60%' overflow='auto'>
+                <SplitPane>
+                  <Pane width="50%" overflow='auto'>
+                    { configViewerElem }
+                  </Pane>
+                  <Pane width="50%" overflow='auto'>
+                    { envViewerElem }
+                  </Pane>
+                </SplitPane>
+              </Pane>
             </SplitPane>
           </Pane>
         </SplitPane>
@@ -342,16 +373,6 @@ function Project(props) {
       hovered={ hovered }
       onNodesSelect={ selectNodes }
       onCodeHover={ hoverNodes } />;
-  }
-  function renderPropViewer() {
-    return (
-      <Pane height='60%' overflow='auto'>
-        <PropViewer
-          metadata={ project.metadata }
-          onRefreshEnvs={ refreshEnvs }
-          onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
-          onSave={ saveMetadata } />
-      </Pane>);
   }
 
   return render();
