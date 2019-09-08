@@ -2,6 +2,7 @@
 
 (require
   racket/hash
+  racket/pretty
   "consts.rkt"
   "global.rkt"
   "toks.rkt")
@@ -55,13 +56,9 @@
     (define s (parseS))
     (define end (tok-end (expect (peek-e 0))))
     (define id (hashsym 's))
-    (define processed-hash
-      (hash-union
-        (hash 's-expr s 'start start 'end end)
-        (process s)
-        #:combine/key (lambda (k v1 v2) v2)))
-    (hash-set! ast id processed-hash)
-    (tokize (~a id) start end))
+    (hash-set! ast id (hash 's-expr s 'start start 'end end))
+    ;(tokize (~a id) start end)
+    (~a id))
   (define (parseS)
     (define e (peek-e 0))
     (define s
@@ -92,63 +89,9 @@
           (error (format "no atom match for \"~a\"" a))]
         ))
     (hash-set! ast id (hash-union (hash 'tok a 'start start 'end end) form))
-    (tokize (~a id) start end))
-  
-  (define (process toks)
-    (define (ensure n)
-      (if (< (length toks) n)
-        (exit 2)
-        #t))
-    (define aTok (tok-s (first toks)))
-    (match aTok
-      [(regexp #rx"a")
-        (define form (tok-s (hash-ref ast (string->symbol aTok))))
-        (case form
-          [("lambda")
-            (ensure 3)
-            (match-define `(,lambda-tok ,args-tok ,body-tok) toks)
-            (define children
-              (for/hash ([tok `(,args-tok ,body-tok)] [label '("args" "body")])
-                (values (string->symbol (tok-s tok)) (hash 'label label))))
-            (hash 'form form 'children children)]
-          [("define")
-            (ensure 3)
-            (match-define `(,define-tok ,id-tok ,body-toks ...) toks)
-            (define body-tok-lst
-              (if (list? body-toks)
-                body-toks
-                `(,body-toks)))
-            (define children
-              (for/hash ([tok body-tok-lst])
-                (values (string->symbol (tok-s tok)) (hash))))
-            (hash 'form form 'children children)]
-          [("if")
-            (ensure 4)
-            (match-define `(,if-tok ,ge-tok ,te-tok ,ee-tok) toks)
-            (define children
-              (for/hash ([tok `(,ge-tok ,te-tok ,ee-tok)] [label '("ge" "te" "ee")])
-                (values (string->symbol (tok-s tok)) (hash 'label label))))
-            (hash 'form form 'children children)]
-          [("quote")
-            (ensure 2)
-            (match-define `(,quote-tok ,data-tok) toks)
-            (hash 'form form 'children (hash (string->symbol (tok-s data-tok)) (hash)))]
-          [("begin")
-            (ensure 2)
-            (match-define `(,begin-tok ,body-toks ...) toks)
-            (define body-tok-lst
-              (if (list? body-toks)
-                body-toks
-                `(,body-toks)))
-            (define children
-              (for/hash ([tok body-tok-lst])
-                (values (string->symbol (tok-s tok)) (hash))))
-            (hash 'form form 'children children 'start 'null 'end 'null)]
-          [else (hash)])]
-      [_
-        (hash)]
-    ))
+    ;(tokize (~a id) start end)
+    (~a id))
   
   (addBegin)
-  (define astStart (tok-s (parseP)))
+  (define astStart (parseP))
   (values ast astStart))

@@ -1,4 +1,3 @@
-import AstGraph from './AstGraph';
 import DefaultGraph from './DefaultGraph';
 import SummaryGraph from './SummaryGraph';
 import CodePos from './CodePos';
@@ -30,8 +29,7 @@ class Project {
       this.items = data.items;
       this.generateGraphs();
       this.generateMetadata();
-      this.ast = data.ast;
-      this.importAst(data.ast);
+      this.importAst(this.items.ast);
     }
   }
   export() {
@@ -146,11 +144,10 @@ class Project {
     this.metadata.konts = konts;
   }
   importAst(ast) {
-    const items = this.items;
-    items.ast = {};
+    this.ast = {};
     for (const [id, data] of Object.entries(ast)) {
       if (data.start && data.end)
-        items.ast[id] = {
+        this.ast[id] = {
           start: new CodePos(data.start[0], data.start[1]),
           end: new CodePos(data.end[0], data.end[1])
         };

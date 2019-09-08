@@ -329,7 +329,7 @@ function Project(props) {
 
     // get marks
     const marks = {};
-    for (const [id, data] of Object.entries(project.items.ast))
+    for (const [id, data] of Object.entries(project.ast))
       marks[id] = new CodeMark(data.start, data.end);
     addMarks(mainGraphId, mainGraph);
     if (subGraph)
