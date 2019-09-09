@@ -3,9 +3,10 @@ class Edge {
     this.source = source;
     this.target = target;
 
-    this.label = data.label || '';
-    this.calls = data.calls;
-    this.style = data.style;
+    const { label, calls, style } = data;
+    this.label = label || '';
+    this.calls = calls;
+    this.style = style;
   }
   export(id) {
     return {
