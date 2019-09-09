@@ -19,17 +19,18 @@ class Project {
     this.status = this.STATUSES.empty;
   }
   import(data) {
-    this.status = data.status;
-    this.error = data.error;
+    const { status, error, code, analysis, store, items } = data;
+    this.status = status;
+    this.error = error;
     
-    this.code = data.code;
-    this.analysis = data.analysis
+    this.code = code;
+    this.analysis = analysis;
     if (this.status == this.STATUSES.done) {
-      this.store = data.store;
-      this.items = data.items;
+      this.store = store; // still needed?
+      this.items = items;
       this.generateGraphs();
       this.generateMetadata();
-      this.importAst(this.items.ast);
+      this.importAst(items.ast);
     }
   }
   export() {
@@ -78,21 +79,21 @@ class Project {
           switch (state.form) {
             case 'halt':
               const results = state.results
-              .map(resultId => {
-                const { type, name, valString } = items.vals[resultId];
+                .map(resultId => {
+                  const { type, name, valString } = items.vals[resultId];
 
-                let string;
-                switch (type) {
-                  case 'closure':
-                    string = name;
-                    break;
-                  case 'bool':
-                    string = valString;
-                    break;
-                }
-                return string;
-              })
-              .join(', ');
+                  let string;
+                  switch (type) {
+                    case 'closure':
+                      string = name;
+                      break;
+                    case 'bool':
+                      string = valString;
+                      break;
+                  }
+                  return string;
+                })
+                .join(', ');
               syntax = `[ ${results} ]`
               break;
             default:
@@ -113,12 +114,11 @@ class Project {
           configPanel.noItems = false;
 
           for (const stateId of stateIds) {
-            const envId = items.states[stateId].env;
-            if (envId)
+            const state = items.states[stateId];
+            if (state.env)
               configPanel.noEnvs = false;
             
-            const kontId = items.states[stateId].kont;
-            if (kontId)
+            if (state.kont)
               configPanel.noKonts = false;
           }
         }
@@ -167,9 +167,10 @@ class Project {
     if (graph) {
       const selectedNodes = graph.metadata.selectedNodes || [];
       const nodeId = selectedNodes[0];
-      if (nodeId) {
+      
+      if (nodeId)
         graphId = graph.nodes[nodeId].detail;
-      } else
+      else
         graphId = 'states';
     }
     return graphId;
