@@ -71,7 +71,7 @@
   (string->symbol (hash-ref item 'tok)))
 
 (define (get-parts item)
-  (map (lambda (i) (get-symbol i)) (hash-ref item 's-expr)))
+  (map string->symbol (hash-ref item 's-expr)))
 
 (define (make-ast jast start)
   (define id>lambda (make-hash))
