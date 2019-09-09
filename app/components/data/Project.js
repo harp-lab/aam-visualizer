@@ -34,7 +34,7 @@ class Project {
     }
   }
   export() {
-    const filter = ['status', 'error', 'code', 'analysis', 'store', 'items', 'ast'];
+    const filter = ['status', 'error', 'code', 'analysis', 'store', 'items'];
     const data = Object.entries(this).reduce((accumulator, currentValue) => {
       const [prop, value] = currentValue;
       if (filter.includes(prop))
@@ -167,7 +167,7 @@ class Project {
     if (graph) {
       const selectedNodes = graph.metadata.selectedNodes || [];
       const nodeId = selectedNodes[0];
-      
+
       if (nodeId)
         graphId = graph.nodes[nodeId].detail;
       else
