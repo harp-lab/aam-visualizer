@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --mode=production",
+    "build": "webpack -p --mode=production",
     "start": "node server/main.js",
     "dev-start": "npm run dev-client & nodemon -x \"npm run dev-server\"",
     "dev-client": "webpack-dev-server",

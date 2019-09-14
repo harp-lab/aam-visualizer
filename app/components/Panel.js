@@ -1,68 +1,77 @@
-import React from 'react';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
-
-import IconButton from '@material-ui/core/IconButton';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
-import DeleteIcon from '@material-ui/icons/Delete';
-import StarIcon from '@material-ui/icons/Star';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-
+import React, { useState } from 'react';
+import {
+  ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@material-ui/core';
+import {
+  AddCircle,
+  CheckBox, CheckBoxOutlineBlank, IndeterminateCheckBox,
+  Delete,
+  ExpandMore,
+  Star, StarBorder
+} from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
 
 function Panel(props) {
-  const { label, children, defaultExpanded, classes } = props;
+  const { label, children, defaultExpanded, theme, classes } = props;
+  const [hovered, setHovered] = useState(false);
+
   let saveButton, selectButton;
   if (props.onSave)
     saveButton = <Button
-      icon={ <StarBorderIcon /> }
+      icon={ <StarBorder /> }
       tooltip='Save'
       onClick={ props.onSave } />;
   else if (props.onUnsave)
     saveButton = <Button
-      icon={ <StarIcon /> }
+      icon={ <Star /> }
       tooltip='Unsave'
       onClick={ props.onUnsave } />;
 
   if (props.disableSelect)
     selectButton = <Button
-      icon={ <IndeterminateCheckBoxIcon color='disabled'/> }
+      icon={ <IndeterminateCheckBox color='disabled'/> }
       tooltip={ props.disableSelectMsg }
       disabled />;
   else if (props.onSelect)
     selectButton = <Button
-      icon={ <CheckBoxOutlineBlankIcon /> }
+      icon={ <CheckBoxOutlineBlank /> }
       tooltip='Select'
       onClick={ props.onSelect } />;
   else if (props.onUnselect)
     selectButton = <Button
-      icon={ <CheckBoxIcon /> }
+      icon={ <CheckBox /> }
       tooltip='Unselect'
       onClick={ props.onUnselect } />;
   
   const deleteButton = <Button
-    icon={ <DeleteIcon /> }
+    icon={ <Delete /> }
     tooltip='Delete'
     onClick={ props.onDelete } />;
+
   return (
     <ExpansionPanel
-      onMouseOver={ () => props.onMouseOver() }
-      onMouseOut={ () => props.onMouseOut() }
+      onMouseOver={ () => {
+        setHovered(true);
+        props.onMouseOver();
+      } }
+      onMouseOut={ () => {
+        setHovered(false);
+        props.onMouseOut();
+      } }
       { ...{ defaultExpanded } } >
       <ExpansionPanelSummary
-        expandIcon={ <ExpandMoreIcon /> }
+        expandIcon={ <ExpandMore /> }
         classes={{
           root: classes.panelRoot,
           content: classes.panelContent,
           expandIcon: classes.panelExpandIcon,
           expanded: classes.panelExpanded
+        }}
+        style={{
+          backgroundColor: hovered ? theme.palette.hover.light : undefined
         }}>
         { selectButton }
         { saveButton }
@@ -75,7 +84,6 @@ function Panel(props) {
 Panel = withStyles(theme => ({
   panelRoot: {
     minHeight: 0,
-    '&:hover': { backgroundColor: theme.palette.hover.light },
     '&$panelExpanded': {
       minHeight: 0
     }
@@ -91,7 +99,7 @@ Panel = withStyles(theme => ({
     padding: '5px 12px'
   },
   panelExpanded: {}
-}))(Panel);
+}), { withTheme: true })(Panel);
 
 function Button(props) {
   const { icon, tooltip, disabled, onClick } = props;

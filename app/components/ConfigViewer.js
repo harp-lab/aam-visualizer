@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
-import Link from '@material-ui/core/Link';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
+import { Link, Tooltip, Typography } from '@material-ui/core'
 
 import Context from './Context';
 import Panel from './Panel';
@@ -65,7 +63,8 @@ function ConfigViewer(props) {
         onDelete={ () => deleteConfig(configId) }>
         <Config
           configId={ configId }
-          onAdd={ props.onAdd } />
+          onShowEnv={ props.onShowEnv }
+          onShowKont={ props.onShowKont } />
       </Panel>);
   }
   function onFilterSaved([configId, config]) {
@@ -86,7 +85,7 @@ function ConfigViewer(props) {
 }
 function Config(props) {
   const items = useContext(Context);
-  const { configId, onAdd } = props;
+  const { configId, onShowEnv, onShowKont } = props;
 
   const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
@@ -103,16 +102,26 @@ function Config(props) {
           default:
             const instrEntries = items.instr[instr]
               .exprStrings.join(', ');
+
+            let kontElem;
+            if (kont)
+              kontElem = (
+                <Tooltip title='View environment'>
+                  <Link onClick={ () => onShowKont(kont) }>
+                    { kont }
+                  </Link>
+                </Tooltip>);
+            
             let envElem;
             if (env)
               envElem = (
                 <Tooltip title='View environment'>
-                  <Link onClick={ () => onAdd(env) }>
+                  <Link onClick={ () => onShowEnv(env) }>
                     { env }
                   </Link>
                 </Tooltip>);
 
-            entry = [`[ ${instrEntries} ]`, kont, envElem];
+            entry = [`[ ${instrEntries} ]`, kontElem, envElem];
             break;
         }
         return entry;

@@ -26,7 +26,6 @@ class Project {
     this.code = code;
     this.analysis = analysis;
     if (this.status == this.STATUSES.done) {
-      this.store = store; // still needed?
       this.items = items;
       this.generateGraphs();
       this.generateMetadata();
@@ -129,8 +128,12 @@ class Project {
   generateEnvs() {
     const items = this.items;
     const envs = {};
-    Object.keys(items.envs)
-      .forEach(envId => envs[envId] = new Panel(envId));
+    Object.entries(items.envs)
+      .forEach(([envId, env]) => {
+        const vars = env.map(entry => entry.varString).join(', ');
+        const label = `${envId}: [ ${vars} ]`;
+        envs[envId] = new Panel(label);
+      });
     this.metadata.envs = envs;
   }
   generateKonts() {

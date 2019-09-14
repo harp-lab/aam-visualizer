@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
-import Link from '@material-ui/core/Link';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
+import { Link, Tooltip, Typography } from '@material-ui/core';
 
 import Context from './Context';
 import Panel from './Panel';
