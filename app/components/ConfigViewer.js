@@ -112,10 +112,7 @@ function Config(props) {
                   </Link>
                 </Tooltip>);
 
-            const kontEntries = items.konts[kont].descs
-              .map((kont, index) => <Typography key={ index }>{ kont }</Typography>);
-
-            entry = [`[ ${instrEntries} ]`, kontEntries, envElem];
+            entry = [`[ ${instrEntries} ]`, kont, envElem];
             break;
         }
         return entry;

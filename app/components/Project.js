@@ -297,17 +297,17 @@ function Project(props) {
           </Pane>
           <Pane width='60%'>
             <SplitPane horizontal>
-              <Pane height='40%'>
+              <Pane height='48%'>
                 <SplitPane vertical>
-                  <Pane width='50%' overflow='auto'>
+                  <Pane width='48%' overflow='auto'>
                     { codeViewerElem }
                   </Pane>
-                  <Pane width='50%'>
+                  <Pane width='52%'>
                     { kontViewerElem }
                   </Pane>
                 </SplitPane>
               </Pane>
-              <Pane height='60%' overflow='auto'>
+              <Pane height='52%' overflow='auto'>
                 <SplitPane>
                   <Pane width="50%" overflow='auto'>
                     { configViewerElem }
