@@ -36,19 +36,6 @@
         tok)
       (error (format "expected token \"~a\"" e))))
   
-  (define (prim? e)
-    (member e '("begin" "lambda" "define" "if" "quote")))
-  (define (x? e)
-    (regexp-match-exact? #px"[\\w]+" e))
-  (define (b? e)
-    (regexp-match-exact? #px"#t|#f" e))
-  (define (n? e)
-    (regexp-match-exact? #px"[\\d]+" e))
-  (define (string->boolean s)
-    (if (string=? s "#t")
-      #t
-      #f))
-  
   (define (addBegin)
     (set! toks (append `(,(tokize "(" '(0 0) '(0 0)) ,(tokize "begin" '(0 0) '(0 0))) toks `(,(tokize ")" '(0 0) (tok-end (last toks)))))))
   (define (parseP)
@@ -57,7 +44,6 @@
     (define end (tok-end (expect (peek-e 0))))
     (define id (hashsym 's))
     (hash-set! ast id (hash 's-expr s 'start start 'end end))
-    ;(tokize (~a id) start end)
     (~a id))
   (define (parseS)
     (define e (peek-e 0))
@@ -75,21 +61,7 @@
     (define start (tok-start tok))
     (define end (tok-end tok))
     (define id (hashsym 'a))
-    (define form
-      (cond
-        [(prim? a)
-          (hash)]
-        [(x? a)
-          (hash 'form "variable" 'data a)]
-        [(b? a)
-          (hash 'form "boolean" 'data (string->boolean a))]
-        [(n? a)
-          (hash 'form "number" 'data (string->number a))]
-        [else
-          (error (format "no atom match for \"~a\"" a))]
-        ))
-    (hash-set! ast id (hash-union (hash 'tok a 'start start 'end end) form))
-    ;(tokize (~a id) start end)
+    (hash-set! ast id (hash 'tok a 'start start 'end end))
     (~a id))
   
   (addBegin)
