@@ -115,10 +115,12 @@ function KontCard(props) {
     case 'addr': {
       const { func: funcId, env, konts: nextKontIds } = kont;
       label = (
-        <Typography>
-          { `${kontId} ${form} func ${items.funcs[funcId].form}` }
+        <KontLabel>
+          <KontLabelItem label='Id'>{ kontId }</KontLabelItem>
+          <KontLabelItem label='Form'>{ form }</KontLabelItem>
+          <KontLabelItem label='Function'>{ items.funcs[funcId].form }</KontLabelItem>
           <EnvLink envId={ env } />
-        </Typography>);
+        </KontLabel>);
       nextLayer = new LayerData(nextKontIds);
       break;
     }
@@ -127,11 +129,11 @@ function KontCard(props) {
       const instrEntries = items.instr[instr]
         .exprStrings.join(', ');
       label = (
-        <Typography>
-          { `${type}` }
+        <KontLabel>
+          <KontLabelItem label='Type'>{ type }</KontLabelItem>
           <EnvLink envId={ env } />
-          { `[ ${instrEntries} ]` }
-        </Typography>);
+          <KontLabelItem label='Instrumentation'>{ `[ ${instrEntries} ]` }</KontLabelItem>
+        </KontLabel>);
       content = (
         <Typography>
           { exprString }
@@ -140,7 +142,11 @@ function KontCard(props) {
       break;
     }
     default:
-      label = <Typography>{ `${kontId} ${form}` }</Typography>;
+      label = (
+        <KontLabel>
+          <KontLabelItem label='Id'>{ kontId }</KontLabelItem>
+          <KontLabelItem label='Form'>{ form }</KontLabelItem>
+        </KontLabel>);
       break;
   }
   const style = {
@@ -186,6 +192,23 @@ KontCard = withStyles(theme => ({
     '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
   }
 }), { withTheme: true })(KontCard);
+
+function KontLabel(props) {
+  const { children } = props;
+  const spacedChildren = children.map(child => {
+    return React.cloneElement(child, { style: {marginRight: '5px'} });
+  });
+  return <div>{ spacedChildren }</div>;
+}
+function KontLabelItem(props) {
+  const { label, children, style } = props;
+  return (
+    <Tooltip title={ label }>
+      <Typography display='inline' { ...{ style } }>
+        { children }
+      </Typography>
+    </Tooltip>);
+}
 function KontInfo(props) {
   const { children, classes } = props;
   const [anchor, setAnchor] = useState(undefined);
@@ -222,7 +245,7 @@ KontInfo = withStyles({
 })(KontInfo);
 
 function EnvLink(props) {
-  const { envId } = props;
+  const { envId, style } = props;
   const kontContext = useContext(KontContext);
   return (
     <Tooltip title='View environment'>
@@ -231,8 +254,8 @@ function EnvLink(props) {
           evt.stopPropagation();
           kontContext.onShowEnv(envId);
         } }
-        style={{ margin: '0 5px' }}>
-        { envId }
+        { ...{ style } }>
+        <Typography display='inline'>{ envId }</Typography>
       </Link>
     </Tooltip>);
 }
