@@ -11,19 +11,14 @@ function ConfigViewer(props) {
   const items = useContext(ItemContext);
 
   function onGenerate([configId, config]) {
-    const { label, noItems } = config;
-    
-    /*if (config.noEnvs) {
-      panelProps.disableSelect = true;
-      panelProps.disableSelectMsg = 'No environments';
-    }*/
+    const { label } = config;
 
     return (
       <Panel
         key={ configId }
         panelId={ configId }
         panelData={ config }
-        label={ (noItems ? `${label} (empty)` : label) }
+        label={ label }
         onMouseOver={ () => props.onHover([configId]) }
         onMouseOut={ () => props.onHover([]) }
         onSelect={ props.onRefresh }

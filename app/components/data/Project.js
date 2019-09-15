@@ -142,7 +142,12 @@ class Project {
     Object.keys(items.konts)
       .forEach(kontId => {
         const { descs } = items.konts[kontId];
-        konts[kontId] = new Panel(`${kontId} stack ${descs[0]}`);
+        let descsElem;
+        if (descs.length > 1)
+          descsElem = `[ ${descs[0]}, ... +${descs.length - 1} ]`;
+        else
+          descsElem = `[ ${descs[0]} ]`;
+        konts[kontId] = new Panel(`${kontId}: ${descsElem}`);
       });
     this.metadata.konts = konts;
   }
