@@ -1,52 +1,17 @@
 import React, { useContext } from 'react';
 import { Link, Tooltip, Typography } from '@material-ui/core'
 
-import Context from './Context';
+import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
 
 function ConfigViewer(props) {
   const { configs } = props;
-  const items = useContext(Context);
-
-  function deleteConfig(configId) {
-    configs[configId].hide();
-    props.onSave(configs);
-  }
-  function save(configId) {
-    configs[configId].save();
-    props.onSave(configs);
-  }
-  function unsave(configId) {
-    configs[configId].unsave();
-    props.onSave(configs);
-  }
-  function select(configId) {
-    configs[configId].select();
-    props.onRefresh();
-    props.onSave(configs);
-  }
-  function unselect(configId) {
-    configs[configId].unselect();
-    props.onRefresh();
-    props.onSave(configs);
-  }
+  const items = useContext(ItemContext);
 
   function onGenerate([configId, config]) {
-    const { label, selected, saved, noItems } = config;
-
-    const panelProps = {
-      defaultExpanded: config.default
-    };
-    if (saved)
-      panelProps.onUnsave = () => unsave(configId);
-    else
-      panelProps.onSave = () => save(configId);
-    if (selected)
-      panelProps.onUnselect = () => unselect(configId);
-    else
-      panelProps.onSelect = () => select(configId);
+    const { label, noItems } = config;
     
     /*if (config.noEnvs) {
       panelProps.disableSelect = true;
@@ -56,11 +21,14 @@ function ConfigViewer(props) {
     return (
       <Panel
         key={ configId }
+        panelId={ configId }
+        panelData={ config }
         label={ (noItems ? `${label} (empty)` : label) }
         onMouseOver={ () => props.onHover([configId]) }
         onMouseOut={ () => props.onHover([]) }
-        { ...panelProps }
-        onDelete={ () => deleteConfig(configId) }>
+        onSelect={ props.onRefresh }
+        onUnselect={ props.onRefresh }
+        onSave={ props.onSave }>
         <Config
           configId={ configId }
           onShowEnv={ props.onShowEnv }
@@ -68,64 +36,59 @@ function ConfigViewer(props) {
       </Panel>);
   }
   function onFilterSaved([configId, config]) {
-    const saved = config.saved;
-    const temp = !['not found', 'non-func'].includes(items.configs[configId].form);
-    return saved && temp;
+    return !['not found', 'non-func'].includes(items.configs[configId].form);
   }
   function onFilterUnsaved([configId, config]) {
-    const unsaved = !config.saved && config.visible;
-    const temp = !['not found', 'non-func'].includes(items.configs[configId].form);
-    return unsaved && temp;
+    return !['not found', 'non-func'].includes(items.configs[configId].form);
   }
-  const funcProps = { onFilterSaved, onFilterUnsaved, onGenerate };
+  const funcProps = { onFilterSaved, onFilterUnsaved };
   return <PanelViewer
     label='Configurations'
     panels={ configs }
+    onGenerate={ onGenerate }
     { ...funcProps } />;
 }
 function Config(props) {
-  const items = useContext(Context);
+  const items = useContext(ItemContext);
   const { configId, onShowEnv, onShowKont } = props;
 
   const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
-  let entries = [];
-  if (config.states)
-    entries = config.states
-      .map(stateId => {
-        const { form, instr, kont, env } = items.states[stateId];
-        let entry;
-        switch (form) {
-          case 'halt':
-            entry = [];
-            break;
-          default:
-            const instrEntries = items.instr[instr]
-              .exprStrings.join(', ');
-
-            let kontElem;
-            if (kont)
-              kontElem = (
-                <Tooltip title='View environment'>
-                  <Link onClick={ () => onShowKont(kont) }>
-                    { kont }
-                  </Link>
-                </Tooltip>);
-            
-            let envElem;
-            if (env)
-              envElem = (
-                <Tooltip title='View environment'>
-                  <Link onClick={ () => onShowEnv(env) }>
-                    { env }
-                  </Link>
-                </Tooltip>);
-
-            entry = [`[ ${instrEntries} ]`, kontElem, envElem];
-            break;
+  const entries = []
+  config.states.forEach(stateId => {
+      const { form, instr, kont, env } = items.states[stateId];
+      switch (form) {
+        case 'halt': {
+          entries.push([]);
+          break;
         }
-        return entry;
-      });
+        default: {
+          const instrEntries = items.instr[instr]
+            .exprStrings.join(', ');
+
+          let kontElem;
+          if (kont)
+            kontElem = (
+              <Tooltip title='View environment'>
+                <Link onClick={ () => onShowKont(kont) }>
+                  { kont }
+                </Link>
+              </Tooltip>);
+          
+          let envElem;
+          if (env)
+            envElem = (
+              <Tooltip title='View environment'>
+                <Link onClick={ () => onShowEnv(env) }>
+                  { env }
+                </Link>
+              </Tooltip>);
+
+          entries.push([`[ ${instrEntries} ]`, kontElem, envElem]);
+          break;
+        }
+      }
+    });
   return <PanelTable
     labels={ labels }
     entries={ entries }/>;

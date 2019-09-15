@@ -1,82 +1,44 @@
 import React, { useContext } from 'react';
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
-import Context from './Context';
+import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
 
 function EnvViewer(props) {
   const envs = props.envs;
-  const items = useContext(Context);
-
-  function deleteEnv(envId) {
-    envs[envId].hide();
-    props.onSave(envs);
-  }
-  function save(envId) {
-    envs[envId].save();
-    props.onSave(envs);
-  }
-  function unsave(envId) {
-    envs[envId].unsave();
-    props.onSave(envs);
-  }
-  function select(envId) {
-    envs[envId].select();
-    props.onSave(envs);
-  }
-  function unselect(envId) {
-    envs[envId].unselect();
-    props.onSave(envs);
-  }
+  const items = useContext(ItemContext);
 
   function onGenerate([envId, env]) {
-    const { label, selected, saved } = env;
-
-    const panelProps = {
-      defaultExpanded: env.default,
-      disableSelect: true,
-      disableSelectMsg: 'No action'
-    };
-    if (saved)
-      panelProps.onUnsave = () => unsave(envId);
-    else
-      panelProps.onSave = () => save(envId);
-    if (selected)
-      panelProps.onUnselect = () => unselect(envId);
-    else
-      panelProps.onSelect = () => select(envId);
+    const { label } = env;
 
     return (
       <Panel
         key={ envId }
+        panelId={ envId }
+        panelData={ env }
         label={ items.envs[envId].length > 0 ? label : `${label} (empty)` }
         onMouseOver={ () => {} } // TODO implement env hovering
         onMouseOut={ () => {} }
-        { ...panelProps }
-        onDelete={ () => deleteEnv(envId) }>
+        onSave={ props.onSave }
+        disableSelect
+        disableSelectMsg='No action'>
         <EnvItem
           envId={ envId }
           onAdd={ props.onAdd } />
       </Panel>);
   }
-  function onFilterSaved([envId, env]) {
-    return env.saved;
-  }
-  function onFilterUnsaved([envId, env]) {
-    return !env.saved && env.visible;
-  }
-  const funcProps = { onFilterSaved, onFilterUnsaved, onGenerate };
+
   return <PanelViewer
     label='Environments'
     panels={ envs }
-    { ...funcProps } />;
+    onGenerate={ onGenerate } />;
 }
 
 function EnvItem(props) {
   const { envId, onAdd } = props
-  const items = useContext(Context);
+  const items = useContext(ItemContext);
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
   const env = envs[envId];

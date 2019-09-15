@@ -18,9 +18,7 @@ function PanelTable(props) {
         <TableHead>
           <TableRow>{ labels }</TableRow>
         </TableHead>
-        <TableBody>
-          { entries }
-        </TableBody>
+        <TableBody>{ entries }</TableBody>
       </Table>);
 }
 

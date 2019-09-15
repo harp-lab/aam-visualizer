@@ -15,41 +15,65 @@ import {
 import withStyles from '@material-ui/styles/withStyles';
 
 function Panel(props) {
-  const { label, children, defaultExpanded, theme, classes } = props;
+  const { panelId, panelData, label, children, theme, classes } = props;
   const [hovered, setHovered] = useState(false);
 
-  let saveButton, selectButton;
-  if (props.onSave)
-    saveButton = <Button
-      icon={ <StarBorder /> }
-      tooltip='Save'
-      onClick={ props.onSave } />;
-  else if (props.onUnsave)
-    saveButton = <Button
-      icon={ <Star /> }
-      tooltip='Unsave'
-      onClick={ props.onUnsave } />;
+  function select() {
+    panelData.select();
+    if (props.onSelect) props.onSelect();
+    props.onSave();
+  }
+  function unselect() {
+    panelData.unselect();
+    if (props.onUnselect) props.onUnselect();
+    props.onSave();
+  }
+  function save() {
+    panelData.save();
+    props.onSave();
+  }
+  function unsave() {
+    panelData.unsave();
+    props.onSave();
+  }
+  function hide() {
+    panelData.hide();
+    props.onSave();
+  }
 
+  const { selected, saved } = panelData;
+  let saveButton, selectButton;
   if (props.disableSelect)
     selectButton = <Button
       icon={ <IndeterminateCheckBox color='disabled'/> }
       tooltip={ props.disableSelectMsg }
       disabled />;
-  else if (props.onSelect)
+  else if (!selected)
     selectButton = <Button
       icon={ <CheckBoxOutlineBlank /> }
       tooltip='Select'
-      onClick={ props.onSelect } />;
-  else if (props.onUnselect)
+      onClick={ select } />;
+  else
     selectButton = <Button
       icon={ <CheckBox /> }
       tooltip='Unselect'
-      onClick={ props.onUnselect } />;
+      onClick={ unselect } />;
   
+  if (!saved)
+    saveButton = <Button
+      icon={ <StarBorder /> }
+      tooltip='Save'
+      onClick={ save } />;
+  else
+    saveButton = <Button
+      icon={ <Star /> }
+      tooltip='Unsave'
+      onClick={ unsave } />;
+
   const deleteButton = <Button
     icon={ <Delete /> }
     tooltip='Delete'
-    onClick={ props.onDelete } />;
+    onClick={ hide } />;
 
   return (
     <ExpansionPanel
@@ -61,7 +85,7 @@ function Panel(props) {
         setHovered(false);
         props.onMouseOut();
       } }
-      { ...{ defaultExpanded } } >
+      defaultExpanded={ panelData.default }>
       <ExpansionPanelSummary
         expandIcon={ <ExpandMore /> }
         classes={{

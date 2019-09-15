@@ -8,7 +8,7 @@ import CodeViewer from './CodeViewer';
 import ConfigViewer from './ConfigViewer';
 import EnvViewer from './EnvViewer';
 import KontViewer from './KontViewer';
-import Context from './Context';
+import ItemContext from './ItemContext';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
@@ -280,7 +280,7 @@ function Project(props) {
       onShowEnv={ onShowEnv }
       onShowKont={ onShowKont }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
-      onSave={ configs => saveMetadata({ configs }) }
+      onSave={ () => saveMetadata({ configs: project.metadata.configs }) }
       onRefresh={ () => {
         refreshEnvs();
         refreshKonts();
@@ -288,15 +288,15 @@ function Project(props) {
     const kontViewerElem = <KontViewer 
       konts={ project.metadata.konts }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
-      onSave={ saveMetadata }
+      onSave={ () => saveMetadata({ konts: project.metadata.konts }) }
       onShowEnv={ onShowEnv } />;
     const envViewerElem = <EnvViewer
       envs={ project.metadata.envs }
       onAdd={ onShowEnv }
-      onSave={ envs => saveMetadata({ envs }) } />;
+      onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;
 
     return (
-      <Context.Provider value={ project.items }>
+      <ItemContext.Provider value={ project.items }>
         <SplitPane vertical>
           <Pane width='40%'>
             { graphElement }
@@ -326,7 +326,7 @@ function Project(props) {
             </SplitPane>
           </Pane>
         </SplitPane>
-      </Context.Provider>);
+      </ItemContext.Provider>);
   }
   function renderCodeViewer() {
     let graphIds = [mainGraphId];

@@ -6,10 +6,24 @@ import withTheme from '@material-ui/styles/withTheme';
 function PanelViewer(props) {
   const { label, panels } = props;
   const savedPanels = Object.entries(panels)
-    .filter(props.onFilterSaved)
+    .filter(([panelId, panelData]) => {
+      const { saved } = panelData;
+      const result = saved;
+      let filter = true;
+      if (props.onFilterUnsaved)
+        filter = props.onFilterSaved([panelId, panelData]);
+      return result && filter;
+    })
     .map(props.onGenerate);
   const unsavedPanels = Object.entries(panels)
-    .filter(props.onFilterUnsaved)
+    .filter(([panelId, panelData]) => {
+      const { saved, visible } = panelData;
+      const result = !saved && visible;
+      let filter = true;
+      if (props.onFilterUnsaved)
+        filter = props.onFilterUnsaved([panelId, panelData]);
+      return result && filter;
+    })
     .map(props.onGenerate);
   const content = [...savedPanels, ...unsavedPanels];
 
