@@ -49,8 +49,8 @@
           (list (set-union new-vals vals)(set-add envs rho)(set-add instrs i)(set-add konts kappa))]
          [`(eval ,_ ,rho ,i ,kappa)
           (list vals (set-add envs rho)(set-add instrs i)(set-add konts kappa))]
-         [`(inner ,_ ,_ ,_ ,_ ,i ,kappa)
-          (list vals envs (set-add instrs i)(set-add konts kappa))]
+         [`(inner ,_ ,_ ,ds ,_ ,i ,kappa)
+          (list (apply set-union vals (if (list? ds)ds(list ds))) envs (set-add instrs i)(set-add konts kappa))]
          [_ tables]))
      (list (set)(set)(set)(set))
      (set->list states)))
@@ -140,7 +140,6 @@
     (match s
       [`(eval ,ast ,rho ,i ,kappa)
        (hash
-        'id (hash-ref state>id s)
         'form "eval"
         'expr (ast-id ast)
         'exprString (~a (only-syntax ast))
@@ -149,15 +148,16 @@
         'kont (hash-ref kont>id kappa))]
       [`(inner ,cat ,ae ,d ,more ,i ,kappa)
        (hash
-        'id (hash-ref state>id s)
         'form (symbol->string cat)
         'expr (ast-id ae)
         'exprString (~a (only-syntax ae))
+        'vals (map
+               (lambda(vs)(set-map vs (lambda(v)(hash-ref val>id v))))
+               (if (list? d)d(list d)))
         'instr (hash-ref instr>id i)
         'kont (hash-ref kont>id kappa))]
       [`(notfound ,ae ,rho ,i ,kappa)
        (hash
-        'id (hash-ref state>id s)
         'form "not found"
         'expr (ast-id ae)
         'exprString (~a (only-syntax ae))
@@ -166,17 +166,14 @@
         'kont (hash-ref kont>id kappa))]
       [`(halt ,d, rho)
        (hash
-        'id (hash-ref state>id s)
         'results (set-map d (lambda(v)(hash-ref val>id v)))
         'form "halt"
         'env (hash-ref env>id rho))]
       [`(non-func ,clo)
        (hash
-        'id (hash-ref state>id s)
         'form "non-func")]
       [_
        (hash
-        'id (hash-ref state>id s)
         'form "unknown")]))
 
   (define (make-addr addr)
@@ -200,17 +197,14 @@
     (match func
       [`(halt ,d ,rho)
        (hash
-        'id id
         'form "halt"
         'results (set-map d (lambda(v)(hash-ref val>id v)))
         'env (hash-ref env>id rho))]
       [`(,form .,_)
        (hash
-        'id id
         'form (symbol->string form))]
       [lid
        (hash
-        'id id
         'form (~a lid)
         'expr (ast-id (hash-ref id>lambda lid))
         'exprString (~a (only-syntax (hash-ref id>lambda lid)))
@@ -293,13 +287,14 @@
        (hash
         'form "halt"
         'descs descs)]
-      [(cons `(frame ,cat ,e ,_vals ,_exps ,_other ,env ,instr) k)
+      [(cons `(frame ,cat ,e ,vals ,_exps ,_other ,env ,instr) k)
        (hash
         'form "frame"
         'descs descs
         'type (~a cat)
         'expr (ast-id e)
         'exprString (~a (only-syntax e))
+        'vals (map (lambda(vs) (set-map vs (lambda(v)(hash-ref val>id v)))) vals) 
         'env (hash-ref env>id env)
         'instr (hash-ref instr>id instr)
         'kont (hash-ref kont>id k))]
