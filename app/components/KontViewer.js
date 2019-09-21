@@ -195,7 +195,7 @@ KontCard = withStyles(theme => ({
 
 function KontLabel(props) {
   const { children } = props;
-  const spacedChildren = children.map(child => {
+  const spacedChildren = React.Children.map(children, child => {
     return React.cloneElement(child, { style: {marginRight: '5px'} });
   });
   return <div>{ spacedChildren }</div>;
