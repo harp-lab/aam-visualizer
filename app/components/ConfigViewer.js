@@ -1,15 +1,12 @@
 import React, { useContext } from 'react';
-import {
-  Card, CardContent,
-  Link,
-  Tooltip,
-  Typography
-} from '@material-ui/core';
+import { Card, CardContent, Typography } from '@material-ui/core';
 
 import ItemContext from './ItemContext';
 import Panel from './Panel';
-import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
+
+import EnvLink from './EnvLink';
+import KontLink from './KontLink';
 
 import ValItem from './ValItem';
 
@@ -31,10 +28,7 @@ function ConfigViewer(props) {
         onSelect={ props.onRefresh }
         onUnselect={ props.onRefresh }
         onSave={ props.onSave }>
-        <Config
-          configId={ configId }
-          onShowEnv={ props.onShowEnv }
-          onShowKont={ props.onShowKont } />
+        <Config configId={ configId } />
       </Panel>);
   }
   function onFilterSaved([configId, config]) {
@@ -51,12 +45,10 @@ function ConfigViewer(props) {
     { ...funcProps } />;
 }
 function Config(props) {
-  const { configId, onShowEnv, onShowKont } = props;
+  const { configId } = props;
   const items = useContext(ItemContext);
 
-  const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
-  const entries = []
   const cards = config.states.map(stateId => {
     const { form } = items.states[stateId];
     switch (form) {
@@ -78,44 +70,6 @@ function Config(props) {
       }}>
       { cards }
     </div>);
-  /*
-  config.states.forEach(stateId => {
-      const { form, instr, kont, env } = items.states[stateId];
-      switch (form) {
-        case 'halt': {
-          entries.push([]);
-          break;
-        }
-        default: {
-          const instrEntries = items.instr[instr]
-            .exprStrings.join(', ');
-
-          let kontElem;
-          if (kont)
-            kontElem = (
-              <Tooltip title='View environment'>
-                <Link onClick={ () => onShowKont(kont) }>
-                  { kont }
-                </Link>
-              </Tooltip>);
-          
-          let envElem;
-          if (env)
-            envElem = (
-              <Tooltip title='View environment'>
-                <Link onClick={ () => onShowEnv(env) }>
-                  { env }
-                </Link>
-              </Tooltip>);
-
-          entries.push([`[ ${instrEntries} ]`, kontElem, envElem]);
-          break;
-        }
-      }
-    });
-  return <PanelTable
-    labels={ labels }
-    entries={ entries }/>;*/
 }
 function StateCard(props) {
   const { stateId } = props;
@@ -130,15 +84,15 @@ function StateCard(props) {
 
   const instr = items.instr[instrId]
    .exprStrings.join(', ');
-  const instrElem = `[ ${ instr } ]`;
+  const instrElem = <Typography display='inline' >{ `[ ${ instr } ]` }</Typography>;
 
-  const kontElem = kontId;
-  const envElem = envId;
+  const kontElem = <KontLink kontId={ kontId } />;
+  const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
 
   let valsElem;
   if (valIdSets)
     valsElem = valIdSets.map((valIds, index) => {
-      const valsElem = valIds.map(valId => <ValItem valId={ valId } />);
+      const valsElem = valIds.map(valId => <ValItem key={ valId } valId={ valId } />);
       return (
         <div
           key={ index }
@@ -149,16 +103,24 @@ function StateCard(props) {
   return(
     <Card style={{ width: '100%' }}>
       <CardContent style={{ padding: 8 }}>
-        <div>
+        <StateLabel>
           { instrElem }
           { kontElem }
           { envElem }
-        </div>
+        </StateLabel>
         <div style={{ display: 'flex' }}>
           { valsElem }
         </div>
       </CardContent>
     </Card>);
+}
+function StateLabel(props) {
+  const { children } = props;
+  const spacedChildren = React.Children.map(children, child => {
+    if (child)
+      return React.cloneElement(child, { style: {marginRight: '5px'} });
+  });
+  return <div>{ spacedChildren }</div>;
 }
 
 export default ConfigViewer;

@@ -35,14 +35,13 @@ function App(props) {
   const [view, setView] = useState(VIEWS.user);
   const [snackbarQueue, setSnackbarQueue] = useState([]);
   const [userId, setUserId] = useState(undefined);
-  const [selectedProjectId, setSelectedProjectId] = useState(undefined);
 
   const { store, dispatch } = useContext(StoreContext);
   const {
-    setProjects, setProject, delProject
+    setProjects, setProject, delProject, selProject
   } = useActions(store, dispatch);
 
-  const projects = store.projects;
+  const { projects, selectedProjectId } = store;
 
   useEffect(() => { setProjects({}) }, [userId]);
 
@@ -53,7 +52,7 @@ function App(props) {
     const projectId = data.id;
     setProject(projectId, new ProjectData(userId));
     setView(VIEWS.list);
-    setSelectedProjectId(undefined);
+    selProject(undefined);
 
     return projectId;
   }
@@ -79,7 +78,7 @@ function App(props) {
       case 205:
         delProject(projectId);
         if (selectedProjectId == projectId)
-          setSelectedProjectId(undefined);
+          selProject(undefined);
         break;
       default:
         queueSnackbar(`Project ${projectId} delete request failed`);
@@ -157,11 +156,11 @@ function App(props) {
 
   function getSelectedProject() { return projects[selectedProjectId]; }
   function selectProject(projectId) {
-    setSelectedProjectId(projectId);
+    selProject(projectId);
     setView(VIEWS.project);
   }
   function deselectProject(projectId) {
-    setSelectedProjectId(undefined);
+    selProject(undefined);
     setView(VIEWS.list);
   }
 

@@ -277,8 +277,6 @@ function Project(props) {
     const codeViewerElem = renderCodeViewer();
     const configViewerElem = <ConfigViewer
       configs={ project.metadata.configs }
-      onShowEnv={ onShowEnv }
-      onShowKont={ onShowKont }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
       onSave={ () => saveMetadata({ configs: project.metadata.configs }) }
       onRefresh={ () => {

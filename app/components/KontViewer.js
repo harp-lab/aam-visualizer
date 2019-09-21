@@ -14,6 +14,8 @@ import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelViewer from './PanelViewer';
 
+import EnvLink from './EnvLink';
+
 import LayerData from './data/Layer';
 
 const KontContext = createContext();
@@ -243,21 +245,5 @@ function KontInfo(props) {
 KontInfo = withStyles({
   paper: { padding: '1em' }
 })(KontInfo);
-
-function EnvLink(props) {
-  const { envId, style } = props;
-  const kontContext = useContext(KontContext);
-  return (
-    <Tooltip title='View environment'>
-      <Link
-        onClick={ evt => {
-          evt.stopPropagation();
-          kontContext.onShowEnv(envId);
-        } }
-        { ...{ style } }>
-        <Typography display='inline'>{ envId }</Typography>
-      </Link>
-    </Tooltip>);
-}
 
 export default KontViewer;
