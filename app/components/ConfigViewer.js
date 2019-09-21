@@ -1,10 +1,17 @@
 import React, { useContext } from 'react';
-import { Link, Tooltip, Typography } from '@material-ui/core'
+import {
+  Card, CardContent,
+  Link,
+  Tooltip,
+  Typography
+} from '@material-ui/core';
 
 import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
+
+import ValItem from './ValItem';
 
 function ConfigViewer(props) {
   const { configs } = props;
@@ -44,12 +51,34 @@ function ConfigViewer(props) {
     { ...funcProps } />;
 }
 function Config(props) {
-  const items = useContext(ItemContext);
   const { configId, onShowEnv, onShowKont } = props;
+  const items = useContext(ItemContext);
 
   const labels = ['instr', 'stack', 'env'];
   const config = items.configs[configId];
   const entries = []
+  const cards = config.states.map(stateId => {
+    const { form } = items.states[stateId];
+    switch (form) {
+      case 'halt':
+        return undefined;
+      default:
+        return <StateCard
+          key={ stateId }
+          stateId={ stateId }/>;
+    }
+
+  });
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%'
+      }}>
+      { cards }
+    </div>);
+  /*
   config.states.forEach(stateId => {
       const { form, instr, kont, env } = items.states[stateId];
       switch (form) {
@@ -86,7 +115,50 @@ function Config(props) {
     });
   return <PanelTable
     labels={ labels }
-    entries={ entries }/>;
+    entries={ entries }/>;*/
+}
+function StateCard(props) {
+  const { stateId } = props;
+  const items = useContext(ItemContext);
+
+  const {
+    instr: instrId,
+    kont: kontId,
+    env: envId,
+    vals: valIdSets
+  } = items.states[stateId];
+
+  const instr = items.instr[instrId]
+   .exprStrings.join(', ');
+  const instrElem = `[ ${ instr } ]`;
+
+  const kontElem = kontId;
+  const envElem = envId;
+
+  let valsElem;
+  if (valIdSets)
+    valsElem = valIdSets.map((valIds, index) => {
+      const valsElem = valIds.map(valId => <ValItem valId={ valId } />);
+      return (
+        <div
+          key={ index }
+          style={{ flex: '1 1 auto' }}>
+          { valsElem }
+        </div>);
+    });
+  return(
+    <Card style={{ width: '100%' }}>
+      <CardContent style={{ padding: 8 }}>
+        <div>
+          { instrElem }
+          { kontElem }
+          { envElem }
+        </div>
+        <div style={{ display: 'flex' }}>
+          { valsElem }
+        </div>
+      </CardContent>
+    </Card>);
 }
 
 export default ConfigViewer;
