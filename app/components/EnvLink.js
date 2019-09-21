@@ -11,9 +11,16 @@ function EnvLink(prop) {
   return (
     <Tooltip title='Show environment'>
       <Link
-        onClick={ () => showEnv(envId) }
+        onClick={ evt => {
+          evt.stopPropagation();
+          showEnv(envId);
+        } }
         { ...{ style } }>
-        <Typography display='inline'>{ envId }</Typography>
+        <Typography 
+          display='inline'
+          style={{ cursor: 'pointer' }}>
+          { `env-${ envId }` }
+        </Typography>
       </Link>
     </Tooltip>);
 }

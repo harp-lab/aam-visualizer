@@ -27,7 +27,7 @@ const theme = createMuiTheme({
       main: amber.A700,
       contrastText: '#fff'
     }
-  }
+  },
 });
 
 export default theme;

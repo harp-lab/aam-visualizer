@@ -11,9 +11,16 @@ function KontLink(prop) {
   return (
     <Tooltip title='Show stack'>
       <Link
-        onClick={ () => showKont(kontId) }
+        onClick={ evt => {
+          evt.stopPropagation();
+          showKont(kontId);
+        } }
         { ...{ style } }>
-        <Typography display='inline'>{ kontId }</Typography>
+        <Typography
+          display='inline'
+          style={{ cursor: 'pointer' }}>
+          { `stack-${ kontId }` }
+        </Typography>
       </Link>
     </Tooltip>);
 }

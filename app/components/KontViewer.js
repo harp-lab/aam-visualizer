@@ -15,6 +15,7 @@ import Panel from './Panel';
 import PanelViewer from './PanelViewer';
 
 import EnvLink from './EnvLink';
+import KontLink from './KontLink';
 
 import LayerData from './data/Layer';
 
@@ -118,7 +119,7 @@ function KontCard(props) {
       const { func: funcId, env, konts: nextKontIds } = kont;
       label = (
         <KontLabel>
-          <KontLabelItem label='Id'>{ kontId }</KontLabelItem>
+          <KontLink kontId={  kontId } />
           <KontLabelItem label='Form'>{ form }</KontLabelItem>
           <KontLabelItem label='Function'>{ items.funcs[funcId].form }</KontLabelItem>
           <EnvLink envId={ env } />
@@ -146,7 +147,7 @@ function KontCard(props) {
     default:
       label = (
         <KontLabel>
-          <KontLabelItem label='Id'>{ kontId }</KontLabelItem>
+          <KontLink kontId={  kontId } />
           <KontLabelItem label='Form'>{ form }</KontLabelItem>
         </KontLabel>);
       break;

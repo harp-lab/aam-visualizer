@@ -100,7 +100,7 @@ function Panel(props) {
         { selectButton }
         { saveButton }
         { deleteButton }
-        <Typography variant='body2'>{ label }</Typography>
+        <Typography>{ label }</Typography>
       </ExpansionPanelSummary>
       <ExpansionPanelDetails>{ children }</ExpansionPanelDetails>
     </ExpansionPanel>);

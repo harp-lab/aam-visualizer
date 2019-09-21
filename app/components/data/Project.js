@@ -71,7 +71,7 @@ class Project {
     Object.entries(items.configs)
       .forEach(([configId, config]) => {
         let syntax;
-        const states = items.configs[configId].states;
+        const { form, states } = items.configs[configId];
         if (states) {
           const stateId = states[0];
           const state = items.states[stateId];
@@ -100,7 +100,7 @@ class Project {
               break;
           }
         }
-        const label = `${configId}: ${syntax}`;
+        const label = `${configId}: ${form} - ${syntax}`;
 
         const configPanel = new Panel(label, true);
 
