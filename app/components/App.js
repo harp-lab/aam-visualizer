@@ -33,7 +33,6 @@ function AppWithStore(props) {
 function App(props) {
   const [load, setLoad] = useState(false);
   const [view, setView] = useState(VIEWS.user);
-  const [snackbarQueue, setSnackbarQueue] = useState([]);
   const [userId, setUserId] = useState(undefined);
 
   const { store, dispatch } = useContext(StoreContext);
@@ -164,13 +163,6 @@ function App(props) {
   function deselectProject(projectId) {
     selProject(undefined);
     setView(VIEWS.list);
-  }
-
-  //function queueSnackbar(message) { setSnackbarQueue([...snackbarQueue, message]); }
-  function nextSnackbar() {
-    /*const [first, ...rest] = snackbarQueue;
-    setSnackbarQueue(rest);*/
-    dequeueSnackbar();
   }
 
   function logout() {
