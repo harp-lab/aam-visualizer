@@ -48,19 +48,21 @@ function Config(props) {
   const { configId } = props;
   const items = useContext(ItemContext);
 
-  const config = items.configs[configId];
-  const cards = config.states.map(stateId => {
-    const { form } = items.states[stateId];
-    switch (form) {
-      case 'halt':
-        return undefined;
-      default:
-        return <StateCard
-          key={ stateId }
-          stateId={ stateId }/>;
-    }
+  const { states } = items.configs[configId];
+  let cards;
+  if (states)
+    cards = states.map(stateId => {
+      const { form } = items.states[stateId];
+      switch (form) {
+        case 'halt':
+          return undefined;
+        default:
+          return <StateCard
+            key={ stateId }
+            stateId={ stateId }/>;
+      }
 
-  });
+    });
   return (
     <div
       style={{

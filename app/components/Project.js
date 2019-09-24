@@ -181,9 +181,9 @@ function Project(props) {
     for (const [configId, config] of Object.entries(configs)) {
       if (config.visible && config.selected) {
         // get states
-        const statesIds = project.items.configs[configId].states;
-        if (statesIds)
-          for (const stateId of statesIds) {
+        const stateIds = project.items.configs[configId].states;
+        if (stateIds)
+          for (const stateId of stateIds) {
             const state = project.items.states[stateId];
             // get env
             const envId = state.env;
@@ -205,10 +205,11 @@ function Project(props) {
     for (const [configId, config] of Object.entries(configs)) {
       if (config.visible && config.selected) {
         const stateIds = project.items.configs[configId].states;
-        for (const stateId of stateIds) {
-          const kontId = project.items.states[stateId].kont;
-          visibleKonts.push(kontId);
-        }
+        if (stateIds)
+          for (const stateId of stateIds) {
+            const kontId = project.items.states[stateId].kont;
+            visibleKonts.push(kontId);
+          }
       }
     }
     for (const [kontId, kont] of Object.entries(konts)) {
