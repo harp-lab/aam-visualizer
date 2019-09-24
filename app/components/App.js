@@ -38,6 +38,7 @@ function App(props) {
 
   const { store, dispatch } = useContext(StoreContext);
   const {
+    queueSnackbar,
     setProjects, setProject, delProject, selProject
   } = useActions(store, dispatch);
 
@@ -93,8 +94,9 @@ function App(props) {
 
     // fork project
     const forkProjectId = await createProject();
-    const forkProject = projects[forkProjectId];
-    forkProject.code = projects[projectId].code;
+    const { code, analysis } = project;
+    const forkProject = { ...projects[forkProjectId], code, analysis };
+    console.log(forkProject);
     setProject(forkProjectId, forkProject);
     selectProject(forkProjectId);
     setView(VIEWS.project);
@@ -164,10 +166,11 @@ function App(props) {
     setView(VIEWS.list);
   }
 
-  function queueSnackbar(message) { setSnackbarQueue([...snackbarQueue, message]); }
+  //function queueSnackbar(message) { setSnackbarQueue([...snackbarQueue, message]); }
   function nextSnackbar() {
-    const [first, ...rest] = snackbarQueue;
-    setSnackbarQueue(rest);
+    /*const [first, ...rest] = snackbarQueue;
+    setSnackbarQueue(rest);*/
+    dequeueSnackbar();
   }
 
   function logout() {
@@ -280,9 +283,7 @@ function App(props) {
         { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
         { appbarElem}
         { viewElem }
-        <NotifySnackbar
-          queue={ snackbarQueue }
-          onClose={ nextSnackbar } />
+        <NotifySnackbar />
       </div>
     </ThemeProvider>);
 }
@@ -341,13 +342,36 @@ function ImportButton(props) {
 }
 
 function NotifySnackbar(props) {
+  const { store, dispatch } = useContext(StoreContext);
+  const { dequeueSnackbar } = useActions(store, dispatch);
+
+  const [message, setMessage] = useState(undefined);
+  const [timer, setTimer] = useState(undefined);
+
+  const { snackbars } = store;
+
+  // update on store change
+  useEffect(() => {
+    if (!message)
+      update();
+  }, [snackbars]);
+
+  function update() {
+    if (snackbars.length > 0) {
+      const message = dequeueSnackbar();
+      setMessage(message);
+      clearTimeout(timer);
+      setTimer(setTimeout(() => update(), 20000));
+    } else {
+      setMessage(undefined);
+      clearTimeout(timer);
+      setTimer(undefined);
+    }
+  }
   function handleClose(evt, reason) {
     if (reason !== 'clickaway')
-      props.onClose();
+      update();
   }
-
-  const message = props.queue[0];
-  const onClose = props.onClose;
 
   return <Snackbar
     open={ Boolean(message) }
@@ -355,7 +379,7 @@ function NotifySnackbar(props) {
     action={[
       <IconButton
         key='close'
-        onClick={ onClose }
+        onClick={ update }
         color='inherit' >
         <CloseIcon />
       </IconButton>

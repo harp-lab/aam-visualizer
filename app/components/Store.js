@@ -1,6 +1,9 @@
 import React, { useReducer, useRef, createContext } from 'react';
 
 const actionTypes = {
+  QUEUE_SNACKBAR: 'QUEUE_SNACKBAR',
+  DEQUEUE_SNACKBAR: 'DEQUEUE_SNACKBAR',
+
   SET_PROJECTS: 'SET_PROJECTS',
   SET_PROJECT: 'SET_PROJECT',
   DEL_PROJECT: 'DEL_PROJECT',
@@ -14,11 +17,26 @@ const StoreContext = createContext();
 
 function Store(props) {
   const initStore = {
+    snackbars: [],
+
     projects: {},
     selectedProjectId: undefined
   };
   const [store, dispatch] = useReducer((state, action) => {
     switch (action.type) {
+      case actionTypes.QUEUE_SNACKBAR: {
+        const { payload } = action;
+        const { snackbars } = state;
+        const { text } = payload;
+        //snackbars = [...snackbars];
+        return { ...state, snackbars: [...snackbars, text] };
+      }
+      case actionTypes.DEQUEUE_SNACKBAR: {
+        const { snackbars } = state;
+        const text = snackbars.shift();
+        return { ...state, snackbars: [...snackbars] };
+      }
+
       case actionTypes.SET_PROJECTS: {
         const { payload } = action;
         return { ...state, projects: payload };
@@ -67,6 +85,18 @@ function getSelectedProject(state) {
 }
 
 function useActions(store, dispatch) {
+  // notifications
+  function queueSnackbar(text) {
+    dispatch({ type: actionTypes.QUEUE_SNACKBAR, payload: { text } });
+  }
+  function dequeueSnackbar() {
+    const { snackbars } = store;
+    const text = snackbars.shift();
+    dispatch({ type: actionTypes.DEQUEUE_SNACKBAR });
+    return text;
+  }
+
+  // projects
   function setProjects(projects) {
     dispatch({ type: actionTypes.SET_PROJECTS, payload: projects });
   }
@@ -80,6 +110,7 @@ function useActions(store, dispatch) {
     dispatch({ type: actionTypes.SEL_PROJECT, id: projectId });
   }
 
+  // panels
   function showEnv(envId) {
     dispatch({ type: actionTypes.SHOW_ENV, id: envId });
   }
@@ -88,6 +119,7 @@ function useActions(store, dispatch) {
   }
 
   return {
+    queueSnackbar, dequeueSnackbar,
     setProjects, setProject, delProject, selProject,
     showEnv, showKont
   };
