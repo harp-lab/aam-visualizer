@@ -94,7 +94,9 @@ function App(props) {
     // fork project
     const forkProjectId = await createProject();
     const { code, analysis } = project;
-    const forkProject = { ...projects[forkProjectId], code, analysis };
+    const forkProject = projects[forkProjectId];
+    forkProject.code = code;
+    forkProject.analysis = analysis;
     console.log(forkProject);
     setProject(forkProjectId, forkProject);
     selectProject(forkProjectId);
