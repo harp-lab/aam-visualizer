@@ -1,12 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { connect } from 'react-redux';
+import { showEnv } from '../redux/actions';
+
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
-import { StoreContext, useActions } from './Store';
-
 function EnvLink(prop) {
-  const { envId, style } = prop;
-  const { store, dispatch } = useContext(StoreContext);
-  const { showEnv } = useActions(store, dispatch);
+  const {
+    envId, style,
+    showEnv
+  } = prop;
   
   return (
     <Tooltip title='Show environment'>
@@ -24,5 +26,7 @@ function EnvLink(prop) {
       </Link>
     </Tooltip>);
 }
-
-export default EnvLink;
+export default connect(
+  null,
+  { showEnv }
+)(EnvLink);

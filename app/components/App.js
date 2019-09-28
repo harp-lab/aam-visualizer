@@ -1,4 +1,10 @@
 import React, { Fragment, useState, useEffect, useRef, useContext } from 'react';
+import { connect } from 'react-redux';
+import { getProjectsState } from '../redux/selectors';
+import { setProjects, setProject, delProject, selProject, queueSnackbar } from '../redux/actions';
+import { getNotificationsState } from '../redux/selectors';
+import { dequeueSnackbar } from '../redux/actions';
+
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
@@ -8,8 +14,6 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 
-import Store, { StoreContext, useActions } from './Store';
-import DropMenu from './DropMenu';
 import Loading from './Loading';
 import Login from './Login';
 import ProjectList from './ProjectList';
@@ -24,24 +28,13 @@ const VIEWS = {
   project: 'project'
 };
 
-function AppWithStore(props) {
-  return (
-    <Store>
-      <App />
-    </Store>);
-}
 function App(props) {
   const [load, setLoad] = useState(false);
   const [view, setView] = useState(VIEWS.user);
   const [userId, setUserId] = useState(undefined);
 
-  const { store, dispatch } = useContext(StoreContext);
-  const {
-    queueSnackbar,
-    setProjects, setProject, delProject, selProject
-  } = useActions(store, dispatch);
-
-  const { projects, selectedProjectId } = store;
+  const { projects, selectedProjectId } = props;
+  const { setProjects, setProject, delProject, selProject, queueSnackbar } = props;
 
   useEffect(() => { setProjects({}) }, [userId]);
 
@@ -87,14 +80,15 @@ function App(props) {
   }
   async function forkProject(projectId) {
     // get project code
-    const project = projects[projectId];
+    const project = {...projects[projectId]};
     if (project.status !== project.STATUSES.empty)
       await getProjectCode(projectId);
 
     // fork project
     const forkProjectId = await createProject();
+    console.log(project);
     const { code, analysis } = project;
-    const forkProject = projects[forkProjectId];
+    const forkProject = {...projects[forkProjectId]};
     forkProject.code = code;
     forkProject.analysis = analysis;
     console.log(forkProject);
@@ -106,7 +100,7 @@ function App(props) {
     const response = await fetch(`/api/${userId}/projects/${projectId}/code`, { method: 'GET' });
     const data = await response.json();
 
-    const project = projects[projectId];
+    const project = {...projects[projectId]};
     project.code = data.code;
     setProject(projectId, project);
   }
@@ -218,12 +212,6 @@ function App(props) {
       const project = getSelectedProject();
       title = project.name || selectedProjectId;
       leftElems = <ProjectListButton />;
-      /* for expansion
-        <DropMenu
-          items={ [
-            { label: 'Logout', callback: logout }
-          ] } />
-      */
       rightElems = (
         <Fragment>
           <AppBarButton
@@ -281,6 +269,14 @@ function App(props) {
       </div>
     </ThemeProvider>);
 }
+const mapStateToProps = state => {
+  const { projects, selectedProjectId } = getProjectsState(state);
+  return { projects, selectedProjectId };
+};
+export default connect(
+  mapStateToProps,
+  { setProjects, setProject, delProject, selProject, queueSnackbar }
+)(App);
 
 function Message(props) {
   return (
@@ -336,13 +332,10 @@ function ImportButton(props) {
 }
 
 function NotifySnackbar(props) {
-  const { store, dispatch } = useContext(StoreContext);
-  const { dequeueSnackbar } = useActions(store, dispatch);
+  const { snackbars } = props;
 
   const [message, setMessage] = useState(undefined);
   const [timer, setTimer] = useState(undefined);
-
-  const { snackbars } = store;
 
   // update on store change
   useEffect(() => {
@@ -382,5 +375,12 @@ function NotifySnackbar(props) {
     message={ message }
     anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }} />;
 }
+const mapStateToProps1 = state => {
+  const { snackbars } = getNotificationsState(state);
+  return { snackbars };
+};
+NotifySnackbar = connect(
+  mapStateToProps1,
+  { dequeueSnackbar }
+)(NotifySnackbar);
 
-export default AppWithStore;

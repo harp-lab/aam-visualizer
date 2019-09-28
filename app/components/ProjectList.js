@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { connect } from 'react-redux';
+import { getProjectsState } from '../redux/selectors';
+import { setProjects } from '../redux/actions';
+
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -16,8 +20,6 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
 import DropMenu from './DropMenu';
-
-import { StoreContext, useActions } from './Store';
 import ProjectData from './data/Project'
 
 function ProjectList(props) {
@@ -25,10 +27,7 @@ function ProjectList(props) {
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
-  const { userId } = props;
-  const { store, dispatch } = useContext(StoreContext);
-  const { setProjects } = useActions(store, dispatch);
-  const projects = store.projects;
+  const { userId, projects, setProjects } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -44,13 +43,14 @@ function ProjectList(props) {
       case 200:
         const data = await res.json();
         let refresh = false;
+        const newProjects = {...projects};
         for (const [id, metadata] of Object.entries(data)) {
-          let project = projects[id];
+          let project = newProjects[id];
 
           // create project if undefined
           if (!project) {
             project = new ProjectData(userId);
-            projects[id] = project;
+            newProjects[id] = project;
           }
 
           project.status = metadata.status;
@@ -66,7 +66,7 @@ function ProjectList(props) {
           timeout.current = setTimeout(getProjectList, 1000);
 
         props.onLoad(false);
-        setProjects(projects);
+        setProjects(newProjects);
         break;
       default:
         props.onLoad(true);
@@ -95,7 +95,7 @@ function ProjectList(props) {
       body: JSON.stringify({ name })
     });
   }
-
+  
   const projectList = Object.entries(projects).map(([id, project]) => {
     const analysisElem = (
       <ListItemText style={{ flex: '0 0 10em' }}>
@@ -181,6 +181,14 @@ function ProjectList(props) {
       { dialog }
     </React.Fragment>);
 }
+const mapStateToProps = state => {
+  const { projects } = getProjectsState(state);
+  return { projects };
+};
+export default connect(
+  mapStateToProps,
+  { setProjects }
+)(ProjectList);
 
 function RenameDialog(props) {
   const [name, setName] = useState(undefined);
@@ -209,5 +217,3 @@ function RenameDialog(props) {
       </DialogActions>
     </Dialog>);
 }
-
-export default ProjectList;

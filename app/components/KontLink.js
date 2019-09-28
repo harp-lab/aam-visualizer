@@ -1,12 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { connect } from 'react-redux';
+import { showKont } from '../redux/actions';
+
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
-import { StoreContext, useActions } from './Store';
 
 function KontLink(prop) {
-  const { kontId, style } = prop;
-  const { store, dispatch } = useContext(StoreContext);
-  const { showKont } = useActions(store, dispatch);
+  const { kontId, style, showKont } = prop;
   
   return (
     <Tooltip title='Show stack'>
@@ -24,5 +24,7 @@ function KontLink(prop) {
       </Link>
     </Tooltip>);
 }
-
-export default KontLink;
+export default connect(
+  null,
+  { showKont }
+)(KontLink);

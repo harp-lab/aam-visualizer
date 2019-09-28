@@ -328,6 +328,7 @@ function Project(props) {
       </ItemContext.Provider>);
   }
   function renderCodeViewer() {
+    console.log(project);
     let graphIds = [mainGraphId];
     if (subGraph)
       graphIds.push(subGraphId);
