@@ -1,4 +1,8 @@
 import React, { Fragment } from 'react';
+import { connect } from 'react-redux';
+import { setMainGraphId } from '../redux/actions';
+import { getSelectedProjectId } from '../redux/selectors/projects'
+import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
@@ -8,49 +12,23 @@ import Pane from './Pane';
 import PaneMessage from './PaneMessage';
 import Graph from './Graph';
 
-function FunctionGraph(props) {
-  const { projectId, project, focused } = props;
+import GraphData from './data/Graph';
 
-  // render main graph
-  const mainGraphId = project.mainGraphId;
-  const mainGraph = project.mainGraph;
+function FunctionGraph(props) {
+  const {
+    projectId, mainGraphId, subGraphId, focused
+  } = props;
+
   const mainGraphElement = <Graph
     projectId={ projectId }
-    graphId={ mainGraphId }
-    data={ mainGraph.export() }
-    metadata={ mainGraph.metadata }
-    onFocus={ props.onFocus }
-    onNodeSelect={ props.onMainNodeSelect }
-    onNodeUnselect={ props.onMainNodeUnselect }
-    onSave={ props.onSave }
-    focus={ focused == mainGraphId } />;
-
-  // render subgraph
-  let subGraphElement;
-  const subGraphId = project.subGraphId;
-  if (subGraphId) {
-    const subGraph = project.graphs[subGraphId];
-    subGraphElement = (
-      <Fragment>
-        <GraphLabel content={ subGraphId} />
-        <Graph
-          projectId={ projectId }
-          graphId={ subGraphId }
-          data={ subGraph.export() }
-          metadata={ subGraph.metadata }
-          onFocus={ props.onFocus }
-          onNodeSelect={ nodeId => props.onNodeSelect(subGraphId, nodeId) }
-          onNodeUnselect={ nodeId => props.onNodeUnselect(subGraphId, nodeId) }
-          onEdgeSelect={ edgeId => {
-              const edge = subGraph.edges[edgeId];
-              if (!edge || edge.calls)
-                props.onEdgeSelect(subGraphId, edgeId);
-          }}
-          onSave={ props.onSave }
-          focus={ focused == subGraphId } />
-      </Fragment>);
-  } else
-    subGraphElement = <PaneMessage content='No subgraph available' />;
+    graphId={ mainGraphId } />;
+  const subGraphElement = (
+    <Fragment>
+      <GraphLabel content={ subGraphId } />
+      <Graph
+        projectId={ projectId }
+        graphId={ subGraphId } />
+    </Fragment>);
 
   return  (
     <SplitPane horizontal>
@@ -79,5 +57,13 @@ function GraphLabel(props) {
     </Toolbar>);
 }
 GraphLabel = withTheme(GraphLabel);
-
-export default FunctionGraph;
+const mapStateToProps = state => {
+  const projectId = getSelectedProjectId(state);
+  const mainGraphId = getMainGraphId(state);
+  const subGraphId = getSubGraphId(state);
+  return { projectId, mainGraphId, subGraphId };
+};
+export default connect(
+  mapStateToProps,
+  { setMainGraphId }
+)(FunctionGraph);

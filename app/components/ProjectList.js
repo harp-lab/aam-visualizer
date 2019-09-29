@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { getProjectsState } from '../redux/selectors';
-import { setProjects } from '../redux/actions';
+import { getProjects } from '../redux/selectors';
+import { setProjectData } from '../redux/actions';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -27,7 +27,7 @@ function ProjectList(props) {
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
-  const { userId, projects, setProjects } = props;
+  const { userId, projects, setProjectData } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -59,6 +59,7 @@ function ProjectList(props) {
 
           if (project.status == project.STATUSES.process)
             refresh = true;
+          setProjectData(id, project);
         }
 
         // update list
@@ -66,7 +67,6 @@ function ProjectList(props) {
           timeout.current = setTimeout(getProjectList, 1000);
 
         props.onLoad(false);
-        setProjects(newProjects);
         break;
       default:
         props.onLoad(true);
@@ -99,7 +99,7 @@ function ProjectList(props) {
   const projectList = Object.entries(projects).map(([id, project]) => {
     const analysisElem = (
       <ListItemText style={{ flex: '0 0 10em' }}>
-        { project.analysis }
+        { project.data.analysis }
       </ListItemText>);
     const nameElem = (
       <ListItemText
@@ -107,7 +107,7 @@ function ProjectList(props) {
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }}>
-        { (project.name || 'unnamed') }
+        { (project.data.name || 'unnamed') }
       </ListItemText>);
     const idElem = (
       <ListItemText style={{ flex: '0 0 10em' }}>
@@ -115,10 +115,10 @@ function ProjectList(props) {
       </ListItemText>);
     const statusElem = (
       <ListItemText style={{ flex: '0 0 10em' }}>
-        { project.status }
+        { project.data.status }
       </ListItemText>);
     let removeActionElem;
-    if (project.status == project.STATUSES.process)
+    if (project.data.status == project.data.STATUSES.process)
       removeActionElem = (
       <Tooltip title='Cancel processing'>
         <IconButton onClick={ () => props.onCancel(id)}>
@@ -168,11 +168,11 @@ function ProjectList(props) {
     dialog = <RenameDialog
       open
       id={ selectedProjectId }
-      name={ project.name }
+      name={ project.data.name }
       onSave={ rename }
       onClose={ closeRenameDialog } />;
   }
-    
+  
   return (
     <React.Fragment>
       <List style={{ overflowY: 'auto' }}>
@@ -182,12 +182,12 @@ function ProjectList(props) {
     </React.Fragment>);
 }
 const mapStateToProps = state => {
-  const { projects } = getProjectsState(state);
+  const projects = getProjects(state);
   return { projects };
 };
 export default connect(
   mapStateToProps,
-  { setProjects }
+  { setProjectData }
 )(ProjectList);
 
 function RenameDialog(props) {

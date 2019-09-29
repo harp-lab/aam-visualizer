@@ -1,4 +1,4 @@
-class Edge {
+/*class Edge {
   constructor(source, target, data) {
     this.source = source;
     this.target = target;
@@ -17,6 +17,20 @@ class Edge {
         target: this.target,
         style: this.style
       }
+    }
+  }
+}*/
+
+function Edge(id, source, target, data) {
+  const { label = '', style } = data;
+  return {
+    group: 'edges',
+    data: {
+      id,
+      label,
+      source,
+      target,
+      style
     }
   }
 }

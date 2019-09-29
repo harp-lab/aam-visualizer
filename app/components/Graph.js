@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { connect } from 'react-redux';
+import { setFocusedGraph, setGraphMetadata } from '../redux/actions'
+import { getProjectItems } from '../redux/selectors/projects';
+import { getGraphMetadata, getFocusedGraph } from '../redux/selectors/graphs';
+
 import cytoscape from 'cytoscape';
 import withTheme from '@material-ui/styles/withTheme';
+
+import GraphData from './data/Graph';
 
 function Graph(props) {
   const cyElem = useRef(undefined);
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  const { projectId, graphId, data, metadata, focus, theme } = props;
+  const {
+    projectId, graphId, data, metadata, focus, theme,
+    setGraphMetadata, setFocusedGraph
+  } = props;
 
   const config = {
     style: [
@@ -68,6 +78,7 @@ function Graph(props) {
   }
   const cyRef = useRef(cytoscape(config));
   const cy = cyRef.current;
+
   const {
     positions,
     selectedNodes = [], 
@@ -116,25 +127,59 @@ function Graph(props) {
   useEffect(() => {
     // event handlers
     ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
-    cy.on('tap', () => props.onFocus(graphId));
+    cy.on('tap', () => setFocusedGraph(graphId));
     cy.on('select', 'node', evt => {
-      const node = evt.target;
-      if (events.current)
-        props.onNodeSelect(node.id());
+      if (events.current) {
+        const node = evt.target;
+        const nodeId = node.id();
+        setGraphMetadata(projectId, graphId, {
+          selectedNodes: [...selectedNodes, nodeId]
+        });
+      }
     });
     cy.on('unselect', 'node', evt => {
-      const node = evt.target;
-      if (events.current)
-        props.onNodeUnselect(node.id());
+      if (events.current) {
+        const node = evt.target;
+        const nodeId = node.id();
+        const newSelectedNodes = selectedNodes.filter(id => id !== nodeId);
+        setGraphMetadata(projectId, graphId, {
+          selectedNodes: newSelectedNodes
+        });
+      }
     });
     cy.on('mouseover', 'node', evt => {
       const node = evt.target;
-      if (hoveredNodes !== [node.id()])
-        props.onSave(graphId, 'hoveredNodes', [node.id()]);
+      const nodeId = node.id();
+      if (hoveredNodes != [nodeId])
+        setGraphMetadata(projectId, graphId, {
+          hoveredNodes: [nodeId]
+        });
     });
     cy.on('mouseout', 'node', evt => {
-      props.onSave(graphId, 'hoveredNodes', []);
+      setGraphMetadata(projectId, graphId, {
+        hoveredNodes: []
+      });
     });
+    cy.on('select', 'edge', evt => {
+      if (events.current) {
+        const edge = evt.target;
+        const edgeId = edge.id();
+        setGraphMetadata(projectId, graphId, {
+          selectedEdges: [edgeId]
+        });
+        //edge.unselect();
+        //props.onEdgeSelect(edge.id());
+      }
+    });
+    cy.on('unselect', 'edge', evt => {
+      if (events.current) {
+        //props.onEdgeSelect(undefined);
+        setGraphMetadata(projectId, graphId, {
+          selectedEdges: []
+        });
+      }
+    });
+    /*
     if (props.onEdgeSelect) {
       cy.on('select', 'edge', evt => {
         const edge = evt.target;
@@ -149,6 +194,7 @@ function Graph(props) {
       });
     } else
       cy.on('select', 'edge', evt => evt.target.unselect());
+    */
     
     // add nodes 
     cy.add(data);
@@ -169,7 +215,8 @@ function Graph(props) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$id(nodeId).position();
       })
-      props.onSave(graphId, 'positions', positions);
+      //props.onSave(graphId, 'positions', positions);
+      setGraphMetadata(projectId, graphId, { positions });
 
       // remove nodes
       cy.nodes().remove();
@@ -270,5 +317,19 @@ function Graph(props) {
     ref={ cyElem } />;
 }
 Graph = withTheme(Graph);
-
-export default Graph;
+const mapStateToProps = (state, ownProps) => {
+  const { graphId } = ownProps;
+  const items = getProjectItems(state);
+  const data = GraphData(graphId, items);
+  const metadata = getGraphMetadata(state, graphId);
+  const focusedGraph = getFocusedGraph(state);
+  const focused = focusedGraph === graphId;
+  return { data, metadata, focused };
+};
+export default connect(
+  mapStateToProps,
+  {
+    setGraphMetadata,
+    setFocusedGraph
+  }
+)(Graph);

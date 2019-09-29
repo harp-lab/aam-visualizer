@@ -1,3 +1,7 @@
+import { connect } from 'react-redux';
+import { getProject } from '../redux/selectors';
+import { setProjectData } from '../redux/actions';
+
 import React, { useState, useEffect, useRef } from 'react';
 import Loading from './Loading';
 import SplitPane from './SplitPane';
@@ -12,14 +16,14 @@ import ItemContext from './ItemContext';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const { userId, projectId, project } = props;
+  const { userId, projectId, project, setProjectData } = props;
   const { mainGraphId, mainGraph, subGraphId, subGraph } = project;
   const timeout = useRef(undefined);
   const [focusedGraph, setFocusedGraph] = useState(undefined);
 
   // mount/unmount
   useEffect(() => {
-    const { status, STATUSES, graphs, code } = project;
+    const { status, STATUSES, graphs, code, items } = project.data;
     switch (status) {
       case STATUSES.edit:
         if (code == '')
@@ -27,7 +31,7 @@ function Project(props) {
         break;
       case STATUSES.done:
       case STATUSES.error:
-        if (Object.keys(graphs).length == 0)
+        if (!items)
           getGraphs();
         break;
     }
@@ -77,8 +81,10 @@ function Project(props) {
     switch (res.status) {
       case 200:
         const data = await res.json();
-        project.import(data);
-        save();
+        //project.import(data);
+        setProjectData(projectId, data);
+
+        //save();
         break;
       case 204:
         timeout.current = setTimeout(() => getGraphs(), 5000);
@@ -221,7 +227,7 @@ function Project(props) {
   }
 
   function render() {
-    const { status, STATUSES, code, graphs, error } = project;
+    const { status, STATUSES, code, graphs, error, items } = project.data;
     let viewElement;
     switch (status) {
       case STATUSES.empty:
@@ -237,7 +243,7 @@ function Project(props) {
         viewElement = <Loading status='Processing' variant='circular'/>;
         break;
       case STATUSES.done:
-        if (Object.keys(graphs).length == 0)
+        if (!items)
           viewElement = <Loading status='Downloading' variant='circular'/>;
         else
           viewElement = renderVisual();
@@ -275,7 +281,7 @@ function Project(props) {
       saveMetadata(konts);
     }
 
-    const codeViewerElem = renderCodeViewer();
+    /*const codeViewerElem = renderCodeViewer();
     const configViewerElem = <ConfigViewer
       configs={ project.metadata.configs }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
@@ -292,7 +298,11 @@ function Project(props) {
     const envViewerElem = <EnvViewer
       envs={ project.metadata.envs }
       onAdd={ onShowEnv }
-      onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;
+      onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;*/
+    const codeViewerElem = <div>code placeholder</div>;
+    const configViewerElem = <div>config placeholder</div>;
+    const kontViewerElem = <div>kont placeholder</div>;
+    const envViewerElem = <div>env placeholder</div>;
 
     return (
       <ItemContext.Provider value={ project.items }>
@@ -328,7 +338,6 @@ function Project(props) {
       </ItemContext.Provider>);
   }
   function renderCodeViewer() {
-    console.log(project);
     let graphIds = [mainGraphId];
     if (subGraph)
       graphIds.push(subGraphId);
@@ -373,7 +382,7 @@ function Project(props) {
     return <CodeViewer
       id={ projectId }
       graphIds={ graphIds }
-      code={ project.code }
+      code={ project.data.code }
       marks={ marks }
       selected={ selected }
       hovered={ hovered }
@@ -383,5 +392,11 @@ function Project(props) {
 
   return render();
 }
-
-export default Project;
+const mapStateToProps = state => {
+  const project = getProject(state);
+  return { project };
+};
+export default connect(
+  mapStateToProps,
+  { setProjectData }
+)(Project);

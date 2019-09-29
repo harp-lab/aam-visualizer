@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect, useRef, useContext } from 'react';
 import { connect } from 'react-redux';
-import { getProjectsState } from '../redux/selectors';
+import { getProjects, getSelectedProjectId } from '../redux/selectors';
 import { setProjects, setProject, delProject, selProject, queueSnackbar } from '../redux/actions';
 import { getNotificationsState } from '../redux/selectors';
 import { dequeueSnackbar } from '../redux/actions';
@@ -86,12 +86,10 @@ function App(props) {
 
     // fork project
     const forkProjectId = await createProject();
-    console.log(project);
     const { code, analysis } = project;
     const forkProject = {...projects[forkProjectId]};
     forkProject.code = code;
     forkProject.analysis = analysis;
-    console.log(forkProject);
     setProject(forkProjectId, forkProject);
     selectProject(forkProjectId);
     setView(VIEWS.project);
@@ -110,7 +108,7 @@ function App(props) {
       case 200:
         const data = await res.json();
         const project = projects[projectId];
-        project.import(data);
+        //project.import(data);
         setProject(projectId, project);
         break;
       case 204:
@@ -210,7 +208,7 @@ function App(props) {
       break;
     case VIEWS.project:
       const project = getSelectedProject();
-      title = project.name || selectedProjectId;
+      title = project.data.name || selectedProjectId;
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
@@ -270,7 +268,8 @@ function App(props) {
     </ThemeProvider>);
 }
 const mapStateToProps = state => {
-  const { projects, selectedProjectId } = getProjectsState(state);
+  const projects = getProjects(state);
+  const selectedProjectId = getSelectedProjectId(state);
   return { projects, selectedProjectId };
 };
 export default connect(

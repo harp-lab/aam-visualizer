@@ -1,8 +1,116 @@
+import store from './store';
+import { getSelectedProjectId } from './selectors/projects'
+
 import {
+  ADD_PROJECT, SET_PROJECT_DATA,
+  SET_METADATA, SET_GRAPH_METADATA,
+  SET_PANEL,
+
   QUEUE_SNACKBAR, DEQUEUE_SNACKBAR, SET_LOADING,
   SET_PROJECTS, SET_PROJECT, DEL_PROJECT, SEL_PROJECT,
   SHOW_ENV, SHOW_KONT
 } from './actionTypes';
+
+
+
+export const addProject = projectId => ({
+  type: ADD_PROJECT,
+  payload: { projectId }
+});
+export const setProjectData = (projectId, data) => ({
+  type: SET_PROJECT_DATA,
+  payload: { projectId, data }
+});
+export const delProject = projectId => ({
+  type: DEL_PROJECT,
+  payload: { projectId }
+});
+export const selProject = projectId => ({
+  type: SEL_PROJECT,
+  payload: { projectId }
+});
+
+
+export const setMetadata = (projectId, data) => ({
+  type: SET_METADATA,
+  payload: { projectId, data }
+});
+export const setMainGraphId = graphId => {
+  const state = store.getState();
+  const projectId = getSelectedProjectId(state);
+  return setMetadata(projectId, {
+    mainGraphId: graphId
+  });
+}
+export const setFocusedGraph = graphId => {
+  const state = store.getState();
+  const projectId = getSelectedProjectId(state);
+  return setMetadata(projectId, {
+    focusedGraph: graphId
+  });
+}
+export const setGraphMetadata = (projectId, graphId, data) => ({
+  type: SET_GRAPH_METADATA,
+  payload: { projectId, graphId, data }
+});
+
+
+export const hideConfig = (projectId, panelId) => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'config',
+    panelId,
+    hidden: true
+  }
+});
+export const hideEnv = panelId => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'env',
+    panelId,
+    hidden: true
+  }
+});
+export const hideKont = panelId => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'kont',
+    panelId,
+    hidden: true
+  }
+});
+export const showConfig = panelId => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'config',
+    panelId,
+    hidden: false
+  }
+});
+export const showEnv = panelId => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'env',
+    panelId,
+    hidden: false
+  }
+});
+export const showKont = panelId => ({
+  type: SET_PANEL,
+  payload: {
+    projectId,
+    type: 'kont',
+    panelId,
+    hidden: false
+  }
+});
+
+
 
 export const queueSnackbar = text => ({
   type: QUEUE_SNACKBAR,
@@ -39,22 +147,4 @@ export const setProject = (id, project) => ({
     id,
     project
   }
-});
-export const delProject = id => ({
-  type: DEL_PROJECT,
-  payload: { id }
-});
-export const selProject = id => ({
-  type: SEL_PROJECT,
-  payload: { id }
-});
-
-// panels
-export const showEnv = id => ({
-  type: SHOW_ENV,
-  payload: { id }
-});
-export const showKont = id => ({
-  type: SHOW_ENV,
-  payload: { id }
 });
