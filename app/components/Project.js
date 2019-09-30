@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
 import { getProject } from '../redux/selectors/projects';
 import { setProjectData } from '../redux/actions/projects';
-import { generateConfigs } from '../redux/actions/panels';
+import { generateConfigs, generateEnvs, generateKonts } from '../redux/actions/panels';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Loading from './Loading';
@@ -17,7 +17,7 @@ import ItemContext from './ItemContext';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const { userId, projectId, project, setProjectData, generateConfigs } = props;
+  const { userId, projectId, project, setProjectData, generateConfigs, generateEnvs, generateKonts } = props;
   const { mainGraphId, mainGraph, subGraphId, subGraph } = project;
   const timeout = useRef(undefined);
   const [focusedGraph, setFocusedGraph] = useState(undefined);
@@ -85,6 +85,8 @@ function Project(props) {
         //project.import(data);
         setProjectData(projectId, data);
         generateConfigs();
+        generateEnvs();
+        generateKonts();
 
 
         //save();
@@ -272,18 +274,14 @@ function Project(props) {
       saveMetadata(konts);
     }
 
-    /*const kontViewerElem = <KontViewer 
+    const kontViewerElem = <KontViewer 
       konts={ project.metadata.konts }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
       onSave={ () => saveMetadata({ konts: project.metadata.konts }) }
       onShowEnv={ onShowEnv } />;
     const envViewerElem = <EnvViewer
-      envs={ project.metadata.envs }
       onAdd={ onShowEnv }
-      onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;*/
-    const configViewerElem = <div>config placeholder</div>;
-    const kontViewerElem = <div>kont placeholder</div>;
-    const envViewerElem = <div>env placeholder</div>;
+      onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;
 
     return (
       <ItemContext.Provider value={ project.items }>
@@ -327,5 +325,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjectData, generateConfigs }
+  { setProjectData, generateConfigs, generateEnvs, generateKonts }
 )(Project);

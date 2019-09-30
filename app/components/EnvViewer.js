@@ -1,4 +1,8 @@
 import React, { useContext } from 'react';
+import { connect } from 'react-redux';
+import { getPanels } from '../redux/selectors/panels';
+import { getProjectItems } from '../redux/selectors/projects';
+
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
 import ItemContext from './ItemContext';
@@ -7,8 +11,7 @@ import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
 
 function EnvViewer(props) {
-  const envs = props.envs;
-  const items = useContext(ItemContext);
+  const { envs, items } = props;
 
   function onGenerate([envId, env]) {
     const { label } = env;
@@ -35,10 +38,17 @@ function EnvViewer(props) {
     panels={ envs }
     onGenerate={ onGenerate } />;
 }
+const mapStateToProps = state => {
+  const { envs } = getPanels(state);
+  const items = getProjectItems(state);
+  return { envs, items };
+};
+export default connect(
+  mapStateToProps
+)(EnvViewer);
 
 function EnvItem(props) {
-  const { envId, onAdd } = props
-  const items = useContext(ItemContext);
+  const { envId, onAdd, items } = props
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
   const env = envs[envId];
@@ -86,5 +96,9 @@ function EnvItem(props) {
     labels={ labels }
     entries={ entries }/>;
 }
-
-export default EnvViewer;
+EnvItem = connect(
+  state => {
+    const items = getProjectItems(state);
+    return { items };
+  },
+)(EnvItem);

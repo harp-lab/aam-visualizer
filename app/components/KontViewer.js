@@ -1,4 +1,8 @@
 import React, { Fragment, useState, useContext, createContext } from 'react';
+import { connect } from 'react-redux';
+import { getPanels } from '../redux/selectors/panels';
+import { getProjectItems } from '../redux/selectors/projects';
+
 import {
   Card, CardContent,
   IconButton,
@@ -49,6 +53,13 @@ function KontViewer(props) {
     panels={ konts }
     onGenerate={ onGenerate } />;
 }
+const mapStateToProps = state => {
+  const { konts } = getPanels(state);
+  return { konts };
+};
+export default connect(
+  mapStateToProps
+)(KontViewer);
 function Kont(props) {
   const { kontId } = props;
   const [layerList, setLayerList] = useState([new LayerData([kontId])]);
@@ -107,8 +118,7 @@ function KontLayer(props) {
     </div>);
 }
 function KontCard(props) {
-  const { kontId, selected, theme, classes } = props;
-  const items = useContext(ItemContext);
+  const { kontId, selected, items, theme, classes } = props;
 
   const kont = items.konts[kontId];
   const { form, type } = kont;
@@ -195,6 +205,12 @@ KontCard = withStyles(theme => ({
     '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
   }
 }), { withTheme: true })(KontCard);
+KontCard = connect(
+  state => {
+    const items = getProjectItems(state);
+    return { items };
+  },
+)(KontCard);
 
 function KontLabel(props) {
   const { children } = props;
@@ -246,5 +262,3 @@ function KontInfo(props) {
 KontInfo = withStyles({
   paper: { padding: '1em' }
 })(KontInfo);
-
-export default KontViewer;

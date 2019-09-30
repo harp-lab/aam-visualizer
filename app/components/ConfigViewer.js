@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
+import { hoverNodes } from '../redux/actions/graphs';
 import { getPanels } from '../redux/selectors/panels';
 import { getProjectItems } from '../redux/selectors/projects';
+import { getSubGraphId } from '../redux/selectors/graphs';
 
 import { Card, CardContent, Typography } from '@material-ui/core';
 
-import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelViewer from './PanelViewer';
 
@@ -15,7 +16,7 @@ import KontLink from './KontLink';
 import ValItem from './ValItem';
 
 function ConfigViewer(props) {
-  const { configs, items } = props;
+  const { configs, items, hoverNodes, subGraphId } = props;
 
   function onGenerate([configId, config]) {
     const { label } = config;
@@ -26,8 +27,8 @@ function ConfigViewer(props) {
         panelId={ configId }
         panelData={ config }
         label={ label }
-        onMouseOver={ () => props.onHover([configId]) }
-        onMouseOut={ () => props.onHover([]) }
+        onMouseOver={ () => hoverNodes(subGraphId, [configId]) }
+        onMouseOut={ () => hoverNodes(subGraphId, []) }
         onSelect={ props.onRefresh }
         onUnselect={ props.onRefresh }
         onSave={ props.onSave }>
@@ -50,10 +51,12 @@ function ConfigViewer(props) {
 const mapStateToProps = state => {
   const { configs } = getPanels(state);
   const items = getProjectItems(state);
-  return { items, configs };
+  const subGraphId = getSubGraphId(state);
+  return { items, configs, subGraphId };
 };
 export default connect(
   mapStateToProps,
+  { hoverNodes }
 )(ConfigViewer);
 
 function Config(props) {

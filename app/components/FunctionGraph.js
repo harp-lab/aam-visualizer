@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { connect } from 'react-redux';
 import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
-import { refreshConfigs } from '../redux/actions/panels';
+import { refreshConfigs, refreshEnvs, refreshKonts } from '../redux/actions/panels';
 
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -14,16 +14,21 @@ import Graph from './Graph';
 function FunctionGraph(props) {
   const {
     mainGraphId, subGraphId,
-    refreshConfigs
+    refreshConfigs, refreshEnvs, refreshKonts
   } = props;
+  function refresh() {
+    refreshConfigs();
+    refreshEnvs();
+    refreshKonts();
+  }
 
   const subGraphElement = (
     <Fragment>
       <GraphLabel content={ subGraphId } />
       <Graph
         graphId={ subGraphId }
-        onNodeSelect={ refreshConfigs }
-        onNodeUnselect={ refreshConfigs } />
+        onNodeSelect={ refresh }
+        onNodeUnselect={ refresh } />
     </Fragment>);
 
   return  (
@@ -61,5 +66,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { refreshConfigs }
+  { refreshConfigs, refreshEnvs, refreshKonts }
 )(FunctionGraph);

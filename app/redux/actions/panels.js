@@ -1,6 +1,7 @@
 import store from '../store';
-import { getSelectedProjectId, getProjectItems } from '../selectors/projects';
+import { getSelectedProjectId, getProjectItems, getProject } from '../selectors/projects';
 import { getSubGraphId, getGraphSelectedNodes } from '../selectors/graphs';
+import { getPanels } from '../selectors/panels';
 import { ADD_PANEL, SET_PANEL, REFRESH_PANELS } from '../actionTypes';
 
 function addPanel(type, panelId, label) {
@@ -79,15 +80,61 @@ export function refreshConfigs() {
   const selectedConfigs = getGraphSelectedNodes(state, subGraphId);
   return refreshPanels('config', (panelId, data) => {
     if (selectedConfigs.includes(panelId)) {
-      return { hidden: false };
+      return { selected: true, hidden: false };
     } else {
       return { hidden: true };
     }
   });
 }
+export function refreshEnvs() {
+  const state = store.getState();
+  const items = getProjectItems(state);
+  const { configs, envs } = getPanels(state);
+  const visibleEnvs = [];
+  for (const [configId, configPanel] of Object.entries(configs)) {
+    if (!configPanel.hidden && configPanel.selected) {
+      const stateIds = items.configs[configId].states;
+      if (stateIds)
+        for (const stateId of stateIds) {
+          const state = items.states[stateId];
+          const envId = state.env;
+          if (envId)
+            visibleEnvs.push(envId);
+        }
+    }
+  }
+  return refreshPanels('env', (envId, panel) => {
+    if (visibleEnvs.includes(envId))
+      return { hidden: false };
+    else
+      return { hidden: true };
+  });
+}
+export function refreshKonts() {
+  const state = store.getState();
+  const items = getProjectItems(state);
+  const { configs, konts } = getPanels(state);
+  const visibleKonts = [];
+  for (const [configId, configPanel] of Object.entries(configs)) {
+    if (!configPanel.hidden && configPanel.selected) {
+      const stateIds = items.configs[configId].states;
+      if (stateIds)
+        for (const stateId of stateIds) {
+          const kontId = items.states[stateId].kont;
+          visibleKonts.push(kontId);
+        }
+    }
+  }
+  return refreshPanels('kont', (kontId, panel) => {
+    if (visibleKonts.includes(kontId))
+      return { hidden: false };
+    else
+      return { hidden: true };
+  });
+}
 
 export function generateConfigs() {
-  return (dispatch) => {
+  return dispatch => {
     const state = store.getState();
     const items = getProjectItems(state);
     for (const [configId, data] of Object.entries(items.configs)) {
@@ -124,6 +171,33 @@ export function generateConfigs() {
       const label = `${configId}: ${form} - ${syntax}`;
   
       dispatch(addConfig(configId, label));
+    }
+  };
+}
+export function generateEnvs() {
+  return dispatch => {
+    const state = store.getState();
+    const items = getProjectItems(state);
+    for (const [envId, data] of Object.entries(items.envs)) {
+      const vars = data.map(entry => entry.varString).join(', ');
+      const label = `${envId}: [ ${vars} ]`;
+
+      dispatch(addEnv(envId, label));
+    }
+  };
+}
+export function generateKonts() {
+  return dispatch => {
+    const state = store.getState();
+    const items = getProjectItems(state);
+    for (const [kontId, kont] of Object.entries(items.konts)) {
+      const { descs } = items.konts[kontId];
+      let label;
+      if (descs.length > 1)
+        label = `[ ${descs[0]}, ... +${descs.length - 1} ]`;
+      else
+        label = `[ ${descs[0]} ]`;
+      dispatch(addKont(kontId, label))
     }
   };
 }
