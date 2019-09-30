@@ -1,13 +1,11 @@
 import { getProjectItems, getProjectMetadata } from './projects';
 
-
 export function getGraphs(store) {
   return getProjectItems(store).graphs;
 }
 export function getGraphsMetadata(store) {
   return getProjectMetadata(store).graphs;
 }
-
 
 export function getMainGraphId(store) {
   return getProjectMetadata(store).data.mainGraphId || 'funcs';
@@ -32,6 +30,15 @@ export function getFocusedGraph(store) {
   const defaultGraph = getMainGraphId(store);
   return getProjectMetadata(store).data.focusedGraph || defaultGraph;
 }
+export function getGraphNodes(store, graphId) {
+  const { graph } = getGraph(store, graphId);
+  const nodeIds = [];
+  for (const [nodeId, children] of Object.entries(graph)) {
+    nodeIds.push(nodeId);
+    nodeIds.concat(Object.keys(children));
+  }
+  return nodeIds;
+}
 
 export function getGraph(store, graphId) {
   return getGraphs(store)[graphId];
@@ -47,5 +54,18 @@ export function getGraphMetadata(store, graphId) {
   return getGraphsMetadata(store)[graphId] || {};
 }
 export function getGraphSelectedNodes(store, graphId) {
-  return getGraphMetadata(store, graphId).selectedNodes || {};
+  return getGraphMetadata(store, graphId).selectedNodes || [];
+}
+export function getGraphHoveredNodes(store, graphId) {
+  return getGraphMetadata(store, graphId).hoveredNodes || [];
+}
+export function getGraphRefData(store, graphId) {
+  const items = getProjectItems(store);
+  switch (graphId) {
+    case 'funcs':
+      return items.funcs;
+    case 'states':
+    default:
+      return items.configs;
+  }
 }

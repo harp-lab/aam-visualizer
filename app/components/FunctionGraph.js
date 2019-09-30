@@ -3,16 +3,14 @@ import { connect } from 'react-redux';
 import { setMainGraphId } from '../redux/actions';
 import { getSelectedProjectId } from '../redux/selectors/projects'
 import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
+
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
 
 import SplitPane from './SplitPane';
 import Pane from './Pane';
-import PaneMessage from './PaneMessage';
 import Graph from './Graph';
-
-import GraphData from './data/Graph';
 
 function FunctionGraph(props) {
   const {

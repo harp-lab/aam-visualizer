@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { setFocusedGraph, setGraphMetadata } from '../redux/actions'
+import { setFocusedGraph, setGraphMetadata, selectAsts, hoverAsts } from '../redux/actions'
 import { getProjectItems } from '../redux/selectors/projects';
 import { getGraphMetadata, getFocusedGraph } from '../redux/selectors/graphs';
 
@@ -132,7 +132,7 @@ function Graph(props) {
       if (events.current) {
         const node = evt.target;
         const nodeId = node.id();
-        setGraphMetadata(projectId, graphId, {
+        setGraphMetadata(graphId, {
           selectedNodes: [...selectedNodes, nodeId]
         });
       }
@@ -142,7 +142,7 @@ function Graph(props) {
         const node = evt.target;
         const nodeId = node.id();
         const newSelectedNodes = selectedNodes.filter(id => id !== nodeId);
-        setGraphMetadata(projectId, graphId, {
+        setGraphMetadata(graphId, {
           selectedNodes: newSelectedNodes
         });
       }
@@ -151,12 +151,12 @@ function Graph(props) {
       const node = evt.target;
       const nodeId = node.id();
       if (hoveredNodes != [nodeId])
-        setGraphMetadata(projectId, graphId, {
+        setGraphMetadata(graphId, {
           hoveredNodes: [nodeId]
         });
     });
     cy.on('mouseout', 'node', evt => {
-      setGraphMetadata(projectId, graphId, {
+      setGraphMetadata(graphId, {
         hoveredNodes: []
       });
     });
@@ -164,7 +164,7 @@ function Graph(props) {
       if (events.current) {
         const edge = evt.target;
         const edgeId = edge.id();
-        setGraphMetadata(projectId, graphId, {
+        setGraphMetadata(graphId, {
           selectedEdges: [edgeId]
         });
         //edge.unselect();
@@ -174,7 +174,7 @@ function Graph(props) {
     cy.on('unselect', 'edge', evt => {
       if (events.current) {
         //props.onEdgeSelect(undefined);
-        setGraphMetadata(projectId, graphId, {
+        setGraphMetadata(graphId, {
           selectedEdges: []
         });
       }
@@ -216,7 +216,7 @@ function Graph(props) {
         positions[nodeId] = cy.$id(nodeId).position();
       })
       //props.onSave(graphId, 'positions', positions);
-      setGraphMetadata(projectId, graphId, { positions });
+      setGraphMetadata(graphId, { positions });
 
       // remove nodes
       cy.nodes().remove();

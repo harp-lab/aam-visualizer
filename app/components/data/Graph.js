@@ -12,6 +12,8 @@ function Graph(graphId, items) {
       data.push(Node(nodeId, form));
 
       for (const [childId, edge] of Object.entries(children)) {
+        const { form } = refData[childId];
+        data.push(Node(childId, form));
         const edgeId = `${nodeId}-${childId}`;
         data.push(Edge(edgeId, nodeId, childId, edge));
       }

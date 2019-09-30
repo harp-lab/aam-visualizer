@@ -281,8 +281,8 @@ function Project(props) {
       saveMetadata(konts);
     }
 
-    /*const codeViewerElem = renderCodeViewer();
-    const configViewerElem = <ConfigViewer
+    const codeViewerElem = renderCodeViewer();
+    /*const configViewerElem = <ConfigViewer
       configs={ project.metadata.configs }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
       onSave={ () => saveMetadata({ configs: project.metadata.configs }) }
@@ -299,7 +299,6 @@ function Project(props) {
       envs={ project.metadata.envs }
       onAdd={ onShowEnv }
       onSave={ () => saveMetadata({ envs: project.metadata.envs }) } />;*/
-    const codeViewerElem = <div>code placeholder</div>;
     const configViewerElem = <div>config placeholder</div>;
     const kontViewerElem = <div>kont placeholder</div>;
     const envViewerElem = <div>env placeholder</div>;
@@ -342,52 +341,12 @@ function Project(props) {
     if (subGraph)
       graphIds.push(subGraphId);
 
-    // get marks
-    const marks = {};
-    for (const [id, data] of Object.entries(project.ast))
-      marks[id] = new CodeMark(data.start, data.end);
-    addMarks(mainGraphId, mainGraph);
-    if (subGraph)
-      addMarks(subGraphId, subGraph);
-    function addMarks(graphId, graph) {
-      for (const [id, node] of Object.entries(graph.nodes)) {
-        const { asts } = node;
-        asts.forEach(ast => {
-          if (marks[ast])
-            marks[ast].addNode(graphId, id);
-        });
-      }
-    }
-
-    // get asts
-    const selected = getAsts('selectedNodes');
-    const hovered = getAsts('hoveredNodes');
-    function getAsts(tag) {
-      let set = getGraphAsts(tag, mainGraph);
-      if (subGraph)
-        set = new Set([...set, ...getGraphAsts(tag, subGraph)]);
-      return [...set];
-    }
-    function getGraphAsts(tag, graph) {
-      const asts = new Set();
-      const nodeIds = graph.load(tag) || [];
-      nodeIds.forEach(nodeId => {
-        graph.nodes[nodeId]
-          .asts
-          .forEach(ast => asts.add(ast));
-      });
-      return asts;
-    }
     
     return <CodeViewer
       id={ projectId }
       graphIds={ graphIds }
       code={ project.data.code }
-      marks={ marks }
-      selected={ selected }
-      hovered={ hovered }
-      onNodesSelect={ selectNodes }
-      onCodeHover={ hoverNodes } />;
+      onNodesSelect={ selectNodes } />;
   }
 
   return render();
