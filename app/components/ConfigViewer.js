@@ -1,4 +1,8 @@
 import React, { useContext } from 'react';
+import { connect } from 'react-redux';
+import { getPanels } from '../redux/selectors/panels';
+import { getProjectItems } from '../redux/selectors/projects';
+
 import { Card, CardContent, Typography } from '@material-ui/core';
 
 import ItemContext from './ItemContext';
@@ -11,8 +15,7 @@ import KontLink from './KontLink';
 import ValItem from './ValItem';
 
 function ConfigViewer(props) {
-  const { configs } = props;
-  const items = useContext(ItemContext);
+  const { configs, items } = props;
 
   function onGenerate([configId, config]) {
     const { label } = config;
@@ -44,10 +47,17 @@ function ConfigViewer(props) {
     onGenerate={ onGenerate }
     { ...funcProps } />;
 }
-function Config(props) {
-  const { configId } = props;
-  const items = useContext(ItemContext);
+const mapStateToProps = state => {
+  const { configs } = getPanels(state);
+  const items = getProjectItems(state);
+  return { items, configs };
+};
+export default connect(
+  mapStateToProps,
+)(ConfigViewer);
 
+function Config(props) {
+  const { configId, items } = props;
   const { states } = items.configs[configId];
   let cards;
   if (states)
@@ -73,9 +83,14 @@ function Config(props) {
       { cards }
     </div>);
 }
+Config = connect(
+  state => {
+    const items = getProjectItems(state);
+    return { items };
+  },
+)(Config);
 function StateCard(props) {
-  const { stateId } = props;
-  const items = useContext(ItemContext);
+  const { stateId, items } = props;
 
   const {
     instr: instrId,
@@ -116,6 +131,12 @@ function StateCard(props) {
       </CardContent>
     </Card>);
 }
+StateCard = connect(
+  state => {
+    const items = getProjectItems(state);
+    return { items };
+  },
+)(StateCard);
 function StateLabel(props) {
   const { children } = props;
   const spacedChildren = React.Children.map(children, child => {
@@ -124,5 +145,3 @@ function StateLabel(props) {
   });
   return <div>{ spacedChildren }</div>;
 }
-
-export default ConfigViewer;

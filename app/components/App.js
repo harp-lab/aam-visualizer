@@ -1,7 +1,8 @@
 import React, { Fragment, useState, useEffect, useRef, useContext } from 'react';
 import { connect } from 'react-redux';
-import { getProjects, getSelectedProjectId } from '../redux/selectors';
-import { setProjects, setProject, delProject, selProject, queueSnackbar } from '../redux/actions';
+import { queueSnackbar } from '../redux/actions';
+import { setProjectData, delProject, selProject } from '../redux/actions/projects';
+import { getProjects, getSelectedProjectId } from '../redux/selectors/projects';
 import { getNotificationsState } from '../redux/selectors';
 import { dequeueSnackbar } from '../redux/actions';
 
@@ -34,16 +35,16 @@ function App(props) {
   const [userId, setUserId] = useState(undefined);
 
   const { projects, selectedProjectId } = props;
-  const { setProjects, setProject, delProject, selProject, queueSnackbar } = props;
+  const { setProjectData, delProject, selProject, queueSnackbar } = props;
 
-  useEffect(() => { setProjects({}) }, [userId]);
+  //useEffect(() => { setProjects({}) }, [userId]);
 
   async function createProject() {
     const res = await fetch(`/api/${userId}/create`, { method: 'GET' });
     const data = await res.json();
 
     const projectId = data.id;
-    setProject(projectId, new ProjectData(userId));
+    setProjectData(projectId, new ProjectData(userId));
     setView(VIEWS.list);
     selProject(undefined);
 
@@ -55,7 +56,7 @@ function App(props) {
       case 200:
         const project = projects[projectId];
         project.status = project.STATUSES.edit;
-        setProject(projectId, project);
+        setProjectData(projectId, project);
         break;
       case 409:
         queueSnackbar(`Project ${projectId} cancel request denied - already finished`)
@@ -90,7 +91,7 @@ function App(props) {
     const forkProject = {...projects[forkProjectId]};
     forkProject.code = code;
     forkProject.analysis = analysis;
-    setProject(forkProjectId, forkProject);
+    setProjectData(forkProjectId, forkProject);
     selectProject(forkProjectId);
     setView(VIEWS.project);
   }
@@ -100,7 +101,7 @@ function App(props) {
 
     const project = {...projects[projectId]};
     project.code = data.code;
-    setProject(projectId, project);
+    setProjectData(projectId, project);
   }
   async function getProjectData(projectId) {
     const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
@@ -109,7 +110,7 @@ function App(props) {
         const data = await res.json();
         const project = projects[projectId];
         //project.import(data);
-        setProject(projectId, project);
+        setProjectData(projectId, project);
         break;
       case 204:
         queueSnackbar('Project still processing');
@@ -122,7 +123,7 @@ function App(props) {
   function importProject(projectId, data) {
     const project = new ProjectData(userId);
     project.import(data);
-    setProject(projectId, project);
+    setProjectData(projectId, project);
   }
   async function exportProject(projectId) {
     const project = projects[projectId];
@@ -198,8 +199,6 @@ function App(props) {
             userId={ userId }
             projects={ projects }
             onClick={ selectProject }
-            onProjectsUpdate={ setProjects }
-            onSave={ setProject }
             onFork={ forkProject }
             onCancel={ cancelProject }
             onDelete={ deleteProject }
@@ -226,7 +225,7 @@ function App(props) {
         userId={ userId }
         projectId={ selectedProjectId }
         project = { getSelectedProject() }
-        onSave={ project => setProject(selectedProjectId, project) }
+        onSave={ project => setProjectData(selectedProjectId, project) }
         onNotify={ queueSnackbar }
         getCode={ () => getProjectCode(selectedProjectId) } />;
       break;
@@ -274,7 +273,7 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjects, setProject, delProject, selProject, queueSnackbar }
+  { setProjectData, delProject, selProject, queueSnackbar }
 )(App);
 
 function Message(props) {

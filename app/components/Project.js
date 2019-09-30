@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
-import { getProject } from '../redux/selectors';
-import { setProjectData } from '../redux/actions';
+import { getProject } from '../redux/selectors/projects';
+import { setProjectData } from '../redux/actions/projects';
+import { generateConfigs } from '../redux/actions/panels';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Loading from './Loading';
@@ -16,7 +17,7 @@ import ItemContext from './ItemContext';
 import CodeMark from './data/CodeMark';
 
 function Project(props) {
-  const { userId, projectId, project, setProjectData } = props;
+  const { userId, projectId, project, setProjectData, generateConfigs } = props;
   const { mainGraphId, mainGraph, subGraphId, subGraph } = project;
   const timeout = useRef(undefined);
   const [focusedGraph, setFocusedGraph] = useState(undefined);
@@ -83,6 +84,8 @@ function Project(props) {
         const data = await res.json();
         //project.import(data);
         setProjectData(projectId, data);
+        generateConfigs();
+
 
         //save();
         break;
@@ -258,18 +261,6 @@ function Project(props) {
     return viewElement;
   }
   function renderVisual() {
-    const graphElement = <FunctionGraph
-      projectId={ projectId }
-      project={ project }
-      focused={ focusedGraph }
-      onFocus={ setFocusedGraph }
-      onNodeSelect={ selectNode }
-      onNodeUnselect={ unselectNode }
-      onMainNodeSelect={ selectMainNode }
-      onMainNodeUnselect={ unselectMainNode }
-      onEdgeSelect={ selectEdge }
-      onSave={ saveGraphMetadata } />;
-
     function onShowEnv(envId) {
       const { envs } = project.metadata;
       envs[envId].show();
@@ -281,16 +272,7 @@ function Project(props) {
       saveMetadata(konts);
     }
 
-    const codeViewerElem = renderCodeViewer();
-    /*const configViewerElem = <ConfigViewer
-      configs={ project.metadata.configs }
-      onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
-      onSave={ () => saveMetadata({ configs: project.metadata.configs }) }
-      onRefresh={ () => {
-        refreshEnvs();
-        refreshKonts();
-      } } />;
-    const kontViewerElem = <KontViewer 
+    /*const kontViewerElem = <KontViewer 
       konts={ project.metadata.konts }
       onHover={ nodeIds => hoverNodes(subGraphId, nodeIds) }
       onSave={ () => saveMetadata({ konts: project.metadata.konts }) }
@@ -307,14 +289,14 @@ function Project(props) {
       <ItemContext.Provider value={ project.items }>
         <SplitPane vertical>
           <Pane width='40%'>
-            { graphElement }
+            <FunctionGraph />
           </Pane>
           <Pane width='60%'>
             <SplitPane horizontal>
               <Pane height='48%'>
                 <SplitPane vertical>
                   <Pane width='48%' overflow='auto'>
-                    { codeViewerElem }
+                    <CodeViewer />
                   </Pane>
                   <Pane width='52%'>
                     { kontViewerElem }
@@ -324,7 +306,7 @@ function Project(props) {
               <Pane height='52%' overflow='auto'>
                 <SplitPane>
                   <Pane width="50%" overflow='auto'>
-                    { configViewerElem }
+                    <ConfigViewer />
                   </Pane>
                   <Pane width="50%" overflow='auto'>
                     { envViewerElem }
@@ -336,18 +318,6 @@ function Project(props) {
         </SplitPane>
       </ItemContext.Provider>);
   }
-  function renderCodeViewer() {
-    let graphIds = [mainGraphId];
-    if (subGraph)
-      graphIds.push(subGraphId);
-
-    
-    return <CodeViewer
-      id={ projectId }
-      graphIds={ graphIds }
-      code={ project.data.code }
-      onNodesSelect={ selectNodes } />;
-  }
 
   return render();
 }
@@ -357,5 +327,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjectData }
+  { setProjectData, generateConfigs }
 )(Project);

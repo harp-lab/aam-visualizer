@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import {
   SET_METADATA, SET_GRAPH_METADATA,
-  ADD_PANEL, SET_PANEL
+  ADD_PANEL, SET_PANEL, REFRESH_PANELS
 } from '../actionTypes';
 
 function dataReducer(state = {}, action) {
@@ -41,19 +41,19 @@ function createFilteredReducer(reducer, predicate) {
 function panelReducer(state = {}, action) {
   switch (action.type) {
     case ADD_PANEL: {
-      const { id, label } = action.payload;
+      const { panelId, label } = action.payload;
       return {
         ...state,
-        [id]: {
+        [panelId]: {
           label,
           saved: false,
-          hidden: false,
+          hidden: true,
           selected: false
         }
       }
     }
     case SET_PANEL: {
-      const { id, ...data } = action.payload
+      const { id, data } = action.payload
       const panel = state[id];
       return {
         ...state,
@@ -62,6 +62,15 @@ function panelReducer(state = {}, action) {
           ...data
         }
       }
+    }
+    case REFRESH_PANELS: {
+      const { func } = action.payload;
+      const panels = {};
+      for (const [panelId, data] of Object.entries(state)) {
+        const newData = func(panelId, data);
+        panels[panelId] = { ...data, ...newData };
+      }
+      return panels;
     }
     default: return state;
   }

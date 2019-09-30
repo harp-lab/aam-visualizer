@@ -17,8 +17,8 @@ function PanelViewer(props) {
     .map(props.onGenerate);
   const unsavedPanels = Object.entries(panels)
     .filter(([panelId, panelData]) => {
-      const { saved, visible } = panelData;
-      const result = !saved && visible;
+      const { saved, hidden } = panelData;
+      const result = !saved && !hidden;
       let filter = true;
       if (props.onFilterUnsaved)
         filter = props.onFilterUnsaved([panelId, panelData]);

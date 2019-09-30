@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { setFocusedGraph, setGraphMetadata, selectAsts, hoverAsts } from '../redux/actions'
+import { setFocusedGraph, setGraphMetadata } from '../redux/actions/graphs'
 import { getProjectItems } from '../redux/selectors/projects';
 import { getGraphMetadata, getFocusedGraph } from '../redux/selectors/graphs';
 
@@ -15,8 +15,9 @@ function Graph(props) {
   const events = useRef(false);
 
   const {
-    projectId, graphId, data, metadata, focus, theme,
-    setGraphMetadata, setFocusedGraph
+    graphId, data, metadata, focus, theme,
+    setGraphMetadata, setFocusedGraph,
+    onNodeSelect, onNodeUnselect
   } = props;
 
   const config = {
@@ -135,6 +136,7 @@ function Graph(props) {
         setGraphMetadata(graphId, {
           selectedNodes: [...selectedNodes, nodeId]
         });
+        if (onNodeSelect) onNodeSelect(nodeId);
       }
     });
     cy.on('unselect', 'node', evt => {
@@ -145,6 +147,7 @@ function Graph(props) {
         setGraphMetadata(graphId, {
           selectedNodes: newSelectedNodes
         });
+        if (onNodeUnselect) onNodeUnselect(nodeId);
       }
     });
     cy.on('mouseover', 'node', evt => {
@@ -221,7 +224,7 @@ function Graph(props) {
       // remove nodes
       cy.nodes().remove();
     };
-  }, [projectId, graphId]);
+  }, [graphId]);
   
   // marking nodes
   useEffect(() => {

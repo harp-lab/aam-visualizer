@@ -9,6 +9,7 @@ export const SET_GRAPH_METADATA = 'SET_GRAPH_METADATA';
 
 export const ADD_PANEL = 'ADD_PANEL';
 export const SET_PANEL = 'SET_PANEL';
+export const REFRESH_PANELS = 'REFRESH_PANELS';
 
 
 export const SET_PROJECTS = 'SET_PROJECTS';

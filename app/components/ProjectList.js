@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { getProjects } from '../redux/selectors';
-import { setProjectData } from '../redux/actions';
+import { setProjectData } from '../redux/actions/projects';
+import { getProjects } from '../redux/selectors/projects';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';

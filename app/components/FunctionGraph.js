@@ -1,8 +1,7 @@
 import React, { Fragment } from 'react';
 import { connect } from 'react-redux';
-import { setMainGraphId } from '../redux/actions';
-import { getSelectedProjectId } from '../redux/selectors/projects'
 import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
+import { refreshConfigs } from '../redux/actions/panels';
 
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -14,25 +13,25 @@ import Graph from './Graph';
 
 function FunctionGraph(props) {
   const {
-    projectId, mainGraphId, subGraphId, focused
+    mainGraphId, subGraphId,
+    refreshConfigs
   } = props;
 
-  const mainGraphElement = <Graph
-    projectId={ projectId }
-    graphId={ mainGraphId } />;
   const subGraphElement = (
     <Fragment>
       <GraphLabel content={ subGraphId } />
       <Graph
-        projectId={ projectId }
-        graphId={ subGraphId } />
+        graphId={ subGraphId }
+        onNodeSelect={ refreshConfigs }
+        onNodeUnselect={ refreshConfigs } />
     </Fragment>);
 
   return  (
     <SplitPane horizontal>
       <Pane height='50%'>
         <GraphLabel content={ mainGraphId } />
-        { mainGraphElement }
+        <Graph
+          graphId={ mainGraphId } />
       </Pane>
       <Pane height='50%'>
         { subGraphElement }
@@ -56,12 +55,11 @@ function GraphLabel(props) {
 }
 GraphLabel = withTheme(GraphLabel);
 const mapStateToProps = state => {
-  const projectId = getSelectedProjectId(state);
   const mainGraphId = getMainGraphId(state);
   const subGraphId = getSubGraphId(state);
-  return { projectId, mainGraphId, subGraphId };
+  return { mainGraphId, subGraphId };
 };
 export default connect(
   mapStateToProps,
-  { setMainGraphId }
+  { refreshConfigs }
 )(FunctionGraph);

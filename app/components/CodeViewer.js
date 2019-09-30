@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { hoverNodes } from '../redux/actions';
+import { selectNodes, hoverNodes } from '../redux/actions/graphs';
 import { getSelectedAsts, getHoveredAsts, getNodeAsts } from '../redux/selectors/ast';
 import {
   getMainGraphId, getSubGraphId,
   getGraphSelectedNodes, getGraphHoveredNodes, getGraphNodes, getGraphRefData
 } from '../redux/selectors/graphs';
-import { getProjectItems } from '../redux/selectors/projects';
+import { getProjectData, getProjectItems } from '../redux/selectors/projects';
 
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
@@ -17,7 +17,7 @@ import CodeMark from './data/CodeMark';
 
 function CodeViewer(props) {
   const [gutterWidth, setGutterWidth] = useState('auto');
-  const { hovered, selected, hoverNodes, theme } = props;
+  const { hovered, selected, hoverNodes, selectNodes, theme } = props;
 
   // filter marks that do not have linked nodes
   const marks = Object.entries(props.marks)
@@ -64,7 +64,7 @@ function CodeViewer(props) {
     if (graphIds.length > 0) {
       const graphId = graphIds[0];
       const graphNodes = nodes[graphId];
-      props.onNodesSelect(graphId, graphNodes);
+      selectNodes(graphId, graphNodes);
     }
   }
   
@@ -168,7 +168,10 @@ function CodeViewer(props) {
 }
 CodeViewer = withTheme(CodeViewer);
 const mapStateToProps = state => {
+  const { code } = getProjectData(state);
+  const graphIds = [getMainGraphId(state), getSubGraphId(state)];
   const items = getProjectItems(state);
+
   const marks = {};
   for (const [astId, data] of Object.entries(items.ast)) {
     const { start, end } = data;
@@ -176,7 +179,6 @@ const mapStateToProps = state => {
     const endPos = new CodePos(end[0], end[1]);
     marks[astId] = new CodeMark(startPos, endPos);
   }
-  const graphIds = [getMainGraphId(state), getSubGraphId(state)];
 
   function addMarks(graphId) {
     const nodeIds = getGraphNodes(state, graphId);
@@ -193,11 +195,11 @@ const mapStateToProps = state => {
   const selected = getSelectedAsts(state);
   const hovered = getHoveredAsts(state);
 
-  return { marks, selected, hovered };
+  return { code, graphIds, marks, selected, hovered };
 };
 export default connect(
   mapStateToProps,
-  { hoverNodes }
+  { hoverNodes, selectNodes }
 )(CodeViewer);
 
 function Token(props) {
