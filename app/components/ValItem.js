@@ -1,12 +1,11 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { connect } from 'react-redux';
+import { getProjectItems } from '../redux/selectors/projects';
 
 import { Typography } from '@material-ui/core';
 
-import ItemContext from './ItemContext';
-
 function ValItem(props) {
-  const { valId } = props;
-  const items = useContext(ItemContext);
+  const { valId, items } = props;
   const { type, astString, valString } = items.vals[valId];
 
   let string;
@@ -24,5 +23,9 @@ function ValItem(props) {
 
   return <Typography>{ string }</Typography>;
 }
-
-export default ValItem;
+export default connect(
+  state => {
+    const items = getProjectItems(state);
+    return { items };
+  }
+)(ValItem);

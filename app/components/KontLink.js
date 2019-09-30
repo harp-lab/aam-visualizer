@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { showKont } from '../redux/actions';
+import { showKont } from '../redux/actions/panels';
 
 import { Link, Tooltip, Typography } from '@material-ui/core';
 

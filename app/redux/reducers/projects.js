@@ -34,10 +34,7 @@ function projectsReducer(state = {}, action) {
     case DEL_PROJECT: {
       const { projectId } = action.payload;
       const {[projectId]: project, ...projects} = state;
-      return {
-        ...state,
-        projects
-      };
+      return { ...projects };
     }
     default: {
       const nextState = {};

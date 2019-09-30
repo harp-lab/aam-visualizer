@@ -10,7 +10,7 @@ function PanelViewer(props) {
       const { saved } = panelData;
       const result = saved;
       let filter = true;
-      if (props.onFilterUnsaved)
+      if (props.onFilterSaved)
         filter = props.onFilterSaved([panelId, panelData]);
       return result && filter;
     })

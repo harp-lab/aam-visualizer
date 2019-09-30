@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { setProjectData } from '../redux/actions/projects';
+import { addProject, setProjectData } from '../redux/actions/projects';
 import { getProjects } from '../redux/selectors/projects';
 
 import List from '@material-ui/core/List';
@@ -20,14 +20,13 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
 import DropMenu from './DropMenu';
-import ProjectData from './data/Project'
 
 function ProjectList(props) {
   const [renameDialog, setRenameDialog] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
-  const { userId, projects, setProjectData } = props;
+  const { userId, projects, addProject, setProjectData } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -49,17 +48,17 @@ function ProjectList(props) {
 
           // create project if undefined
           if (!project) {
-            project = new ProjectData(userId);
-            newProjects[id] = project;
+            addProject(id);
+            project = {};
           }
 
-          project.status = metadata.status;
-          project.name = metadata.name;
-          project.analysis = metadata.analysis;
+          const status = metadata.status;
+          const name = metadata.name;
+          const analysis = metadata.analysis;
 
-          if (project.status == project.STATUSES.process)
+          if (status == 'process')
             refresh = true;
-          setProjectData(id, project);
+          setProjectData(id, { status, name, analysis});
         }
 
         // update list
@@ -187,7 +186,7 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjectData }
+  { addProject, setProjectData }
 )(ProjectList);
 
 function RenameDialog(props) {

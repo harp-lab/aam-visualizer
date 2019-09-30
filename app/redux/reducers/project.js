@@ -6,6 +6,13 @@ import metadataReducer from './metadata';
 
 const initialState = {
   status: 'empty',
+  STATUSES: {
+    empty: 'empty',
+    edit: 'edit',
+    process: 'process',
+    done: 'done',
+    error: 'error'
+  },
   code: ''
 };
 

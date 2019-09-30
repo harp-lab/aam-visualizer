@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useContext, createContext } from 'react';
+import React, { Fragment, useState, createContext } from 'react';
 import { connect } from 'react-redux';
 import { getPanels } from '../redux/selectors/panels';
 import { getProjectItems } from '../redux/selectors/projects';
@@ -6,7 +6,6 @@ import { getProjectItems } from '../redux/selectors/projects';
 import {
   Card, CardContent,
   IconButton,
-  Link,
   Popover,
   Tooltip,
   Typography
@@ -14,7 +13,6 @@ import {
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
 
-import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelViewer from './PanelViewer';
 
@@ -29,17 +27,13 @@ function KontViewer(props) {
   const { konts, onShowEnv } = props;
   
   function onGenerate([kontId, kont]) {
-    const { label } = kont;
-
     return (
       <Panel
         key={ kontId }
         panelId={ kontId }
-        panelData={ kont }
-        label={ label }
+        panelType='konts'
         onMouseOver={ () => {} }
         onMouseOut={ () => {} }
-        onSave={ props.onSave }
         disableSelect
         disableSelectMsg='No action'>
         <KontContext.Provider value={{ onShowEnv }}>

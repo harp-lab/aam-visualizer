@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
+import { getSelectedProjectId, getProjectData } from '../redux/selectors/projects';
+import { saveCode, processCode } from '../redux/api/server';
+
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -25,10 +29,10 @@ class Editor extends Component {
   }
   set value(data) { this.cm.getDoc().setValue(data); }
   get value() { return this.cm.getDoc().getValue(); }
-  save() { this.props.onSave(this.value); }
-  process() { this.props.onProcess(this.value, this.state.processOptions); }
+  save() { this.props.saveCode(this.props.projectId, this.value); }
+  process() { this.props.processCode(this.props.projectId, this.value, this.state.processOptions); }
   refresh() {
-    this.value = this.props.data;
+    this.value = this.props.code;
     if (this.props.marks){
       this.clearMarks();
       this.renderMarks();
@@ -109,7 +113,7 @@ class Editor extends Component {
     this.selectMark();
   }
   componentDidUpdate(prevProps) {
-    const dataUpdate = this.props.data !== prevProps.data;
+    const dataUpdate = this.props.code !== prevProps.data;
     const idUpdate = this.props.id !== prevProps.id;
     const typeUpdate = this.props.type !== prevProps.type;
     if (dataUpdate || idUpdate || typeUpdate)
@@ -189,6 +193,14 @@ class Editor extends Component {
     );
   }
 }
+export default connect(
+  state => {
+    const projectId = getSelectedProjectId(state);
+    const { code } = getProjectData(state);
+    return { projectId, code }
+  },
+  { saveCode, processCode }
+)(Editor);
 
 class ProcessButton extends Component {
   render() {
@@ -202,5 +214,3 @@ class ProcessButton extends Component {
     </Button>;
   }
 }
-
-export default Editor;

@@ -1,10 +1,9 @@
-import React, { Fragment, useState, useEffect, useRef, useContext } from 'react';
+import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { queueSnackbar } from '../redux/actions';
-import { setProjectData, delProject, selProject } from '../redux/actions/projects';
+import { addProject, setProjectData, delProject, selProject } from '../redux/actions/projects';
+import { queueSnackbar, dequeueSnackbar } from '../redux/actions/notifications';
 import { getProjects, getSelectedProjectId } from '../redux/selectors/projects';
-import { getNotificationsState } from '../redux/selectors';
-import { dequeueSnackbar } from '../redux/actions';
+import { getNotificationsState } from '../redux/selectors/notifications';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -20,7 +19,6 @@ import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
-import ProjectData from './data/Project'
 
 const VIEWS = {
   login: 'login',
@@ -35,7 +33,7 @@ function App(props) {
   const [userId, setUserId] = useState(undefined);
 
   const { projects, selectedProjectId } = props;
-  const { setProjectData, delProject, selProject, queueSnackbar } = props;
+  const { addProject, setProjectData, delProject, selProject, queueSnackbar } = props;
 
   //useEffect(() => { setProjects({}) }, [userId]);
 
@@ -44,7 +42,7 @@ function App(props) {
     const data = await res.json();
 
     const projectId = data.id;
-    setProjectData(projectId, new ProjectData(userId));
+    addProject(projectId);
     setView(VIEWS.list);
     selProject(undefined);
 
@@ -81,14 +79,14 @@ function App(props) {
   }
   async function forkProject(projectId) {
     // get project code
-    const project = {...projects[projectId]};
+    const project = projects[projectId].data;
     if (project.status !== project.STATUSES.empty)
       await getProjectCode(projectId);
 
     // fork project
     const forkProjectId = await createProject();
     const { code, analysis } = project;
-    const forkProject = {...projects[forkProjectId]};
+    const forkProject = {};
     forkProject.code = code;
     forkProject.analysis = analysis;
     setProjectData(forkProjectId, forkProject);
@@ -99,7 +97,7 @@ function App(props) {
     const response = await fetch(`/api/${userId}/projects/${projectId}/code`, { method: 'GET' });
     const data = await response.json();
 
-    const project = {...projects[projectId]};
+    const project = projects[projectId].data;
     project.code = data.code;
     setProjectData(projectId, project);
   }
@@ -121,9 +119,8 @@ function App(props) {
     }
   }
   function importProject(projectId, data) {
-    const project = new ProjectData(userId);
-    project.import(data);
-    setProjectData(projectId, project);
+    addProject(projectId);
+    setProjectData(projectId, data);
   }
   async function exportProject(projectId) {
     const project = projects[projectId];
@@ -273,7 +270,7 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjectData, delProject, selProject, queueSnackbar }
+  { addProject, setProjectData, delProject, selProject, queueSnackbar }
 )(App);
 
 function Message(props) {

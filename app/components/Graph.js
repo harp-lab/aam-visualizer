@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { setFocusedGraph, setGraphMetadata } from '../redux/actions/graphs'
+import {
+  setFocusedGraph,
+  selectNodes, unselectNodes, hoverNodes,
+  selectEdges,
+  setPositions } from '../redux/actions/graphs'
 import { getProjectItems } from '../redux/selectors/projects';
 import { getGraphMetadata, getFocusedGraph } from '../redux/selectors/graphs';
 
@@ -15,25 +19,25 @@ function Graph(props) {
   const events = useRef(false);
 
   const {
-    graphId, data, metadata, focus, theme,
-    setGraphMetadata, setFocusedGraph,
-    onNodeSelect, onNodeUnselect
+    graphId, data, metadata, edgePredicate, focus, theme,
+    onNodeSelect, onNodeUnselect,
+    setFocusedGraph,
+    selectNodes, unselectNodes, hoverNodes,
+    selectEdges,
+    setPositions
   } = props;
 
   const config = {
-    style: [
-      {
+    style: [{
         selector: 'node',
         style: {
           'label': 'data(label)',
           'text-wrap': 'wrap'
         }
-      },
-      {
+      }, {
         selector: 'node:selected',
         style: { 'background-color': theme.palette.select.main }
-      },
-      {
+      }, {
         selector: 'edge',
         style: {
           'label': 'data(label)',
@@ -41,25 +45,21 @@ function Graph(props) {
           'target-arrow-shape': 'triangle',
           'line-style': getStyle('line-style', 'solid')
         }
-      },
-      {
+      }, {
         selector: 'edge:selected',
         style: {
           'line-color': theme.palette.select.main,
           'target-arrow-color': theme.palette.select.main
         }
-      },
-      {
+      }, {
         selector: '.suggested',
         style: { 'background-color': theme.palette.suggest.main }
-      },
-      {
+      }, {
         selector: element => {
           return element.hasClass('suggested') && element.selected();
         },
         style: { 'background-color': theme.palette.suggest.dark }
-      },
-      {
+      }, {
         selector: '.hovered',
         style: { 'background-color': theme.palette.hover.main }
       }
@@ -82,8 +82,8 @@ function Graph(props) {
 
   const {
     positions,
-    selectedNodes = [], 
-    selectedEdge = [],
+    selectedNodes = [],
+    selectedEdges = [],
     hoveredNodes = [],
     suggestedNodes = []
   } = metadata;
@@ -92,7 +92,6 @@ function Graph(props) {
   // mount/unmount
   useEffect(() => {
     cy.mount(cyElem.current);
-
     return () => cy.unmount();
   }, []);
 
@@ -133,9 +132,7 @@ function Graph(props) {
       if (events.current) {
         const node = evt.target;
         const nodeId = node.id();
-        setGraphMetadata(graphId, {
-          selectedNodes: [...selectedNodes, nodeId]
-        });
+        selectNodes(graphId, [nodeId]);
         if (onNodeSelect) onNodeSelect(nodeId);
       }
     });
@@ -143,10 +140,7 @@ function Graph(props) {
       if (events.current) {
         const node = evt.target;
         const nodeId = node.id();
-        const newSelectedNodes = selectedNodes.filter(id => id !== nodeId);
-        setGraphMetadata(graphId, {
-          selectedNodes: newSelectedNodes
-        });
+        unselectNodes(graphId, [nodeId]);
         if (onNodeUnselect) onNodeUnselect(nodeId);
       }
     });
@@ -154,72 +148,46 @@ function Graph(props) {
       const node = evt.target;
       const nodeId = node.id();
       if (hoveredNodes != [nodeId])
-        setGraphMetadata(graphId, {
-          hoveredNodes: [nodeId]
-        });
+        hoverNodes(graphId, [nodeId]);
     });
     cy.on('mouseout', 'node', evt => {
-      setGraphMetadata(graphId, {
-        hoveredNodes: []
-      });
+      hoverNodes(graphId, []);
     });
     cy.on('select', 'edge', evt => {
       if (events.current) {
         const edge = evt.target;
-        const edgeId = edge.id();
-        setGraphMetadata(graphId, {
-          selectedEdges: [edgeId]
-        });
-        //edge.unselect();
-        //props.onEdgeSelect(edge.id());
+        if (edgePredicate(edge)) {
+          const edgeId = edge.id();
+          selectEdges(graphId, [edgeId]);
+        } else
+          edge.unselect();
       }
     });
     cy.on('unselect', 'edge', evt => {
-      if (events.current) {
-        //props.onEdgeSelect(undefined);
-        setGraphMetadata(graphId, {
-          selectedEdges: []
-        });
-      }
+      if (events.current)
+        selectEdges(graphId, []);
     });
-    /*
-    if (props.onEdgeSelect) {
-      cy.on('select', 'edge', evt => {
-        const edge = evt.target;
-        if (events.current) {
-          edge.unselect();
-          props.onEdgeSelect(edge.id());
-        }
-      });
-      cy.on('unselect', 'edge', evt => {
-        if (events.current)
-          props.onEdgeSelect(undefined);
-      });
-    } else
-      cy.on('select', 'edge', evt => evt.target.unselect());
-    */
     
     // add nodes 
     cy.add(data);
 
     // load node positions
     if (positions) {
-      cy.nodes().positions(element => {
-        return positions[element.data('id')];
-      });
+      cy.nodes()
+        .positions(element => positions[element.data('id')]);
       cy.fit();
     } else
-      cy.layout({ name: 'cose', directed: true }).run();
+      cy.layout({ name: 'cose', directed: true })
+        .run();
     
     return () => {
       // save node positions
       const positions = {};
-      data.forEach(node => {
+      for (const node of data) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$id(nodeId).position();
-      })
-      //props.onSave(graphId, 'positions', positions);
-      setGraphMetadata(graphId, { positions });
+      }
+      setPositions(graphId, positions);
 
       // remove nodes
       cy.nodes().remove();
@@ -229,26 +197,22 @@ function Graph(props) {
   // marking nodes
   useEffect(() => {
     events.current = false;
-    select([...selectedNodes, selectedEdge]);
+    select([...selectedNodes, ...selectedEdges]);
     events.current = true;
 
     function select(elemIds) {
-      elemIds.forEach(elemId => {
-        cy.$id(elemId).select();
-      });
+      elemIds.forEach(elemId => cy.$id(elemId).select());
     }
     function unselect(elemIds) {
-      elemIds.forEach(elemId => {
-        cy.$id(elemId).unselect();
-      })
+      elemIds.forEach(elemId => cy.$id(elemId).unselect())
     }
 
     return () => {
       events.current = false;
-      unselect([...selectedNodes, selectedEdge]);
+      unselect([...selectedNodes, selectedEdges]);
       events.current = true;
     };
-  }, [selectedNodes, selectedEdge]);
+  }, [selectedNodes, selectedEdges]);
   useEffect(() => {
     events.current = false;
     addClass(suggestedNodes, 'suggested');
@@ -306,7 +270,6 @@ function Graph(props) {
 
   // update
   useEffect(() => {
-    // update bounds
     bounds.current = cyElem.current.getBoundingClientRect();
   });
 
@@ -320,19 +283,22 @@ function Graph(props) {
     ref={ cyElem } />;
 }
 Graph = withTheme(Graph);
-const mapStateToProps = (state, ownProps) => {
-  const { graphId } = ownProps;
-  const items = getProjectItems(state);
-  const data = GraphData(graphId, items);
-  const metadata = getGraphMetadata(state, graphId);
-  const focusedGraph = getFocusedGraph(state);
-  const focused = focusedGraph === graphId;
-  return { data, metadata, focused };
-};
 export default connect(
-  mapStateToProps,
+  (state, ownProps) => {
+    const { graphId } = ownProps;
+    const items = getProjectItems(state);
+    const data = GraphData(graphId, items);
+    const metadata = getGraphMetadata(state, graphId);
+    const focusedGraph = getFocusedGraph(state);
+    const focused = focusedGraph === graphId;
+    return { data, metadata, focused };
+  },
   {
-    setGraphMetadata,
-    setFocusedGraph
+    setFocusedGraph,
+    selectNodes,
+    unselectNodes,
+    hoverNodes,
+    selectEdges,
+    setPositions
   }
 )(Graph);

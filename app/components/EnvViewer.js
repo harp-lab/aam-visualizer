@@ -1,30 +1,25 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { getPanels } from '../redux/selectors/panels';
 import { getProjectItems } from '../redux/selectors/projects';
 
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
-import ItemContext from './ItemContext';
 import Panel from './Panel';
 import PanelTable from './PanelTable';
 import PanelViewer from './PanelViewer';
 
 function EnvViewer(props) {
-  const { envs, items } = props;
+  const { envs } = props;
 
   function onGenerate([envId, env]) {
-    const { label } = env;
-
     return (
       <Panel
         key={ envId }
         panelId={ envId }
-        panelData={ env }
-        label={ items.envs[envId].length > 0 ? label : `${label} (empty)` }
+        panelType='envs'
         onMouseOver={ () => {} } // TODO implement env hovering
         onMouseOut={ () => {} }
-        onSave={ props.onSave }
         disableSelect
         disableSelectMsg='No action'>
         <EnvItem

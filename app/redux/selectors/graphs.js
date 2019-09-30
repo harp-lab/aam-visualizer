@@ -59,6 +59,9 @@ export function getGraphSelectedNodes(store, graphId) {
 export function getGraphHoveredNodes(store, graphId) {
   return getGraphMetadata(store, graphId).hoveredNodes || [];
 }
+export function getSelectedEdges(store, graphId) {
+  return getGraphMetadata(store, graphId).selectedEdges || [];
+}
 export function getGraphRefData(store, graphId) {
   const items = getProjectItems(store);
   switch (graphId) {

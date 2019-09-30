@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { showEnv } from '../redux/actions';
+import { showEnv } from '../redux/actions/panels';
 
 import { Link, Tooltip, Typography } from '@material-ui/core';
 

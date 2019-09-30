@@ -17,9 +17,9 @@ function addPanel(type, panelId, label) {
     }
   };
 }
-export const addConfig = (panelId, label) => addPanel('config', panelId, label);
-export const addEnv = (panelId, label) => addPanel('env', panelId, label);
-export const addKont = (panelId, label) => addPanel('kont', panelId, label);
+export const addConfig = (panelId, label) => addPanel('configs', panelId, label);
+export const addEnv = (panelId, label) => addPanel('envs', panelId, label);
+export const addKont = (panelId, label) => addPanel('konts', panelId, label);
 
 function setPanel(type, panelId, data) {
   const state = store.getState();
@@ -34,33 +34,33 @@ function setPanel(type, panelId, data) {
     }
   }
 }
-const hidePanel = (type, panelId) => setPanel(type, panelId, { hidden: true });
-const showPanel = (type, panelId) => setPanel(type, panelId, { hidden: false });
-const savePanel = (type, panelId) => setPanel(type, panelId, { saved: true });
-const unsavePanel = (type, panelId) => setPanel(type, panelId, { saved: false });
-const selectPanel = (type, panelId) => setPanel(type, panelId, { selected: true });
-const unselectPanel = (type, panelId) => setPanel(type, panelId, { selected: false });
+export const hidePanel = (type, panelId) => setPanel(type, panelId, { hidden: true });
+export const showPanel = (type, panelId) => setPanel(type, panelId, { hidden: false });
+export const savePanel = (type, panelId) => setPanel(type, panelId, { saved: true });
+export const unsavePanel = (type, panelId) => setPanel(type, panelId, { saved: false });
+export const selectPanel = (type, panelId) => setPanel(type, panelId, { selected: true });
+export const unselectPanel = (type, panelId) => setPanel(type, panelId, { selected: false });
 
-export const hideConfig = panelId => hidePanel('config', panelId);
-export const showConfig = panelId => showPanel('config', panelId);
-export const saveConfig = panelId => savePanel('config', panelId);
-export const unsaveConfig = panelId => unsavePanel('config', panelId);
-export const selectConfig = panelId => selectPanel('config', panelId);
-export const unselectConfig = panelId => unselectPanel('config', panelId);
+export const hideConfig = panelId => hidePanel('configs', panelId);
+export const showConfig = panelId => showPanel('configs', panelId);
+export const saveConfig = panelId => savePanel('configs', panelId);
+export const unsaveConfig = panelId => unsavePanel('configs', panelId);
+export const selectConfig = panelId => selectPanel('configs', panelId);
+export const unselectConfig = panelId => unselectPanel('configs', panelId);
 
-export const hideKont = panelId => hidePanel('kont', panelId);
-export const showKont = panelId => showPanel('kont', panelId);
-export const saveKont = panelId => savePanel('kont', panelId);
-export const unsaveKont = panelId => unsavePanel('kont', panelId);
-export const selectKont = panelId => selectPanel('kont', panelId);
-export const unselectKont = panelId => unselectPanel('kont', panelId);
+export const hideKont = panelId => hidePanel('konts', panelId);
+export const showKont = panelId => showPanel('konts', panelId);
+export const saveKont = panelId => savePanel('konts', panelId);
+export const unsaveKont = panelId => unsavePanel('konts', panelId);
+export const selectKont = panelId => selectPanel('konts', panelId);
+export const unselectKont = panelId => unselectPanel('konts', panelId);
 
-export const hideEnv = panelId => hidePanel('env', panelId);
-export const showEnv = panelId => showPanel('env', panelId);
-export const saveEnv = panelId => savePanel('env', panelId);
-export const unsaveEnv = panelId => unsavePanel('env', panelId);
-export const selectEnv = panelId => selectPanel('env', panelId);
-export const unselectEnv = panelId => unselectPanel('env', panelId);
+export const hideEnv = panelId => hidePanel('envs', panelId);
+export const showEnv = panelId => showPanel('envs', panelId);
+export const saveEnv = panelId => savePanel('envs', panelId);
+export const unsaveEnv = panelId => unsavePanel('envs', panelId);
+export const selectEnv = panelId => selectPanel('envs', panelId);
+export const unselectEnv = panelId => unselectPanel('envs', panelId);
 
 function refreshPanels(type, func) {
   const state = store.getState();
@@ -74,11 +74,18 @@ function refreshPanels(type, func) {
     }
   };
 }
+export function refresh() {
+  return dispatch => {
+    dispatch(refreshConfigs());
+    dispatch(refreshEnvs());
+    dispatch(refreshKonts());
+  };
+}
 export function refreshConfigs() {
   const state = store.getState();
   const subGraphId = getSubGraphId(state);
   const selectedConfigs = getGraphSelectedNodes(state, subGraphId);
-  return refreshPanels('config', (panelId, data) => {
+  return refreshPanels('configs', (panelId, data) => {
     if (selectedConfigs.includes(panelId)) {
       return { selected: true, hidden: false };
     } else {
@@ -103,7 +110,7 @@ export function refreshEnvs() {
         }
     }
   }
-  return refreshPanels('env', (envId, panel) => {
+  return refreshPanels('envs', (envId, panel) => {
     if (visibleEnvs.includes(envId))
       return { hidden: false };
     else
@@ -125,7 +132,7 @@ export function refreshKonts() {
         }
     }
   }
-  return refreshPanels('kont', (kontId, panel) => {
+  return refreshPanels('konts', (kontId, panel) => {
     if (visibleKonts.includes(kontId))
       return { hidden: false };
     else

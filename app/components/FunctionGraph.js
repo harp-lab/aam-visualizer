@@ -1,7 +1,6 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
-import { refreshConfigs, refreshEnvs, refreshKonts } from '../redux/actions/panels';
 
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -12,34 +11,26 @@ import Pane from './Pane';
 import Graph from './Graph';
 
 function FunctionGraph(props) {
-  const {
-    mainGraphId, subGraphId,
-    refreshConfigs, refreshEnvs, refreshKonts
-  } = props;
-  function refresh() {
-    refreshConfigs();
-    refreshEnvs();
-    refreshKonts();
-  }
-
-  const subGraphElement = (
-    <Fragment>
-      <GraphLabel content={ subGraphId } />
-      <Graph
-        graphId={ subGraphId }
-        onNodeSelect={ refresh }
-        onNodeUnselect={ refresh } />
-    </Fragment>);
+  const { mainGraphId, subGraphId } = props;
 
   return  (
     <SplitPane horizontal>
       <Pane height='50%'>
         <GraphLabel content={ mainGraphId } />
         <Graph
-          graphId={ mainGraphId } />
+          graphId={ mainGraphId }
+          edgePredicate={ edge => false } />
       </Pane>
       <Pane height='50%'>
-        { subGraphElement }
+        <GraphLabel content={ subGraphId } />
+        <Graph
+          graphId={ subGraphId }
+          edgePredicate={ edge => {
+            const style = edge.data('style');
+            if (style)
+              return style['line-style'] === 'dashed';
+            return false;
+          } } />
       </Pane>
     </SplitPane>);
 }
@@ -65,6 +56,5 @@ const mapStateToProps = state => {
   return { mainGraphId, subGraphId };
 };
 export default connect(
-  mapStateToProps,
-  { refreshConfigs, refreshEnvs, refreshKonts }
+  mapStateToProps
 )(FunctionGraph);

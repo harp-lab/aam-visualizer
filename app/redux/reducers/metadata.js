@@ -53,11 +53,11 @@ function panelReducer(state = {}, action) {
       }
     }
     case SET_PANEL: {
-      const { id, data } = action.payload
-      const panel = state[id];
+      const { panelId, data } = action.payload
+      const panel = state[panelId];
       return {
         ...state,
-        [id]: {
+        [panelId]: {
           ...panel,
           ...data
         }
@@ -76,9 +76,9 @@ function panelReducer(state = {}, action) {
   }
 }
 const panelsReducer = combineReducers({
-  configs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'config' : false),
-  envs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'env' : false),
-  konts: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'kont' : false)
+  configs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'configs' : false),
+  envs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'envs' : false),
+  konts: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === 'konts' : false)
 })
 
 export default combineReducers({
