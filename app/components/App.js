@@ -1,9 +1,12 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
+import { setUser, setView  } from '../redux/actions/data';
 import { addProject, setProjectData, delProject, selProject } from '../redux/actions/projects';
 import { queueSnackbar, dequeueSnackbar } from '../redux/actions/notifications';
+import { getUser, getView } from '../redux/selectors/data';
 import { getProjects, getSelectedProjectId } from '../redux/selectors/projects';
-import { getNotificationsState } from '../redux/selectors/notifications';
+import { getSnackbar } from '../redux/selectors/notifications';
+import { LOGIN_VIEW, LOAD_VIEW, LIST_VIEW, PROJECT_VIEW } from '../redux/consts';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -29,11 +32,9 @@ const VIEWS = {
 
 function App(props) {
   const [load, setLoad] = useState(false);
-  const [view, setView] = useState(VIEWS.user);
-  const [userId, setUserId] = useState(undefined);
 
-  const { projects, selectedProjectId } = props;
-  const { addProject, setProjectData, delProject, selProject, queueSnackbar } = props;
+  const { userId, view, projects, selectedProjectId } = props;
+  const { setUser, setView, addProject, setProjectData, delProject, selProject, queueSnackbar } = props;
 
   //useEffect(() => { setProjects({}) }, [userId]);
 
@@ -43,7 +44,7 @@ function App(props) {
 
     const projectId = data.id;
     addProject(projectId);
-    setView(VIEWS.list);
+    setView(LIST_VIEW);
     selProject(undefined);
 
     return projectId;
@@ -64,19 +65,6 @@ function App(props) {
         break;
     }
   }
-  async function deleteProject(projectId) {
-    const res = await fetch(`/api/${userId}/projects/${projectId}/delete`, { method: 'POST' });
-    switch (res.status) {
-      case 205:
-        delProject(projectId);
-        if (selectedProjectId == projectId)
-          selProject(undefined);
-        break;
-      default:
-        queueSnackbar(`Project ${projectId} delete request failed`);
-        break;
-    }
-  }
   async function forkProject(projectId) {
     // get project code
     const project = projects[projectId].data;
@@ -91,7 +79,7 @@ function App(props) {
     forkProject.analysis = analysis;
     setProjectData(forkProjectId, forkProject);
     selectProject(forkProjectId);
-    setView(VIEWS.project);
+    setView(PROJECT_VIEW);
   }
   async function getProjectCode(projectId) {
     const response = await fetch(`/api/${userId}/projects/${projectId}/code`, { method: 'GET' });
@@ -123,11 +111,11 @@ function App(props) {
     setProjectData(projectId, data);
   }
   async function exportProject(projectId) {
-    const project = projects[projectId];
     await getProjectData(projectId);
+    const project = projects[projectId];
 
     // get project data
-    const data = project.export();
+    const data = project.data;
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
 
@@ -150,16 +138,16 @@ function App(props) {
   function getSelectedProject() { return projects[selectedProjectId]; }
   function selectProject(projectId) {
     selProject(projectId);
-    setView(VIEWS.project);
+    setView(PROJECT_VIEW);
   }
   function deselectProject(projectId) {
     selProject(undefined);
-    setView(VIEWS.list);
+    setView(LIST_VIEW);
   }
 
   function logout() {
-    setUserId(undefined);
-    setView(VIEWS.user);
+    setUser(undefined);
+    setView(LOGIN_VIEW);
   }
 
   function ProjectListButton(props) {
@@ -170,14 +158,14 @@ function App(props) {
 
   let viewElem, title, leftElems, rightElems;
   switch (view) {
-    case VIEWS.user:
+    case LOGIN_VIEW:
       viewElem = <Login 
         onSubmit={ userId => {
-          setUserId(userId);
-          setView(VIEWS.list);
+          setUser(userId);
+          setView(LIST_VIEW);
         }} />;
       break;
-    case VIEWS.list:
+    case LIST_VIEW:
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
@@ -198,11 +186,10 @@ function App(props) {
             onClick={ selectProject }
             onFork={ forkProject }
             onCancel={ cancelProject }
-            onDelete={ deleteProject }
             onExport={ exportProject }
             onLoad={ setLoad } />;
       break;
-    case VIEWS.project:
+    case PROJECT_VIEW:
       const project = getSelectedProject();
       title = project.data.name || selectedProjectId;
       leftElems = <ProjectListButton />;
@@ -264,13 +251,15 @@ function App(props) {
     </ThemeProvider>);
 }
 const mapStateToProps = state => {
+  const userId = getUser(state);
+  const view = getView(state);
   const projects = getProjects(state);
   const selectedProjectId = getSelectedProjectId(state);
-  return { projects, selectedProjectId };
+  return { userId, view, projects, selectedProjectId };
 };
 export default connect(
   mapStateToProps,
-  { addProject, setProjectData, delProject, selProject, queueSnackbar }
+  { setUser, setView, addProject, setProjectData, delProject, selProject, queueSnackbar }
 )(App);
 
 function Message(props) {
@@ -327,28 +316,21 @@ function ImportButton(props) {
 }
 
 function NotifySnackbar(props) {
-  const { snackbars } = props;
+  const { message, dequeueSnackbar } = props;
 
-  const [message, setMessage] = useState(undefined);
   const [timer, setTimer] = useState(undefined);
 
   // update on store change
   useEffect(() => {
-    if (!message)
-      update();
-  }, [snackbars]);
+    if (message)
+      setTimer(setTimeout(() => {
+        update();
+      }, 20000));
+  }, [message]);
 
   function update() {
-    if (snackbars.length > 0) {
-      const message = dequeueSnackbar();
-      setMessage(message);
-      clearTimeout(timer);
-      setTimer(setTimeout(() => update(), 20000));
-    } else {
-      setMessage(undefined);
-      clearTimeout(timer);
-      setTimer(undefined);
-    }
+    clearTimeout(timer);
+    dequeueSnackbar();
   }
   function handleClose(evt, reason) {
     if (reason !== 'clickaway')
@@ -371,8 +353,8 @@ function NotifySnackbar(props) {
     anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }} />;
 }
 const mapStateToProps1 = state => {
-  const { snackbars } = getNotificationsState(state);
-  return { snackbars };
+  const message = getSnackbar(state);
+  return { message };
 };
 NotifySnackbar = connect(
   mapStateToProps1,

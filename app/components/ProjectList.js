@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
+import { deleteProject } from '../redux/api/server';
 import { addProject, setProjectData } from '../redux/actions/projects';
 import { getProjects } from '../redux/selectors/projects';
 
@@ -26,7 +27,9 @@ function ProjectList(props) {
   const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
-  const { userId, projects, addProject, setProjectData } = props;
+  const {
+    userId, projects,
+    addProject, setProjectData, deleteProject } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -127,7 +130,7 @@ function ProjectList(props) {
     else
       removeActionElem = (
         <Tooltip title='Delete'>
-          <IconButton onClick={ () => props.onDelete(id) }>
+          <IconButton onClick={ () => deleteProject(id) }>
             <DeleteIcon />
           </IconButton>
         </Tooltip>);
@@ -186,7 +189,7 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { addProject, setProjectData }
+  { addProject, setProjectData, deleteProject }
 )(ProjectList);
 
 function RenameDialog(props) {

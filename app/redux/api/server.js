@@ -1,8 +1,27 @@
 import store from '../store';
-import { setProjectData } from '../actions/projects';
-import { queueSnackbar } from '../actions/notifications'
-import { getProjectData } from '../selectors/projects';
+import { setProjectData, delProject, selProject } from '../actions/projects';
+import { queueSnackbar } from '../actions/notifications';
+import { getUser } from '../selectors/data';
+import { getSelectedProjectId, getProjectData } from '../selectors/projects';
 
+export function deleteProject(projectId) {
+  return async function(dispatch) {
+    const state = store.getState();
+    const userId = getUser(state);
+    const selectedProjectId = getSelectedProjectId(state);
+    const res = await fetch(`/api/${userId}/projects/${projectId}/delete`, { method: 'POST' });
+    switch (res.status) {
+      case 205:
+        dispatch(delProject(projectId));
+        if (selectedProjectId == projectId)
+          dispatch(selProject(undefined));
+        break;
+      default:
+        dispatch(queueSnackbar(`Project ${projectId} delete request failed`));
+        break;
+    }
+  };
+}
 export function saveCode(projectId, code) {
   return dispatch => {
     const state = store.getState();
@@ -43,7 +62,7 @@ export function processCode(projectId, code, options) {
         break;
       }
       case 412: {
-        queueSnackbar('Project process request rejected');
+        dispatch(queueSnackbar('Project process request rejected'));
         break;
       }
     }

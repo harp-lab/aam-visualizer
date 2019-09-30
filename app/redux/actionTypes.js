@@ -1,3 +1,6 @@
+export const SET_USER = 'SET_USER';
+export const SET_VIEW = 'SET_VIEW';
+
 export const QUEUE_SNACKBAR = 'QUEUE_SNACKBAR';
 export const DEQUEUE_SNACKBAR = 'DEQUEUE_SNACKBAR';
 export const SET_LOADING = 'SET_LOADING';
