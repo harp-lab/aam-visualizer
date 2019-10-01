@@ -2,12 +2,12 @@ import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import { createProject, forkProject, importData, exportData } from '../redux/api/server';
 import { setUser, setView  } from '../redux/actions/data';
-import { setProjectData, selProject } from '../redux/actions/projects';
-import { queueSnackbar, dequeueSnackbar } from '../redux/actions/notifications';
-import { getUser, getView } from '../redux/selectors/data';
-import { getProjects, getSelectedProjectId } from '../redux/selectors/projects';
+import { selProject, delProjects } from '../redux/actions/projects';
+import { dequeueSnackbar } from '../redux/actions/notifications';
+import { getUser, getView, getTitle } from '../redux/selectors/data';
+import { getSelectedProjectId } from '../redux/selectors/projects';
 import { getSnackbar } from '../redux/selectors/notifications';
-import { LOGIN_VIEW, LOAD_VIEW, LIST_VIEW, PROJECT_VIEW } from '../redux/consts';
+import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from '../redux/consts';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -18,22 +18,18 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 
-import Loading from './Loading';
 import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
 
 function App(props) {
-  const [load, setLoad] = useState(false);
+  const { userId, view, title, selectedProjectId } = props;
+  const { setUser, setView, createProject, forkProject, importData, exportData, selProject, delProjects } = props;
 
-  const { userId, view, projects, selectedProjectId } = props;
-  const { setUser, setView, createProject, forkProject, setProjectData, importData, exportData, selProject, queueSnackbar } = props;
+  useEffect(() => { delProjects() }, [userId]);
 
-  //useEffect(() => { setProjects({}) }, [userId]);
-
-  function getSelectedProject() { return projects[selectedProjectId]; }
-  function deselectProject(projectId) {
+  function deselectProject() {
     selProject(undefined);
     setView(LIST_VIEW);
   }
@@ -49,7 +45,7 @@ function App(props) {
       onClick={ deselectProject } />;
   }
 
-  let viewElem, title, leftElems, rightElems;
+  let viewElem, leftElems, rightElems;
   switch (view) {
     case LOGIN_VIEW:
       viewElem = <Login 
@@ -70,14 +66,9 @@ function App(props) {
             content='logout'
             onClick={ logout } />
         </Fragment>);
-      if (load)
-        viewElem = <Loading status='Getting projects' variant='linear'/>;
-      else
-        viewElem = <ProjectList onLoad={ setLoad } />;
+      viewElem = <ProjectList />;
       break;
     case PROJECT_VIEW:
-      const project = getSelectedProject();
-      title = project.data.name || selectedProjectId;
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
@@ -91,12 +82,7 @@ function App(props) {
             content='logout'
             onClick={ logout } />
         </Fragment>);
-      viewElem = <Project
-        userId={ userId }
-        projectId={ selectedProjectId }
-        project = { getSelectedProject() }
-        onSave={ project => setProjectData(selectedProjectId, project) }
-        onNotify={ queueSnackbar } />;
+      viewElem = <Project />;
       break;
   }
   
@@ -136,15 +122,15 @@ function App(props) {
     </ThemeProvider>);
 }
 const mapStateToProps = state => {
-  const userId = getUser(state);
   const view = getView(state);
-  const projects = getProjects(state);
+  const userId = getUser(state);
   const selectedProjectId = getSelectedProjectId(state);
-  return { userId, view, projects, selectedProjectId };
+  const title = getTitle(state);
+  return { userId, view, title, selectedProjectId };
 };
 export default connect(
   mapStateToProps,
-  { setUser, setView, createProject, forkProject, setProjectData, selProject, queueSnackbar, importData, exportData }
+  { setUser, setView, createProject, forkProject, selProject, delProjects, importData, exportData }
 )(App);
 
 function Message(props) {

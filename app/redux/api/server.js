@@ -165,15 +165,14 @@ export function getData(projectId) {
       case 200: {
         const data = await res.json();
         dispatch(setProjectData(projectId, data));
-        break;
+        return res.status;
       }
       case 204: {
-        dispatch(queueSnackbar('Project still processing'));
-        break;
+        return res.status;
       }
       case 412: {
         dispatch(queueSnackbar('Project data request rejected'));
-        break;
+        return res.status;
       }
     }
   };
@@ -186,27 +185,35 @@ export function importData(projectId, data) {
 }
 export function exportData(projectId) {
   return async function(dispatch) {
-    await dispatch(getData(projectId));
+    const status = await dispatch(getData(projectId));
+    switch (status) {
+      case 200: {
+        // create blob
+        const state = store.getState();
+        const data = getProjectData(state, projectId);
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
 
-    // create blob
-    const state = store.getState();
-    const data = getProjectData(state, projectId);
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+        // create elem
+        const href = URL.createObjectURL(blob);
+        const file = `aam-vis-${projectId}.json`
+        const elem = document.createElement('a');
+        Object.assign(elem, {
+          href,
+          download: file
+        });
+        document.body.appendChild(elem);
+        elem.click();
 
-    // create elem
-    const href = URL.createObjectURL(blob);
-    const file = `aam-vis-${projectId}.json`
-    const elem = document.createElement('a');
-    Object.assign(elem, {
-      href,
-      download: file
-    });
-    document.body.appendChild(elem);
-    elem.click();
-
-    // cleanup
-    elem.remove();
-    URL.revokeObjectURL(href);
+        // cleanup
+        elem.remove();
+        URL.revokeObjectURL(href);
+        break;
+      }
+      case 204: {
+        dispatch(queueSnackbar('Project still processing'));
+        break;
+      }
+    }
   };
 }

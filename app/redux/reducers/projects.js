@@ -1,7 +1,6 @@
 import {
-  ADD_PROJECT, SET_PROJECT_DATA, SET_PANEL_SAVED, SET_PANEL_HIDDEN, SET_PANEL_SELECTED,
-  SET_PROJECTS, SET_PROJECT, DEL_PROJECT, SEL_PROJECT,
-  SHOW_ENV, SHOW_KONT
+  ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS,
+  SEL_PROJECT
 } from '../actionTypes';
 import projectReducer from './project';
 import { combineReducers } from 'redux';
@@ -36,6 +35,7 @@ function projectsReducer(state = {}, action) {
       const {[projectId]: project, ...projects} = state;
       return { ...projects };
     }
+    case DEL_PROJECTS: return {};
     default: {
       const nextState = {};
       for (const [projectId, project] of Object.entries(state)) {

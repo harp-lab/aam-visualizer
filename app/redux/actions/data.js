@@ -1,5 +1,4 @@
-import store from '../store';
-import { SET_USER, SET_VIEW } from '../actionTypes';
+import { SET_USER, SET_VIEW, SET_TITLE } from '../actionTypes';
 
 export const setUser = userId => ({
   type: SET_USER,
@@ -9,3 +8,7 @@ export const setView = view => ({
   type: SET_VIEW,
   payload: { view }
 });
+export const setTitle = title => ({
+  type: SET_TITLE,
+  payload: { title }
+})

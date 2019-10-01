@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
-import { getCode } from '../redux/api/server';
-import { getProject } from '../redux/selectors/projects';
+import { getCode, getData } from '../redux/api/server';
+import { setTitle } from '../redux/actions/data';
+import { getProject, getSelectedProjectId } from '../redux/selectors/projects';
 import { setProjectData } from '../redux/actions/projects';
 import { generateConfigs, generateEnvs, generateKonts } from '../redux/actions/panels';
 
@@ -17,12 +18,13 @@ import KontViewer from './KontViewer';
 import ItemContext from './ItemContext';
 
 function Project(props) {
-  const { userId, projectId, project, getCode, setProjectData, generateConfigs, generateEnvs, generateKonts } = props;
+  const { projectId, project, getCode, getData, setProjectData, setTitle, generateConfigs, generateEnvs, generateKonts } = props;
   const timeout = useRef(undefined);
 
   // mount/unmount
   useEffect(() => {
-    const { status, STATUSES, code, items } = project.data;
+    const { status, STATUSES, code, items, name } = project.data;
+    setTitle(name || projectId);
     switch (status) {
       case STATUSES.edit:
         if (code == '')
@@ -36,6 +38,7 @@ function Project(props) {
     }
 
     return () => {
+      setTitle(undefined);
       clearTimeout(timeout.current);
     };
   }, []);
@@ -48,25 +51,19 @@ function Project(props) {
   }, [project.data.status]);
 
   async function getGraphs() {
-    const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
-    switch (res.status) {
-      case 200:
-        const data = await res.json();
-        //project.import(data);
-        setProjectData(projectId, data);
+    const status = await getData(projectId);
+    switch (status) {
+      case 200: {
         generateConfigs();
         generateEnvs();
         generateKonts();
-
-
-        //save();
         break;
-      case 204:
+      }
+      case 204: {
         timeout.current = setTimeout(() => getGraphs(), 5000);
         break;
-      case 412:
-        props.onNotify('Project data request rejected');
-        break;
+      }
+      default: break;
     }
   }
   function render() {
@@ -135,10 +132,11 @@ function Project(props) {
   return render();
 }
 const mapStateToProps = state => {
+  const projectId = getSelectedProjectId(state);
   const project = getProject(state);
-  return { project };
+  return { projectId, project };
 };
 export default connect(
   mapStateToProps,
-  { getCode, setProjectData, generateConfigs, generateEnvs, generateKonts }
+  { getCode, getData, setProjectData, generateConfigs, generateEnvs, generateKonts, setTitle }
 )(Project);

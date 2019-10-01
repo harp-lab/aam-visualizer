@@ -1,5 +1,5 @@
 import {
-  ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, SEL_PROJECT,
+  ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
   SET_METADATA
 } from '../actionTypes';
 
@@ -14,6 +14,9 @@ export const setProjectData = (projectId, data) => ({
 export const delProject = projectId => ({
   type: DEL_PROJECT,
   payload: { projectId }
+});
+export const delProjects = () => ({
+  type: DEL_PROJECTS
 });
 export const selProject = projectId => ({
   type: SEL_PROJECT,

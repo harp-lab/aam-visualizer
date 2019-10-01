@@ -1,5 +1,6 @@
 export const SET_USER = 'SET_USER';
 export const SET_VIEW = 'SET_VIEW';
+export const SET_TITLE = 'SET_TITLE';
 
 export const QUEUE_SNACKBAR = 'QUEUE_SNACKBAR';
 export const DEQUEUE_SNACKBAR = 'DEQUEUE_SNACKBAR';
@@ -18,6 +19,7 @@ export const REFRESH_PANELS = 'REFRESH_PANELS';
 export const SET_PROJECTS = 'SET_PROJECTS';
 export const SET_PROJECT = 'SET_PROJECT';
 export const DEL_PROJECT = 'DEL_PROJECT';
+export const DEL_PROJECTS = 'DEL_PROJECTS';
 export const SEL_PROJECT = 'SEL_PROJECT';
 
 export const SHOW_ENV = 'SHOW_ENV';

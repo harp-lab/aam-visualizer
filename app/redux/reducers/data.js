@@ -1,4 +1,4 @@
-import { SET_USER, SET_VIEW } from '../actionTypes';
+import { SET_USER, SET_VIEW, SET_TITLE } from '../actionTypes';
 import { LOGIN_VIEW } from '../consts';
 
 const initialState = {
@@ -14,6 +14,10 @@ export default function dataReducer(state = initialState, action) {
     case SET_VIEW: {
       const { view } = action.payload;
       return { ...state, view };
+    }
+    case SET_TITLE: {
+      const { title } = action.payload;
+      return { ...state, title };
     }
     default: return state;
   }

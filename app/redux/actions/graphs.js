@@ -47,6 +47,7 @@ export function unselectNodes(graphId, nodeIds) {
     dispatch(setGraphMetadata(graphId, {
       selectedNodes: [...combinedNodes]
     }));
+    dispatch(refresh());
   };
 }
 export function hoverNodes(graphId, nodeIds) {

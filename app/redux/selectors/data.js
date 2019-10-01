@@ -7,3 +7,6 @@ export function getUser(store) {
 export function getView(store) {
   return getData(store).view;
 }
+export function getTitle(store) {
+  return getData(store).title;
+}
