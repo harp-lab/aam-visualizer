@@ -1,7 +1,8 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
+import { createProject, forkProject, importData, exportData } from '../redux/api/server';
 import { setUser, setView  } from '../redux/actions/data';
-import { addProject, setProjectData, delProject, selProject } from '../redux/actions/projects';
+import { setProjectData, selProject } from '../redux/actions/projects';
 import { queueSnackbar, dequeueSnackbar } from '../redux/actions/notifications';
 import { getUser, getView } from '../redux/selectors/data';
 import { getProjects, getSelectedProjectId } from '../redux/selectors/projects';
@@ -23,123 +24,15 @@ import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
 
-const VIEWS = {
-  login: 'login',
-  load: 'load',
-  list: 'list',
-  project: 'project'
-};
-
 function App(props) {
   const [load, setLoad] = useState(false);
 
   const { userId, view, projects, selectedProjectId } = props;
-  const { setUser, setView, addProject, setProjectData, delProject, selProject, queueSnackbar } = props;
+  const { setUser, setView, createProject, forkProject, setProjectData, importData, exportData, selProject, queueSnackbar } = props;
 
   //useEffect(() => { setProjects({}) }, [userId]);
 
-  async function createProject() {
-    const res = await fetch(`/api/${userId}/create`, { method: 'GET' });
-    const data = await res.json();
-
-    const projectId = data.id;
-    addProject(projectId);
-    setView(LIST_VIEW);
-    selProject(undefined);
-
-    return projectId;
-  }
-  async function cancelProject(projectId) {
-    const res = await fetch(`/api/${userId}/projects/${projectId}/cancel`, { method: 'POST' });
-    switch (res.status) {
-      case 200:
-        const project = projects[projectId];
-        project.status = project.STATUSES.edit;
-        setProjectData(projectId, project);
-        break;
-      case 409:
-        queueSnackbar(`Project ${projectId} cancel request denied - already finished`)
-        break;
-      default:
-        queueSnackbar(`Project ${projectId} cancel request failed`);
-        break;
-    }
-  }
-  async function forkProject(projectId) {
-    // get project code
-    const project = projects[projectId].data;
-    if (project.status !== project.STATUSES.empty)
-      await getProjectCode(projectId);
-
-    // fork project
-    const forkProjectId = await createProject();
-    const { code, analysis } = project;
-    const forkProject = {};
-    forkProject.code = code;
-    forkProject.analysis = analysis;
-    setProjectData(forkProjectId, forkProject);
-    selectProject(forkProjectId);
-    setView(PROJECT_VIEW);
-  }
-  async function getProjectCode(projectId) {
-    const response = await fetch(`/api/${userId}/projects/${projectId}/code`, { method: 'GET' });
-    const data = await response.json();
-
-    const project = projects[projectId].data;
-    project.code = data.code;
-    setProjectData(projectId, project);
-  }
-  async function getProjectData(projectId) {
-    const res = await fetch(`/api/${userId}/projects/${projectId}/data`, { method: 'GET' });
-    switch (res.status) {
-      case 200:
-        const data = await res.json();
-        const project = projects[projectId];
-        //project.import(data);
-        setProjectData(projectId, project);
-        break;
-      case 204:
-        queueSnackbar('Project still processing');
-        break;
-      case 412:
-        queueSnackbar('Project data request rejected');
-        break;
-    }
-  }
-  function importProject(projectId, data) {
-    addProject(projectId);
-    setProjectData(projectId, data);
-  }
-  async function exportProject(projectId) {
-    await getProjectData(projectId);
-    const project = projects[projectId];
-
-    // get project data
-    const data = project.data;
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-
-    // create elem
-    const href = URL.createObjectURL(blob);
-    const file = `aam-vis-${projectId}.json`
-    const elem = document.createElement('a');
-    Object.assign(elem, {
-      href,
-      download: file
-    });
-    document.body.appendChild(elem);
-    elem.click();
-
-    // cleanup
-    elem.remove();
-    URL.revokeObjectURL(href);
-  }
-
   function getSelectedProject() { return projects[selectedProjectId]; }
-  function selectProject(projectId) {
-    selProject(projectId);
-    setView(PROJECT_VIEW);
-  }
   function deselectProject(projectId) {
     selProject(undefined);
     setView(LIST_VIEW);
@@ -169,7 +62,7 @@ function App(props) {
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
-          <ImportButton onImport={ importProject } />
+          <ImportButton onImport={ importData } />
           <AppBarButton
             content='new project'
             onClick={ createProject } />
@@ -180,14 +73,7 @@ function App(props) {
       if (load)
         viewElem = <Loading status='Getting projects' variant='linear'/>;
       else
-        viewElem = <ProjectList
-            userId={ userId }
-            projects={ projects }
-            onClick={ selectProject }
-            onFork={ forkProject }
-            onCancel={ cancelProject }
-            onExport={ exportProject }
-            onLoad={ setLoad } />;
+        viewElem = <ProjectList onLoad={ setLoad } />;
       break;
     case PROJECT_VIEW:
       const project = getSelectedProject();
@@ -200,7 +86,7 @@ function App(props) {
             onClick={ () => forkProject(selectedProjectId) } />
           <AppBarButton
             content='export project'
-            onClick={ () => exportProject(selectedProjectId) } />
+            onClick={ () => exportData(selectedProjectId) } />
           <AppBarButton
             content='logout'
             onClick={ logout } />
@@ -210,8 +96,7 @@ function App(props) {
         projectId={ selectedProjectId }
         project = { getSelectedProject() }
         onSave={ project => setProjectData(selectedProjectId, project) }
-        onNotify={ queueSnackbar }
-        getCode={ () => getProjectCode(selectedProjectId) } />;
+        onNotify={ queueSnackbar } />;
       break;
   }
   
@@ -259,7 +144,7 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setUser, setView, addProject, setProjectData, delProject, selProject, queueSnackbar }
+  { setUser, setView, createProject, forkProject, setProjectData, selProject, queueSnackbar, importData, exportData }
 )(App);
 
 function Message(props) {

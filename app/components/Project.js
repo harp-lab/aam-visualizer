@@ -1,4 +1,5 @@
 import { connect } from 'react-redux';
+import { getCode } from '../redux/api/server';
 import { getProject } from '../redux/selectors/projects';
 import { setProjectData } from '../redux/actions/projects';
 import { generateConfigs, generateEnvs, generateKonts } from '../redux/actions/panels';
@@ -16,7 +17,7 @@ import KontViewer from './KontViewer';
 import ItemContext from './ItemContext';
 
 function Project(props) {
-  const { userId, projectId, project, setProjectData, generateConfigs, generateEnvs, generateKonts } = props;
+  const { userId, projectId, project, getCode, setProjectData, generateConfigs, generateEnvs, generateKonts } = props;
   const timeout = useRef(undefined);
 
   // mount/unmount
@@ -25,7 +26,7 @@ function Project(props) {
     switch (status) {
       case STATUSES.edit:
         if (code == '')
-          props.getCode(projectId);
+          getCode(projectId);
         break;
       case STATUSES.done:
       case STATUSES.error:
@@ -139,5 +140,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { setProjectData, generateConfigs, generateEnvs, generateKonts }
+  { getCode, setProjectData, generateConfigs, generateEnvs, generateKonts }
 )(Project);

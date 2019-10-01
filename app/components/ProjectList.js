@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { deleteProject } from '../redux/api/server';
-import { addProject, setProjectData } from '../redux/actions/projects';
+import { getList, deleteProject, cancelProcess, exportData, forkProject } from '../redux/api/server';
+import { setView } from '../redux/actions/data';
+import { selProject } from '../redux/actions/projects';
+import { getUser } from '../redux/selectors/data';
 import { getProjects } from '../redux/selectors/projects';
+import { PROJECT_VIEW } from '../redux/consts';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -29,52 +32,19 @@ function ProjectList(props) {
 
   const {
     userId, projects,
-    addProject, setProjectData, deleteProject } = props;
+    getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject } = props;
 
   // mount/unmount
   useEffect(() => {
-    getProjectList();
+    update();
     return () => {
       clearTimeout(timeout.current);
     };
   }, []);
 
-  async function getProjectList() {
-    const res = await fetch(`/api/${userId}/all`, { method: 'GET' });
-    switch (res.status) {
-      case 200:
-        const data = await res.json();
-        let refresh = false;
-        const newProjects = {...projects};
-        for (const [id, metadata] of Object.entries(data)) {
-          let project = newProjects[id];
-
-          // create project if undefined
-          if (!project) {
-            addProject(id);
-            project = {};
-          }
-
-          const status = metadata.status;
-          const name = metadata.name;
-          const analysis = metadata.analysis;
-
-          if (status == 'process')
-            refresh = true;
-          setProjectData(id, { status, name, analysis});
-        }
-
-        // update list
-        if (refresh)
-          timeout.current = setTimeout(getProjectList, 1000);
-
-        props.onLoad(false);
-        break;
-      default:
-        props.onLoad(true);
-        timeout.current = setTimeout(getProjectList, 1000);
-        break;
-    }
+  async function update() {
+    const refresh = await getList();
+    if (refresh) timeout.current = setTimeout(getList(), 1000);
   }
   function openRenameDialog(projectId) {
     setSelectedProjectId(projectId);
@@ -123,7 +93,7 @@ function ProjectList(props) {
     if (project.data.status == project.data.STATUSES.process)
       removeActionElem = (
       <Tooltip title='Cancel processing'>
-        <IconButton onClick={ () => props.onCancel(id)}>
+        <IconButton onClick={ () => cancelProcess(id)}>
           <CancelIcon />
         </IconButton>
       </Tooltip>);
@@ -139,10 +109,10 @@ function ProjectList(props) {
         <DropMenu
           items={ [
             {label: 'Rename', callback: () => openRenameDialog(id)},
-            {label: 'Export', callback: () => props.onExport(id)}
+            {label: 'Export', callback: () => exportData(id)}
           ] } />
         <Tooltip title='Fork'>
-          <IconButton onClick={ () => props.onFork(id) }>
+          <IconButton onClick={ () => forkProject(id) }>
             <CallSplitIcon />
           </IconButton>
         </Tooltip>
@@ -153,7 +123,10 @@ function ProjectList(props) {
       <ListItem
         button
         key={ id }
-        onClick={ () => props.onClick(id) }
+        onClick={ () => {
+          selProject(id);
+          setView(PROJECT_VIEW);
+        } }
         align='flex-start'
         style={{ paddingRight: 144+16 }}>
         { analysisElem }
@@ -184,12 +157,13 @@ function ProjectList(props) {
     </React.Fragment>);
 }
 const mapStateToProps = state => {
+  const userId = getUser(state);
   const projects = getProjects(state);
-  return { projects };
+  return { userId, projects };
 };
 export default connect(
   mapStateToProps,
-  { addProject, setProjectData, deleteProject }
+  { getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject }
 )(ProjectList);
 
 function RenameDialog(props) {

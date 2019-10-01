@@ -1,15 +1,57 @@
 import store from '../store';
-import { setProjectData, delProject, selProject } from '../actions/projects';
+import { setView } from '../actions/data'
+import { setProjectData, addProject, delProject, selProject } from '../actions/projects';
 import { queueSnackbar } from '../actions/notifications';
 import { getUser } from '../selectors/data';
 import { getSelectedProjectId, getProjectData } from '../selectors/projects';
+import {
+  LIST_VIEW, PROJECT_VIEW,
+  EDIT_STATUS, PROCESS_STATUS
+} from '../consts';
 
+function apiReq(url, method) {
+  const state = store.getState();
+  const userId = getUser(state);
+  return fetch(`/api/${userId}/${url}`, { method });
+}
+
+export function getList() {
+  return async function(dispatch) {
+    const res = await apiReq('all', 'GET');
+    switch (res.status) {
+      case 200: {
+        const data = await res.json();
+        let refresh = false;
+        
+        for (const [projectId, projectData] of Object.entries(data)) {
+          const { status, name, analysis } = projectData;
+          dispatch(setProjectData(projectId, { status, name, analysis }));
+          if (status === PROCESS_STATUS)
+            refresh = true;
+        }
+        return refresh;
+      }
+      default: return true;
+    }
+  };
+}
+
+export function createProject() {
+  return async function(dispatch) {
+    const res = await apiReq('create', 'GET');
+    const data = await res.json();
+    const projectId = data.id;
+    dispatch(addProject(projectId));
+    dispatch(setView(LIST_VIEW));
+    dispatch(selProject(undefined));
+    return projectId;
+  };
+}
 export function deleteProject(projectId) {
   return async function(dispatch) {
     const state = store.getState();
-    const userId = getUser(state);
     const selectedProjectId = getSelectedProjectId(state);
-    const res = await fetch(`/api/${userId}/projects/${projectId}/delete`, { method: 'POST' });
+    const res = await apiReq(`projects/${projectId}/delete`, 'POST');
     switch (res.status) {
       case 205:
         dispatch(delProject(projectId));
@@ -20,6 +62,33 @@ export function deleteProject(projectId) {
         dispatch(queueSnackbar(`Project ${projectId} delete request failed`));
         break;
     }
+  };
+}
+export function forkProject(projectId) {
+  return async function(dispatch) {
+    let state = store.getState();
+    let project = getProjectData(state, projectId);
+    if (project.status !== project.STATUSES.empty) {
+      await dispatch(getCode(projectId));
+      state = store.getState();
+      project = getProjectData(state, projectId);
+    }
+    
+    const forkProjectId = await dispatch(createProject());
+    const { code, analysis } = project;
+    const forkData = { code, analysis };
+    dispatch(setProjectData(forkProjectId, forkData));
+    dispatch(selProject(forkProjectId));
+    dispatch(setView(PROJECT_VIEW));
+  };
+}
+
+export function getCode(projectId) {
+  return async function(dispatch) {
+    const res = await apiReq(`projects/${projectId}/code`, 'GET');
+    const { code } = await res.json();
+    const data = { code };
+    dispatch(setProjectData(projectId, data));
   };
 }
 export function saveCode(projectId, code) {
@@ -44,7 +113,6 @@ export function saveCode(projectId, code) {
     }
   }
 }
-
 export function processCode(projectId, code, options) {
   return async function(dispatch) {
     dispatch(saveCode(projectId, code));
@@ -55,7 +123,7 @@ export function processCode(projectId, code, options) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options)
-    })
+    });
     switch (res.status) {
       case 200: {
         dispatch(setProjectData(projectId, { status: 'process' }));
@@ -67,4 +135,78 @@ export function processCode(projectId, code, options) {
       }
     }
   }
+}
+export function cancelProcess(projectId) {
+  return async function(dispatch) {
+    const res = await apiReq(`projects/${projectId}/cancel`, 'POST');
+    switch (res.status) {
+      case 200: {
+        dispatch(setProjectData(projectId, { status: EDIT_STATUS }));
+        break;
+      }
+      case 409: {
+        const msg = `Project ${projectId} cancel request denied - already finished`;
+        dispatch(queueSnackbar(msg));
+        break;
+      }
+      default: {
+        const msg = `Project ${projectId} cancel request failed`;
+        dispatch(queueSnackbar(msg));
+        break;
+      }
+    }
+  };
+}
+
+export function getData(projectId) {
+  return async function(dispatch) {
+    const res = await apiReq(`projects/${projectId}/data`, 'GET');
+    switch (res.status) {
+      case 200: {
+        const data = await res.json();
+        dispatch(setProjectData(projectId, data));
+        break;
+      }
+      case 204: {
+        dispatch(queueSnackbar('Project still processing'));
+        break;
+      }
+      case 412: {
+        dispatch(queueSnackbar('Project data request rejected'));
+        break;
+      }
+    }
+  };
+}
+export function importData(projectId, data) {
+  return dispatch => {
+    dispatch(addProject(projectId));
+    dispatch(setProjectData(projectId, data));
+  }
+}
+export function exportData(projectId) {
+  return async function(dispatch) {
+    await dispatch(getData(projectId));
+
+    // create blob
+    const state = store.getState();
+    const data = getProjectData(state, projectId);
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+
+    // create elem
+    const href = URL.createObjectURL(blob);
+    const file = `aam-vis-${projectId}.json`
+    const elem = document.createElement('a');
+    Object.assign(elem, {
+      href,
+      download: file
+    });
+    document.body.appendChild(elem);
+    elem.click();
+
+    // cleanup
+    elem.remove();
+    URL.revokeObjectURL(href);
+  };
 }
