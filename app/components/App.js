@@ -1,12 +1,8 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { createProject, forkProject, importData, exportData } from '../redux/api/server';
-import { setUser, setView  } from '../redux/actions/data';
-import { selProject, delProjects } from '../redux/actions/projects';
-import { dequeueSnackbar } from '../redux/actions/notifications';
-import { getUser, getView, getTitle } from '../redux/selectors/data';
-import { getSelectedProjectId } from '../redux/selectors/projects';
-import { getSnackbar } from '../redux/selectors/notifications';
+import { createProject, forkProject, importData, exportData } from 'store-apis';
+import { setUser, setView, selProject, delProjects, dequeueSnackbar } from 'store-actions';
+import { getUser, getView, getTitle, getSelectedProjectId, getSnackbar } from 'store-selectors';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from '../redux/consts';
 
 import AppBar from '@material-ui/core/AppBar';

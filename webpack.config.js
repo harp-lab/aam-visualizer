@@ -1,3 +1,4 @@
+var path = require('path');
 var HTMLWebpackPlugin = require('html-webpack-plugin');
 var HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   template: __dirname + '/app/index.html',
@@ -9,7 +10,9 @@ module.exports = {
   entry: __dirname + '/app/index.js',
   resolve: {
     alias: {
-      
+      'store-actions': path.resolve(__dirname, 'app/redux/actions'),
+      'store-apis': path.resolve(__dirname, 'app/redux/api'),
+      'store-selectors': path.resolve(__dirname, 'app/redux/selectors')
     }
   },
   module: {
