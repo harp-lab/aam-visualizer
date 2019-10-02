@@ -1,11 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import { getList, deleteProject, cancelProcess, exportData, forkProject } from '../redux/api/server';
-import { setView } from '../redux/actions/data';
-import { setRenameDialog } from '../redux/actions/notifications';
-import { selProject } from '../redux/actions/projects';
-import { getUser } from '../redux/selectors/data';
-import { getProjects } from '../redux/selectors/projects';
+import { setView, setRenameDialog, selProject } from '../redux/actions';
+import { getUser, getProjects } from '../redux/selectors';
 import { PROJECT_VIEW } from '../redux/consts';
 
 import List from '@material-ui/core/List';

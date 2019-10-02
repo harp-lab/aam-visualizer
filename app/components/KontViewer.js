@@ -18,6 +18,7 @@ import PanelViewer from './PanelViewer';
 
 import EnvLink from './EnvLink';
 import KontLink from './KontLink';
+import ValItem from './ValItem';
 
 import LayerData from './data/Layer';
 
@@ -115,7 +116,7 @@ function KontCard(props) {
   const { kontId, selected, items, theme, classes } = props;
 
   const kont = items.konts[kontId];
-  const { form, type } = kont;
+  const { form, type, vals: valIdSets } = kont;
   let label, content, nextLayer;
 
   switch (form) {
@@ -177,20 +178,33 @@ function KontCard(props) {
   if (content)
     infoButton = <KontInfo>{ content }</KontInfo>;
 
+  let valsElem;
+  if (valIdSets)
+    valsElem = valIdSets.map((valIds, index) => {
+      const valsElem = valIds.map(valId => <ValItem key={ valId } valId={ valId } />);
+      return (
+        <div
+          key={ index }
+          style={{ flex: '1 1 auto' }}>
+          { valsElem }
+        </div>);
+    });
   return (
     <Card
       key={ kontId }
       { ...cardProps }>
-      <CardContent
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          padding: 8
-        }}>
-        { label }
-        { infoButton }
+      <CardContent style={{ padding: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap'
+          }}>
+          { label }
+          { infoButton }
+        </div>
+        { valsElem }
       </CardContent>
     </Card>);
 }

@@ -7,6 +7,11 @@ var HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
 
 module.exports = {
   entry: __dirname + '/app/index.js',
+  resolve: {
+    alias: {
+      
+    }
+  },
   module: {
     rules: [
       {
