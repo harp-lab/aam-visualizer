@@ -184,7 +184,7 @@ class Server {
         if (code !== undefined)
           project.importCode(code);
       default:
-        if (name)
+        if (name !== undefined)
           project.name = name;
         await this.writeProject(projectId);
         break;

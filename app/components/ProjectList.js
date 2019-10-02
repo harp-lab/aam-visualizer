@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import { getList, deleteProject, cancelProcess, exportData, forkProject } from '../redux/api/server';
 import { setView } from '../redux/actions/data';
+import { setRenameDialog } from '../redux/actions/notifications';
 import { selProject } from '../redux/actions/projects';
 import { getUser } from '../redux/selectors/data';
 import { getProjects } from '../redux/selectors/projects';
@@ -17,22 +18,14 @@ import CancelIcon from '@material-ui/icons/Cancel';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Tooltip from '@material-ui/core/Tooltip';
 
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-
 import DropMenu from './DropMenu';
 
 function ProjectList(props) {
-  const [renameDialog, setRenameDialog] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState(undefined);
   const timeout = useRef(undefined);
 
   const {
-    userId, projects,
-    getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject } = props;
+    projects,
+    getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -45,27 +38,6 @@ function ProjectList(props) {
   async function update() {
     const refresh = await getList();
     if (refresh) timeout.current = setTimeout(getList(), 1000);
-  }
-  function openRenameDialog(projectId) {
-    setSelectedProjectId(projectId);
-    setRenameDialog(true);
-  }
-  function closeRenameDialog() {
-    setSelectedProjectId(undefined);
-    setRenameDialog(false);
-  }
-  async function rename(projectId, name) {
-    // save local
-    const project = projects[projectId];
-    project.name = name;
-    props.onSave(projectId, project);
-
-    // save server
-    await fetch(`/api/${userId}/projects/${projectId}/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
   }
   
   const projectList = Object.entries(projects).map(([id, project]) => {
@@ -108,7 +80,7 @@ function ProjectList(props) {
       <ListItemSecondaryAction>
         <DropMenu
           items={ [
-            {label: 'Rename', callback: () => openRenameDialog(id)},
+            {label: 'Rename', callback: () => setRenameDialog(id)},
             {label: 'Export', callback: () => exportData(id)}
           ] } />
         <Tooltip title='Fork'>
@@ -136,25 +108,11 @@ function ProjectList(props) {
         { actionsElem }
       </ListItem>);
   });
-
-  let dialog;
-  const project = projects[selectedProjectId];
-  if (selectedProjectId && renameDialog) {
-    dialog = <RenameDialog
-      open
-      id={ selectedProjectId }
-      name={ project.data.name }
-      onSave={ rename }
-      onClose={ closeRenameDialog } />;
-  }
   
   return (
-    <React.Fragment>
-      <List style={{ overflowY: 'auto' }}>
-        { projectList }
-      </List>
-      { dialog }
-    </React.Fragment>);
+    <List style={{ overflowY: 'auto' }}>
+      { projectList }
+    </List>);
 }
 const mapStateToProps = state => {
   const userId = getUser(state);
@@ -163,33 +121,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject }
+  { getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog }
 )(ProjectList);
-
-function RenameDialog(props) {
-  const [name, setName] = useState(undefined);
-  useEffect(() => setName(props.name || ''), [props.name]);
-
-  return (
-    <Dialog
-      open={ props.open }
-      onClose={ props.onClose }>
-      <DialogContent>
-        <TextField
-          label='name'
-          value={ name }
-          onChange={ evt => setName(evt.target.value) }
-          placeholder={ `project ${props.id} name` } />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={ props.onClose }>cancel</Button>
-        <Button
-          onClick={ () => {
-            props.onClose();
-            props.onSave(props.id, name)
-          }}>
-          rename
-        </Button>
-      </DialogActions>
-    </Dialog>);
-}

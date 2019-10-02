@@ -5,6 +5,7 @@ export const SET_TITLE = 'SET_TITLE';
 export const QUEUE_SNACKBAR = 'QUEUE_SNACKBAR';
 export const DEQUEUE_SNACKBAR = 'DEQUEUE_SNACKBAR';
 export const SET_LOADING = 'SET_LOADING';
+export const SET_DIALOG = 'SET_DIALOG';
 
 export const ADD_PROJECT = 'ADD_PROJECT';
 export const SET_PROJECT_DATA = 'SET_PROJECT_DATA';

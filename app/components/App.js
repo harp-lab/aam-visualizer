@@ -22,6 +22,7 @@ import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
+import RenameDialog from './dialogs/Rename';
 
 function App(props) {
   const { userId, view, title, selectedProjectId } = props;
@@ -118,6 +119,7 @@ function App(props) {
         { appbarElem}
         { viewElem }
         <NotifySnackbar />
+        <RenameDialog />
       </div>
     </ThemeProvider>);
 }

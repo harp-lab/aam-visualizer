@@ -83,6 +83,18 @@ export function forkProject(projectId) {
   };
 }
 
+export function rename(projectId, name) {
+  return async function(dispatch) {
+    const state = store.getState();
+    const userId = getUser(state);
+    dispatch(setProjectData(projectId, { name }));
+    return fetch(`/api/${userId}/projects/${projectId}/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+  };
+}
 export function getCode(projectId) {
   return async function(dispatch) {
     const res = await apiReq(`projects/${projectId}/code`, 'GET');
@@ -177,6 +189,7 @@ export function getData(projectId) {
     }
   };
 }
+
 export function importData(projectId, data) {
   return dispatch => {
     dispatch(addProject(projectId));

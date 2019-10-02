@@ -1,6 +1,7 @@
 import {
   QUEUE_SNACKBAR, DEQUEUE_SNACKBAR,
-  SET_LOADING
+  SET_LOADING,
+  SET_DIALOG
 } from '../actionTypes';
 
 export const queueSnackbar = text => ({
@@ -18,4 +19,11 @@ export const showLoading = () => ({
 export const hideLoading = () => ({
   type: SET_LOADING,
   payload: { loading: false }
+});
+export const setRenameDialog = projectId => ({
+  type: SET_DIALOG,
+  payload: {
+    dialogId: 'rename',
+    data: projectId
+  }
 });
