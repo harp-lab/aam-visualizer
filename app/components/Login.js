@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { login } from 'store-actions'; 
+
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
-function Login(props) {
+function Login() {
+  const dispatch = useDispatch();
+
   const [user, setUser] = useState('guest');
   const re = /^\w+$/;
   const error = !re.test(user);
@@ -22,7 +27,7 @@ function Login(props) {
         error={ error }
         helperText={ 'You can use letters, numbers, & underscores' } />
       <Button
-        onClick={ () => props.onSubmit(user) }
+        onClick={ () => dispatch(login(user)) }
         disabled={ error }>
         login
       </Button>

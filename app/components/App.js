@@ -1,17 +1,14 @@
-import React, { Fragment, useState, useEffect, useRef } from 'react';
-import { connect, useSelector, useDispatch } from 'react-redux';
+import React, { Fragment, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { createProject, forkProject, importData, exportData } from 'store-apis';
-import { setUser, setView, selProject, delProjects, dequeueSnackbar } from 'store-actions';
-import { getUser, getView, getTitle, getSelectedProjectId, getSnackbar } from 'store-selectors';
+import { logout, selProject } from 'store-actions';
+import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import Snackbar from '@material-ui/core/Snackbar';
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@material-ui/icons/Close';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
 
 import Login from './Login';
@@ -19,40 +16,18 @@ import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
 import RenameDialog from './dialogs/Rename';
+import Snackbar from './Snackbar';
 
-function App(props) {
-  const userId = useSelector(getUser);
+function App() {
   const view = useSelector(getView);
   const title = useSelector(getTitle);
   const selectedProjectId = useSelector(getSelectedProjectId);
   const dispatch = useDispatch();
 
-  useEffect(() => { dispatch(delProjects()) }, [userId]);
-
-  function deselectProject() {
-    dispatch(selProject(undefined));
-    dispatch(setView(LIST_VIEW));
-  }
-
-  function logout() {
-    dispatch(setUser(undefined));
-    dispatch(setView(LOGIN_VIEW));
-  }
-
-  function ProjectListButton(props) {
-    return <AppBarButton
-      content='project list'
-      onClick={ deselectProject } />;
-  }
-
   let viewElem, leftElems, rightElems;
   switch (view) {
     case LOGIN_VIEW:
-      viewElem = <Login 
-        onSubmit={ userId => {
-          dispatch(setUser(userId));
-          dispatch(setView(LIST_VIEW));
-        }} />;
+      viewElem = <Login />;
       break;
     case LIST_VIEW:
       leftElems = <ProjectListButton />;
@@ -62,9 +37,7 @@ function App(props) {
           <AppBarButton
             content='new project'
             onClick={ () => dispatch(createProject()) } />
-          <AppBarButton
-            content='logout'
-            onClick={ logout } />
+          <LogoutButton />
         </Fragment>);
       viewElem = <ProjectList />;
       break;
@@ -78,9 +51,7 @@ function App(props) {
           <AppBarButton
             content='export project'
             onClick={ () => dispatch(exportData(selectedProjectId)) } />
-          <AppBarButton
-            content='logout'
-            onClick={ logout } />
+          <LogoutButton />
         </Fragment>);
       viewElem = <Project />;
       break;
@@ -117,7 +88,7 @@ function App(props) {
         { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
         { appbarElem}
         { viewElem }
-        <NotifySnackbar />
+        <Snackbar />
         <RenameDialog />
       </div>
     </ThemeProvider>);
@@ -137,19 +108,19 @@ function Message(props) {
     </Typography>);
 }
 
-function AppBarButton(props) {
-  const { content, onClick } = props;
-  return (
-    <Button
-      onClick={ onClick }
-      color='inherit'
-      variant='outlined'
-      style={{ margin: Theme.spacing(1) }}>
-      { content }
-    </Button>);
+function ProjectListButton() {
+  const dispatch = useDispatch();
+  return <AppBarButton
+    content='project list'
+    onClick={ () => dispatch(selProject(undefined)) } />;
 }
-
-function ImportButton(props) {
+function LogoutButton() {
+  const dispatch = useDispatch();
+  return <AppBarButton
+    content='logout'
+    onClick={ userId => dispatch(logout(userId)) } />
+}
+function ImportButton() {
   const input = useRef(undefined);
   const dispatch = useDispatch();
 
@@ -177,50 +148,14 @@ function ImportButton(props) {
         hidden />
     </Fragment>);
 }
-
-function NotifySnackbar(props) {
-  const { message, dequeueSnackbar } = props;
-
-  const [timer, setTimer] = useState(undefined);
-
-  // update on store change
-  useEffect(() => {
-    if (message)
-      setTimer(setTimeout(() => {
-        update();
-      }, 20000));
-  }, [message]);
-
-  function update() {
-    clearTimeout(timer);
-    dequeueSnackbar();
-  }
-  function handleClose(evt, reason) {
-    if (reason !== 'clickaway')
-      update();
-  }
-
-  return <Snackbar
-    open={ Boolean(message) }
-    onClose={ handleClose }
-    action={[
-      <IconButton
-        key='close'
-        onClick={ update }
-        color='inherit' >
-        <CloseIcon />
-      </IconButton>
-    ]}
-    autoHideDuration={ 20000 }
-    message={ message }
-    anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }} />;
+function AppBarButton(props) {
+  const { content, onClick } = props;
+  return (
+    <Button
+      onClick={ onClick }
+      color='inherit'
+      variant='outlined'
+      style={{ margin: Theme.spacing(1) }}>
+      { content }
+    </Button>);
 }
-const mapStateToProps1 = state => {
-  const message = getSnackbar(state);
-  return { message };
-};
-NotifySnackbar = connect(
-  mapStateToProps1,
-  { dequeueSnackbar }
-)(NotifySnackbar);
-

@@ -18,6 +18,7 @@ export default function(state = initialState, action) {
     }
     case DEQUEUE_SNACKBAR: {
       const { snackbars } = state;
+      const text = snackbars.shift();
       return {
         ...state,
         snackbars: [...snackbars]
