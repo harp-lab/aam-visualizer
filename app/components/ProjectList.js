@@ -34,7 +34,7 @@ function ProjectList(props) {
 
   async function update() {
     const refresh = await getList();
-    if (refresh) timeout.current = setTimeout(getList(), 1000);
+    if (refresh) timeout.current = setTimeout(getList, 1000);
   }
   
   const projectList = Object.entries(projects).map(([id, project]) => {

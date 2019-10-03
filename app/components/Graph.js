@@ -18,7 +18,7 @@ function Graph(props) {
   const events = useRef(false);
 
   const {
-    graphId, data, metadata, edgePredicate, focus, theme,
+    graphId, data, metadata, edgePredicate, focused, theme,
     onNodeSelect, onNodeUnselect,
     setFocusedGraph,
     selectNodes, unselectNodes, hoverNodes,
@@ -95,13 +95,13 @@ function Graph(props) {
   }, []);
 
   useEffect(() => {
-    if (focus) {
+    if (focused) {
       document.addEventListener('keydown', keyDown );
       return () => {
         document.removeEventListener('keydown', keyDown )
       }
     }
-  }, [focus]);
+  }, [focused]);
   function keyDown(evt) {
     const selectedNodes = cy.$('node:selected');
     switch (evt.key) {

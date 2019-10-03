@@ -198,7 +198,9 @@ function KontCard(props) {
           { label }
           { infoButton }
         </div>
-        { valsElem }
+        <div style={{ display: 'flex' }}>
+          { valsElem }
+        </div>
       </CardContent>
     </Card>);
 }
