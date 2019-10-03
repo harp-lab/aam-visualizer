@@ -1,5 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { showEnv } from 'store-actions';
 import { getPanels, getProjectItems } from 'store-selectors';
 
 import { Link, Tooltip, Typography } from '@material-ui/core';
@@ -8,7 +9,7 @@ import Panel from './Panel';
 import { PanelTable, PanelViewer } from 'library';
 
 function EnvViewer(props) {
-  const { envs } = props;
+  const { envs } = useSelector(getPanels);
 
   function onGenerate([envId, env]) {
     return (
@@ -20,9 +21,7 @@ function EnvViewer(props) {
         onMouseOut={ () => {} }
         disableSelect
         disableSelectMsg='No action'>
-        <EnvItem
-          envId={ envId }
-          onAdd={ props.onAdd } />
+        <EnvItem envId={ envId } />
       </Panel>);
   }
 
@@ -31,17 +30,13 @@ function EnvViewer(props) {
     panels={ envs }
     onGenerate={ onGenerate } />;
 }
-const mapStateToProps = state => {
-  const { envs } = getPanels(state);
-  const items = getProjectItems(state);
-  return { envs, items };
-};
-export default connect(
-  mapStateToProps
-)(EnvViewer);
+export default EnvViewer;
 
 function EnvItem(props) {
-  const { envId, onAdd, items } = props
+  const { envId } = props
+  const items = useSelector(getProjectItems);
+  const dispatch = useDispatch();
+
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
   const env = envs[envId];
@@ -70,7 +65,7 @@ function EnvItem(props) {
           if (env)
             addEnvLink = (
               <Tooltip title='View environment'>
-                <Link onClick={ () => onAdd(env) }>
+                <Link onClick={ () => dispatch(showEnv(env)) }>
                   <sup>
                     { env }
                   </sup>
@@ -89,9 +84,3 @@ function EnvItem(props) {
     labels={ labels }
     entries={ entries }/>;
 }
-EnvItem = connect(
-  state => {
-    const items = getProjectItems(state);
-    return { items };
-  },
-)(EnvItem);
