@@ -1,7 +1,6 @@
-import React, { Fragment, useState, createContext } from 'react';
+import React, { Fragment, useState } from 'react';
 import { connect } from 'react-redux';
-import { getPanels } from '../redux/selectors/panels';
-import { getProjectItems } from '../redux/selectors/projects';
+import { getPanels, getProjectItems } from 'store-selectors';
 
 import {
   Card, CardContent,
@@ -14,18 +13,15 @@ import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
 
 import Panel from './Panel';
-import PanelViewer from './PanelViewer';
+import { PanelViewer } from 'library';
 
-import EnvLink from './EnvLink';
-import KontLink from './KontLink';
+import { EnvLink, KontLink } from './links';
 import ValItem from './ValItem';
 
 import LayerData from './data/Layer';
 
-const KontContext = createContext();
-
 function KontViewer(props) {
-  const { konts, onShowEnv } = props;
+  const { konts } = props;
   
   function onGenerate([kontId, kont]) {
     return (
@@ -37,9 +33,7 @@ function KontViewer(props) {
         onMouseOut={ () => {} }
         disableSelect
         disableSelectMsg='No action'>
-        <KontContext.Provider value={{ onShowEnv }}>
-          <Kont kontId={ kontId } />
-        </KontContext.Provider>
+        <Kont kontId={ kontId } />
       </Panel>);
   }
 

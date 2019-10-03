@@ -10,6 +10,7 @@ module.exports = {
   entry: __dirname + '/app/index.js',
   resolve: {
     alias: {
+      'library': path.resolve(__dirname, 'app/library'),
       'store-actions': path.resolve(__dirname, 'app/redux/actions'),
       'store-apis': path.resolve(__dirname, 'app/redux/apis'),
       'store-consts': path.resolve(__dirname, 'app/redux/consts.js'),

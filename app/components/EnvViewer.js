@@ -5,8 +5,7 @@ import { getPanels, getProjectItems } from 'store-selectors';
 import { Link, Tooltip, Typography } from '@material-ui/core';
 
 import Panel from './Panel';
-import PanelTable from './PanelTable';
-import PanelViewer from './PanelViewer';
+import { PanelTable, PanelViewer } from 'library';
 
 function EnvViewer(props) {
   const { envs } = props;

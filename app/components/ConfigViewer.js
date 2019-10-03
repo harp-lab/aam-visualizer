@@ -6,10 +6,9 @@ import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 import { Card, CardContent, Typography } from '@material-ui/core';
 
 import Panel from './Panel';
-import PanelViewer from './PanelViewer';
+import { PanelViewer } from 'library';
 
-import EnvLink from './EnvLink';
-import KontLink from './KontLink';
+import { EnvLink, KontLink } from './links';
 
 import ValItem from './ValItem';
 
