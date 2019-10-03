@@ -1,9 +1,7 @@
 import { connect } from 'react-redux';
-import { getCode, getData } from '../redux/api/server';
-import { setTitle } from '../redux/actions/data';
-import { getProject, getSelectedProjectId } from '../redux/selectors/projects';
-import { setProjectData } from '../redux/actions/projects';
-import { generateConfigs, generateEnvs, generateKonts } from '../redux/actions/panels';
+import { getCode, getData } from 'store-apis';
+import { setTitle, setProjectData, generateConfigs, generateEnvs, generateKonts } from 'store-actions';
+import { getProject, getSelectedProjectId } from 'store-selectors';
 
 import React, { useEffect, useRef } from 'react';
 import Loading from './Loading';

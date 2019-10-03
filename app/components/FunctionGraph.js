@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getMainGraphId, getSubGraphId } from '../redux/selectors/graphs';
+import { getMainGraphId, getSubGraphId } from 'store-selectors';
 
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';

@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getPanels } from '../redux/selectors/panels';
-import { getProjectItems } from '../redux/selectors/projects';
+import { getPanels, getProjectItems } from 'store-selectors';
 
 import { Link, Tooltip, Typography } from '@material-ui/core';
 

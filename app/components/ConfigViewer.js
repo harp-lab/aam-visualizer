@@ -1,10 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { hoverNodes } from '../redux/actions/graphs';
-import { refreshEnvs, refreshKonts } from '../redux/actions/panels';
-import { getPanels } from '../redux/selectors/panels';
-import { getProjectItems } from '../redux/selectors/projects';
-import { getSubGraphId } from '../redux/selectors/graphs';
+import { hoverNodes, refreshEnvs, refreshKonts } from 'store-actions';
+import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 
 import { Card, CardContent, Typography } from '@material-ui/core';
 

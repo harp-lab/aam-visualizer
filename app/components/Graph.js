@@ -4,9 +4,8 @@ import {
   setFocusedGraph,
   selectNodes, unselectNodes, hoverNodes,
   selectEdges,
-  setPositions } from '../redux/actions/graphs'
-import { getProjectItems } from '../redux/selectors/projects';
-import { getGraphMetadata, getFocusedGraph } from '../redux/selectors/graphs';
+  setPositions } from 'store-actions'
+import { getProjectItems, getGraphMetadata, getFocusedGraph } from 'store-selectors';
 
 import cytoscape from 'cytoscape';
 import withTheme from '@material-ui/styles/withTheme';

@@ -1,9 +1,9 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
+import { connect, useSelector, useDispatch } from 'react-redux';
 import { createProject, forkProject, importData, exportData } from 'store-apis';
 import { setUser, setView, selProject, delProjects, dequeueSnackbar } from 'store-actions';
 import { getUser, getView, getTitle, getSelectedProjectId, getSnackbar } from 'store-selectors';
-import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from '../redux/consts';
+import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -21,19 +21,22 @@ import Theme from './Theme';
 import RenameDialog from './dialogs/Rename';
 
 function App(props) {
-  const { userId, view, title, selectedProjectId } = props;
-  const { setUser, setView, createProject, forkProject, importData, exportData, selProject, delProjects } = props;
+  const userId = useSelector(getUser);
+  const view = useSelector(getView);
+  const title = useSelector(getTitle);
+  const selectedProjectId = useSelector(getSelectedProjectId);
+  const dispatch = useDispatch();
 
-  useEffect(() => { delProjects() }, [userId]);
+  useEffect(() => { dispatch(delProjects()) }, [userId]);
 
   function deselectProject() {
-    selProject(undefined);
-    setView(LIST_VIEW);
+    dispatch(selProject(undefined));
+    dispatch(setView(LIST_VIEW));
   }
 
   function logout() {
-    setUser(undefined);
-    setView(LOGIN_VIEW);
+    dispatch(setUser(undefined));
+    dispatch(setView(LOGIN_VIEW));
   }
 
   function ProjectListButton(props) {
@@ -47,18 +50,18 @@ function App(props) {
     case LOGIN_VIEW:
       viewElem = <Login 
         onSubmit={ userId => {
-          setUser(userId);
-          setView(LIST_VIEW);
+          dispatch(setUser(userId));
+          dispatch(setView(LIST_VIEW));
         }} />;
       break;
     case LIST_VIEW:
       leftElems = <ProjectListButton />;
       rightElems = (
         <Fragment>
-          <ImportButton onImport={ importData } />
+          <ImportButton />
           <AppBarButton
             content='new project'
-            onClick={ createProject } />
+            onClick={ () => dispatch(createProject()) } />
           <AppBarButton
             content='logout'
             onClick={ logout } />
@@ -71,10 +74,10 @@ function App(props) {
         <Fragment>
           <AppBarButton
             content='fork project'
-            onClick={ () => forkProject(selectedProjectId) } />
+            onClick={ () => dispatch(forkProject(selectedProjectId)) } />
           <AppBarButton
             content='export project'
-            onClick={ () => exportData(selectedProjectId) } />
+            onClick={ () => dispatch(exportData(selectedProjectId)) } />
           <AppBarButton
             content='logout'
             onClick={ logout } />
@@ -119,17 +122,7 @@ function App(props) {
       </div>
     </ThemeProvider>);
 }
-const mapStateToProps = state => {
-  const view = getView(state);
-  const userId = getUser(state);
-  const selectedProjectId = getSelectedProjectId(state);
-  const title = getTitle(state);
-  return { userId, view, title, selectedProjectId };
-};
-export default connect(
-  mapStateToProps,
-  { setUser, setView, createProject, forkProject, selProject, delProjects, importData, exportData }
-)(App);
+export default App;
 
 function Message(props) {
   return (
@@ -158,6 +151,7 @@ function AppBarButton(props) {
 
 function ImportButton(props) {
   const input = useRef(undefined);
+  const dispatch = useDispatch();
 
   function change(file) {
     const fr = new FileReader();
@@ -165,7 +159,7 @@ function ImportButton(props) {
       const json = JSON.parse(fr.result);
       const re = /aam-vis-(.*)\.js/;
       const projectId = file.name.match(re)[1];
-      props.onImport(projectId, json);
+      dispatch(importData(projectId, json));
     };
     fr.readAsText(file);
     input.current.value = '';

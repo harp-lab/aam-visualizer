@@ -22,13 +22,17 @@ function dataReducer(state = {
 function projectsReducer(state = {}, action) {
   switch (action.type) {
     case ADD_PROJECT:
-    case SET_PROJECT_DATA: {
-      const { projectId } = action.payload;
-      const project = state[projectId];
-      return {
-        ...state,
-        [projectId]: projectReducer(project, action)
-      };
+    case SET_PROJECT_DATA:
+    default: {
+      if (action.payload && action.payload.projectId) {
+        const { projectId } = action.payload;
+        const project = state[projectId];
+        return {
+          ...state,
+          [projectId]: projectReducer(project, action)
+        };
+      }
+      return state;
     }
     case DEL_PROJECT: {
       const { projectId } = action.payload;
@@ -36,13 +40,6 @@ function projectsReducer(state = {}, action) {
       return { ...projects };
     }
     case DEL_PROJECTS: return {};
-    default: {
-      const nextState = {};
-      for (const [projectId, project] of Object.entries(state)) {
-        nextState[projectId] = projectReducer(project, action);
-      }
-      return nextState;
-    }
   }
 }
 

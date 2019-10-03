@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
-import { getSelectedProjectId, getProjectData } from '../redux/selectors/projects';
-import { saveCode, processCode } from '../redux/api/server';
+import { saveCode, processCode } from 'store-apis';
+import { getSelectedProjectId, getProjectData } from 'store-selectors';
 
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';

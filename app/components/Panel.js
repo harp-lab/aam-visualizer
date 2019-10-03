@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from '../redux/actions/panels';
-import { getPanels } from '../redux/selectors/panels';
+import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
+import { getPanels } from 'store-selectors';
 
 import {
   ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails,

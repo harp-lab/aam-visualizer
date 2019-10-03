@@ -11,7 +11,8 @@ module.exports = {
   resolve: {
     alias: {
       'store-actions': path.resolve(__dirname, 'app/redux/actions'),
-      'store-apis': path.resolve(__dirname, 'app/redux/api'),
+      'store-apis': path.resolve(__dirname, 'app/redux/apis'),
+      'store-consts': path.resolve(__dirname, 'app/redux/consts.js'),
       'store-selectors': path.resolve(__dirname, 'app/redux/selectors')
     }
   },

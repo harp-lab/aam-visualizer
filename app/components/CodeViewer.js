@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { selectNodes, hoverNodes } from '../redux/actions/graphs';
-import { getSelectedAsts, getHoveredAsts, getNodeAsts } from '../redux/selectors/ast';
+import { selectNodes, hoverNodes } from 'store-actions';
 import {
+  getSelectedAsts, getHoveredAsts, getNodeAsts,
   getMainGraphId, getSubGraphId,
-  getGraphSelectedNodes, getGraphHoveredNodes, getGraphNodes, getGraphRefData
-} from '../redux/selectors/graphs';
-import { getProjectData, getProjectItems } from '../redux/selectors/projects';
+  getGraphSelectedNodes, getGraphHoveredNodes, getGraphNodes, getGraphRefData,
+  getProjectData, getProjectItems
+} from 'store-selectors';
 
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { rename } from '../../redux/api/server';
-import { setRenameDialog } from '../../redux/actions/notifications';
-import { getRenameDialog } from '../../redux/selectors/notifications';
-import { getProjectData } from '../../redux/selectors/projects';
+import { rename } from 'store-apis';
+import { setRenameDialog } from 'store-actions';
+import { getRenameDialog, getProjectData } from 'store-selectors';
 
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
