@@ -16,10 +16,6 @@ export function logout(userId) {
     dispatch(delProjects());
   };
 }
-export const setView = view => ({
-  type: SET_VIEW,
-  payload: { view }
-});
 export const setTitle = title => ({
   type: SET_TITLE,
   payload: { title }

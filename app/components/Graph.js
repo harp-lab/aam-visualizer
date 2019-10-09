@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   setFocusedGraph,
-  selectNodes, unselectNodes, hoverNodes,
-  selectEdges,
-  setPositions } from 'store-actions'
+  selectNodes, unselectNodes, hoverNodes, selectEdges,
+  setPositions
+} from 'store-actions'
 import { getProjectItems, getGraphMetadata, getFocusedGraph } from 'store-selectors';
 
 import cytoscape from 'cytoscape';
@@ -17,14 +17,13 @@ function Graph(props) {
   const bounds = useRef(undefined);
   const events = useRef(false);
 
-  const {
-    graphId, data, metadata, edgePredicate, focused, theme,
-    onNodeSelect, onNodeUnselect,
-    setFocusedGraph,
-    selectNodes, unselectNodes, hoverNodes,
-    selectEdges,
-    setPositions
-  } = props;
+  const { graphId, edgePredicate, onNodeSelect, onNodeUnselect, theme } = props;
+  const items = useSelector(getProjectItems);
+  const data = GraphData(graphId, items);
+  const metadata = useSelector(state => getGraphMetadata(state, graphId));
+  const focusedGraph = useSelector(getFocusedGraph);
+  const focused = focusedGraph === graphId;
+  const dispatch = useDispatch();
 
   const config = {
     style: [{
@@ -126,12 +125,12 @@ function Graph(props) {
   useEffect(() => {
     // event handlers
     ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
-    cy.on('tap', () => setFocusedGraph(graphId));
+    cy.on('tap', () => dispatch(setFocusedGraph(graphId)));
     cy.on('select', 'node', evt => {
       if (events.current) {
         const node = evt.target;
         const nodeId = node.id();
-        selectNodes(graphId, [nodeId]);
+        dispatch(selectNodes(graphId, [nodeId]));
         if (onNodeSelect) onNodeSelect(nodeId);
       }
     });
@@ -139,7 +138,7 @@ function Graph(props) {
       if (events.current) {
         const node = evt.target;
         const nodeId = node.id();
-        unselectNodes(graphId, [nodeId]);
+        dispatch(unselectNodes(graphId, [nodeId]));
         if (onNodeUnselect) onNodeUnselect(nodeId);
       }
     });
@@ -147,24 +146,24 @@ function Graph(props) {
       const node = evt.target;
       const nodeId = node.id();
       if (hoveredNodes != [nodeId])
-        hoverNodes(graphId, [nodeId]);
+        dispatch(hoverNodes(graphId, [nodeId]));
     });
     cy.on('mouseout', 'node', evt => {
-      hoverNodes(graphId, []);
+      dispatch(hoverNodes(graphId, []));
     });
     cy.on('select', 'edge', evt => {
       if (events.current) {
         const edge = evt.target;
         if (edgePredicate(edge)) {
           const edgeId = edge.id();
-          selectEdges(graphId, [edgeId]);
+          dispatch(selectEdges(graphId, [edgeId]));
         } else
           edge.unselect();
       }
     });
     cy.on('unselect', 'edge', evt => {
       if (events.current)
-        selectEdges(graphId, []);
+        dispatch(selectEdges(graphId, []));
     });
     
     // add nodes 
@@ -186,7 +185,7 @@ function Graph(props) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$id(nodeId).position();
       }
-      setPositions(graphId, positions);
+      dispatch(setPositions(graphId, positions));
 
       // remove nodes
       cy.nodes().remove();
@@ -282,22 +281,4 @@ function Graph(props) {
     ref={ cyElem } />;
 }
 Graph = withTheme(Graph);
-export default connect(
-  (state, ownProps) => {
-    const { graphId } = ownProps;
-    const items = getProjectItems(state);
-    const data = GraphData(graphId, items);
-    const metadata = getGraphMetadata(state, graphId);
-    const focusedGraph = getFocusedGraph(state);
-    const focused = focusedGraph === graphId;
-    return { data, metadata, focused };
-  },
-  {
-    setFocusedGraph,
-    selectNodes,
-    unselectNodes,
-    hoverNodes,
-    selectEdges,
-    setPositions
-  }
-)(Graph);
+export default Graph;

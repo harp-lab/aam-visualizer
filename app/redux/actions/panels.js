@@ -1,8 +1,9 @@
 import store from '../store';
-import { getSelectedProjectId, getProjectItems, getProject } from '../selectors/projects';
-import { getSubGraphId, getGraphSelectedNodes } from '../selectors/graphs';
-import { getPanels } from '../selectors/panels';
 import { ADD_PANEL, SET_PANEL, REFRESH_PANELS } from '../actionTypes';
+import {
+  getSelectedProjectId, getProjectItems,
+  getSubGraphId, getGraphSelectedNodes,
+  getPanels } from 'store-selectors';
 
 function addPanel(projectId, type, panelId, label) {
   const state = store.getState();
@@ -141,6 +142,15 @@ export function refreshKonts() {
   });
 }
 
+export function generatePanels(projectId) {
+  return dispatch => {
+    const state = store.getState();
+    const items = getProjectItems(state, projectId);
+    if (items.configs) dispatch(generateConfigs(projectId));
+    if (items.envs) dispatch(generateEnvs(projectId));
+    if (items.konts) dispatch(generateKonts(projectId));
+  };
+}
 export function generateConfigs(projectId) {
   return dispatch => {
     const state = store.getState();

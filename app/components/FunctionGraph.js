@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getMainGraphId, getSubGraphId } from 'store-selectors';
 
 import Toolbar from '@material-ui/core/Toolbar';
@@ -10,8 +10,9 @@ import SplitPane from './SplitPane';
 import Pane from './Pane';
 import Graph from './Graph';
 
-function FunctionGraph(props) {
-  const { mainGraphId, subGraphId } = props;
+function FunctionGraph() {
+  const mainGraphId = useSelector(getMainGraphId);
+  const subGraphId = useSelector(getSubGraphId);
 
   return  (
     <SplitPane horizontal>
@@ -50,11 +51,5 @@ function GraphLabel(props) {
     </Toolbar>);
 }
 GraphLabel = withTheme(GraphLabel);
-const mapStateToProps = state => {
-  const mainGraphId = getMainGraphId(state);
-  const subGraphId = getSubGraphId(state);
-  return { mainGraphId, subGraphId };
-};
-export default connect(
-  mapStateToProps
-)(FunctionGraph);
+
+export default FunctionGraph;

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
+import { setRenameDialog, selProject } from 'store-actions';
 import { getList, deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
-import { setView, setRenameDialog, selProject } from 'store-actions';
 import { getUser, getProjects } from 'store-selectors';
 import { PROJECT_VIEW } from 'store-consts';
 
@@ -22,7 +22,7 @@ function ProjectList(props) {
 
   const {
     projects,
-    getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog } = props;
+    getList, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -94,7 +94,6 @@ function ProjectList(props) {
         key={ id }
         onClick={ () => {
           selProject(id);
-          setView(PROJECT_VIEW);
         } }
         align='flex-start'
         style={{ paddingRight: 144+16 }}>
@@ -118,5 +117,5 @@ const mapStateToProps = state => {
 };
 export default connect(
   mapStateToProps,
-  { getList, setView, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog }
+  { getList, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog }
 )(ProjectList);

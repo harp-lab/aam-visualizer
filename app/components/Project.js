@@ -1,9 +1,9 @@
-import { connect } from 'react-redux';
+import React, { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setTitle, generatePanels } from 'store-actions';
 import { getCode, getData } from 'store-apis';
-import { setTitle, setProjectData, generateConfigs, generateEnvs, generateKonts } from 'store-actions';
 import { getProject, getSelectedProjectId } from 'store-selectors';
 
-import React, { useEffect, useRef } from 'react';
 import Loading from './Loading';
 import SplitPane from './SplitPane';
 import Pane from './Pane';
@@ -13,20 +13,21 @@ import CodeViewer from './CodeViewer';
 import ConfigViewer from './ConfigViewer';
 import EnvViewer from './EnvViewer';
 import KontViewer from './KontViewer';
-import ItemContext from './ItemContext';
 
-function Project(props) {
-  const { projectId, project, getCode, getData, setProjectData, setTitle, generateConfigs, generateEnvs, generateKonts } = props;
+function Project() {
+  const projectId = useSelector(getSelectedProjectId);
+  const project = useSelector(getProject);
+  const dispatch = useDispatch();
   const timeout = useRef(undefined);
 
   // mount/unmount
   useEffect(() => {
     const { status, STATUSES, code, items, name } = project.data;
-    setTitle(name || projectId);
+    dispatch(setTitle(name || projectId));
     switch (status) {
       case STATUSES.edit:
         if (code == '')
-          getCode(projectId);
+          dispatch(getCode(projectId));
         break;
       case STATUSES.done:
       case STATUSES.error:
@@ -36,7 +37,7 @@ function Project(props) {
     }
 
     return () => {
-      setTitle(undefined);
+      dispatch(setTitle(undefined));
       clearTimeout(timeout.current);
     };
   }, []);
@@ -49,12 +50,10 @@ function Project(props) {
   }, [project.data.status]);
 
   async function getGraphs() {
-    const status = await getData(projectId);
+    const status = await dispatch(getData(projectId));
     switch (status) {
       case 200: {
-        generateConfigs();
-        generateEnvs();
-        generateKonts();
+        dispatch(generatePanels());
         break;
       }
       case 204: {
@@ -94,7 +93,6 @@ function Project(props) {
   function renderVisual() {
 
     return (
-      <ItemContext.Provider value={ project.items }>
         <SplitPane vertical>
           <Pane width='40%'>
             <FunctionGraph />
@@ -123,18 +121,9 @@ function Project(props) {
               </Pane>
             </SplitPane>
           </Pane>
-        </SplitPane>
-      </ItemContext.Provider>);
+        </SplitPane>);
   }
 
   return render();
 }
-const mapStateToProps = state => {
-  const projectId = getSelectedProjectId(state);
-  const project = getProject(state);
-  return { projectId, project };
-};
-export default connect(
-  mapStateToProps,
-  { getCode, getData, setProjectData, generateConfigs, generateEnvs, generateKonts, setTitle }
-)(Project);
+export default Project;

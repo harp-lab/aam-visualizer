@@ -1,14 +1,15 @@
 import store from '../store';
-import { setView } from '../actions/data'
-import { generateConfigs, generateEnvs, generateKonts } from 'store-actions';
-import { setProjectData, addProject, delProject, selProject } from '../actions/projects';
-import { queueSnackbar } from '../actions/notifications';
-import { getUser } from '../selectors/data';
-import { getSelectedProjectId, getProjectData } from '../selectors/projects';
+import {
+  setView,
+  setProjectData, addProject, delProject, selProject,
+  generatePanels,
+  queueSnackbar
+} from 'store-actions';
+import { getUser, getSelectedProjectId, getProjectData } from 'store-selectors';
 import {
   LIST_VIEW, PROJECT_VIEW,
   EDIT_STATUS, PROCESS_STATUS
-} from '../consts';
+} from 'store-consts';
 
 function apiReq(url, method) {
   const state = store.getState();
@@ -43,7 +44,6 @@ export function createProject() {
     const data = await res.json();
     const projectId = data.id;
     dispatch(addProject(projectId));
-    dispatch(setView(LIST_VIEW));
     dispatch(selProject(undefined));
     return projectId;
   };
@@ -80,7 +80,6 @@ export function forkProject(projectId) {
     const forkData = { code, analysis };
     dispatch(setProjectData(forkProjectId, forkData));
     dispatch(selProject(forkProjectId));
-    dispatch(setView(PROJECT_VIEW));
   };
 }
 
@@ -195,10 +194,7 @@ export function importData(projectId, data) {
   return dispatch => {
     dispatch(addProject(projectId));
     dispatch(setProjectData(projectId, data));
-    
-    dispatch(generateConfigs(projectId));
-    dispatch(generateEnvs(projectId));
-    dispatch(generateKonts(projectId));
+    dispatch(generatePanels(projectId));
   }
 }
 export function exportData(projectId) {
