@@ -4,9 +4,10 @@ import { getSubGraphId, getGraphSelectedNodes } from '../selectors/graphs';
 import { getPanels } from '../selectors/panels';
 import { ADD_PANEL, SET_PANEL, REFRESH_PANELS } from '../actionTypes';
 
-function addPanel(type, panelId, label) {
+function addPanel(projectId, type, panelId, label) {
   const state = store.getState();
-  const projectId = getSelectedProjectId(state);
+  if (!projectId)
+    projectId = getSelectedProjectId(state);
   return {
     type: ADD_PANEL,
     payload: {
@@ -17,9 +18,9 @@ function addPanel(type, panelId, label) {
     }
   };
 }
-export const addConfig = (panelId, label) => addPanel('configs', panelId, label);
-export const addEnv = (panelId, label) => addPanel('envs', panelId, label);
-export const addKont = (panelId, label) => addPanel('konts', panelId, label);
+export const addConfig = (projectId, panelId, label) => addPanel(projectId, 'configs', panelId, label);
+export const addEnv = (projectId, panelId, label) => addPanel(projectId, 'envs', panelId, label);
+export const addKont = (projectId, panelId, label) => addPanel(projectId, 'konts', panelId, label);
 
 function setPanel(type, panelId, data) {
   const state = store.getState();
@@ -140,10 +141,10 @@ export function refreshKonts() {
   });
 }
 
-export function generateConfigs() {
+export function generateConfigs(projectId) {
   return dispatch => {
     const state = store.getState();
-    const items = getProjectItems(state);
+    const items = getProjectItems(state, projectId);
     for (const [configId, data] of Object.entries(items.configs)) {
       const { form, states } = data;
       let syntax;
@@ -177,26 +178,26 @@ export function generateConfigs() {
       }
       const label = `${configId}: ${form} - ${syntax}`;
   
-      dispatch(addConfig(configId, label));
+      dispatch(addConfig(projectId, configId, label));
     }
   };
 }
-export function generateEnvs() {
+export function generateEnvs(projectId) {
   return dispatch => {
     const state = store.getState();
-    const items = getProjectItems(state);
+    const items = getProjectItems(state, projectId);
     for (const [envId, data] of Object.entries(items.envs)) {
       const vars = data.map(entry => entry.varString).join(', ');
       const label = `${envId}: [ ${vars} ]`;
 
-      dispatch(addEnv(envId, label));
+      dispatch(addEnv(projectId, envId, label));
     }
   };
 }
-export function generateKonts() {
+export function generateKonts(projectId) {
   return dispatch => {
     const state = store.getState();
-    const items = getProjectItems(state);
+    const items = getProjectItems(state, projectId);
     for (const [kontId, kont] of Object.entries(items.konts)) {
       const { descs } = items.konts[kontId];
       let label;
@@ -204,7 +205,7 @@ export function generateKonts() {
         label = `[ ${descs[0]}, ... +${descs.length - 1} ]`;
       else
         label = `[ ${descs[0]} ]`;
-      dispatch(addKont(kontId, label))
+      dispatch(addKont(projectId, kontId, label))
     }
   };
 }

@@ -12,8 +12,8 @@ export function getProject(store, projectId) {
     projectId = getSelectedProjectId(store);
   return getProjects(store)[projectId];
 };
-export function getProjectItems(store) {
-  const { items } = getProject(store).data;
+export function getProjectItems(store, projectId) {
+  const { items } = getProject(store, projectId).data;
   return items;
 }
 export function getProjectData(store, projectId) {

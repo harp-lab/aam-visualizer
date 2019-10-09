@@ -1,5 +1,6 @@
 import store from '../store';
 import { setView } from '../actions/data'
+import { generateConfigs, generateEnvs, generateKonts } from 'store-actions';
 import { setProjectData, addProject, delProject, selProject } from '../actions/projects';
 import { queueSnackbar } from '../actions/notifications';
 import { getUser } from '../selectors/data';
@@ -194,6 +195,10 @@ export function importData(projectId, data) {
   return dispatch => {
     dispatch(addProject(projectId));
     dispatch(setProjectData(projectId, data));
+    
+    dispatch(generateConfigs(projectId));
+    dispatch(generateEnvs(projectId));
+    dispatch(generateKonts(projectId));
   }
 }
 export function exportData(projectId) {
