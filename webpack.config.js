@@ -44,8 +44,14 @@ module.exports = {
     ]
   },
   output: {
-    filename: 'transformed.js',
-    path: __dirname + '/build'
+    filename: '[name].bundle.js',
+    chunkFilename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'build')
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+    },
   },
   plugins: [HTMLWebpackPluginConfig],
   devServer: {
