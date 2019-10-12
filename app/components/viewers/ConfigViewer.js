@@ -1,34 +1,34 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { hoverNodes, refreshEnvs, refreshKonts } from 'store-actions';
 import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 
 import { Card, CardContent, Typography } from '@material-ui/core';
 
-import Panel from './Panel';
-import { PanelViewer } from 'library';
+import Panel from '../Panel';
+import { PanelViewer, Spacer } from 'library';
 
-import { EnvLink, KontLink } from './links';
+import { EnvLink, KontLink } from '../links';
+import { ValItem } from '../items';
 
-import ValItem from './ValItem';
-
-function ConfigViewer(props) {
-  const { configs, items, hoverNodes, subGraphId, refreshEnvs, refreshKonts } = props;
+function ConfigViewer() {
+  const { configs } = useSelector(getPanels);
+  const items = useSelector(getProjectItems);
+  const subGraphId = useSelector(getSubGraphId);
+  const dispatch = useDispatch();
 
   function refresh() {
-    refreshEnvs();
-    refreshKonts();
+    dispatch(refreshEnvs());
+    dispatch(refreshKonts());
   }
   function onGenerate([configId, config]) {
-    const { label } = config;
-
     return (
       <Panel
         key={ configId }
         panelId={ configId }
         panelType='configs'
-        onMouseOver={ () => hoverNodes(subGraphId, [configId]) }
-        onMouseOut={ () => hoverNodes(subGraphId, []) }
+        onMouseOver={ () => dispatch(hoverNodes(subGraphId, [configId])) }
+        onMouseOut={ () => dispatch(hoverNodes(subGraphId, [])) }
         onSelect={ refresh }
         onUnselect={ refresh }>
         <Config configId={ configId } />
@@ -47,19 +47,11 @@ function ConfigViewer(props) {
     onGenerate={ onGenerate }
     { ...funcProps } />;
 }
-const mapStateToProps = state => {
-  const { configs } = getPanels(state);
-  const items = getProjectItems(state);
-  const subGraphId = getSubGraphId(state);
-  return { items, configs, subGraphId };
-};
-export default connect(
-  mapStateToProps,
-  { hoverNodes, refreshEnvs, refreshKonts }
-)(ConfigViewer);
 
 function Config(props) {
-  const { configId, items } = props;
+  const { configId } = props;
+  const items = useSelector(getProjectItems);
+
   const { states } = items.configs[configId];
   let cards;
   if (states)
@@ -71,7 +63,7 @@ function Config(props) {
         default:
           return <StateCard
             key={ stateId }
-            stateId={ stateId }/>;
+            stateId={ stateId } />;
       }
 
     });
@@ -85,14 +77,9 @@ function Config(props) {
       { cards }
     </div>);
 }
-Config = connect(
-  state => {
-    const items = getProjectItems(state);
-    return { items };
-  },
-)(Config);
 function StateCard(props) {
-  const { stateId, items } = props;
+  const { stateId } = props;
+  const items = useSelector(getProjectItems);
 
   const {
     instr: instrId,
@@ -103,7 +90,7 @@ function StateCard(props) {
 
   const instr = items.instr[instrId]
    .exprStrings.join(', ');
-  const instrElem = <Typography display='inline' >{ `[ ${ instr } ]` }</Typography>;
+  const instrElem = <Typography display='inline'>{ `[ ${ instr } ]` }</Typography>;
 
   const kontElem = <KontLink kontId={ kontId } />;
   const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
@@ -122,28 +109,16 @@ function StateCard(props) {
   return(
     <Card style={{ width: '100%' }}>
       <CardContent style={{ padding: 8 }}>
-        <StateLabel>
+        <Spacer childrenStyle={{ marginRight: 5 }}>
           { instrElem }
           { kontElem }
           { envElem }
-        </StateLabel>
+        </Spacer>
         <div style={{ display: 'flex' }}>
           { valsElem }
         </div>
       </CardContent>
     </Card>);
 }
-StateCard = connect(
-  state => {
-    const items = getProjectItems(state);
-    return { items };
-  },
-)(StateCard);
-function StateLabel(props) {
-  const { children } = props;
-  const spacedChildren = React.Children.map(children, child => {
-    if (child)
-      return React.cloneElement(child, { style: {marginRight: '5px'} });
-  });
-  return <div>{ spacedChildren }</div>;
-}
+
+export default ConfigViewer;

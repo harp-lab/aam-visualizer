@@ -1,11 +1,12 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getProjectItems } from 'store-selectors';
 
 import { Typography } from '@material-ui/core';
 
 function ValItem(props) {
-  const { valId, items } = props;
+  const { valId } = props;
+  const items = useSelector(getProjectItems);
   const { type, astString, valString } = items.vals[valId];
 
   let string;
@@ -23,9 +24,4 @@ function ValItem(props) {
 
   return <Typography>{ string }</Typography>;
 }
-export default connect(
-  state => {
-    const items = getProjectItems(state);
-    return { items };
-  }
-)(ValItem);
+export default ValItem;

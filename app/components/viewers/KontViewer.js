@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getPanels, getProjectItems } from 'store-selectors';
 
 import {
@@ -12,16 +12,16 @@ import {
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
 
-import Panel from './Panel';
+import Panel from '../Panel';
 import { PanelViewer } from 'library';
 
-import { EnvLink, KontLink } from './links';
-import ValItem from './ValItem';
+import { ValItem } from '../items';
+import { EnvLink, KontLink } from '../links';
 
-import LayerData from './data/Layer';
+import LayerData from '../data/Layer';
 
-function KontViewer(props) {
-  const { konts } = props;
+function KontViewer() {
+  const { konts } = useSelector(getPanels);
   
   function onGenerate([kontId, kont]) {
     return (
@@ -42,13 +42,6 @@ function KontViewer(props) {
     panels={ konts }
     onGenerate={ onGenerate } />;
 }
-const mapStateToProps = state => {
-  const { konts } = getPanels(state);
-  return { konts };
-};
-export default connect(
-  mapStateToProps
-)(KontViewer);
 function Kont(props) {
   const { kontId } = props;
   const [layerList, setLayerList] = useState([new LayerData([kontId])]);
@@ -107,7 +100,8 @@ function KontLayer(props) {
     </div>);
 }
 function KontCard(props) {
-  const { kontId, selected, items, theme, classes } = props;
+  const { kontId, selected, theme, classes } = props;
+  const items = useSelector(getProjectItems);
 
   const kont = items.konts[kontId];
   const { form, type, vals: valIdSets } = kont;
@@ -209,12 +203,6 @@ KontCard = withStyles(theme => ({
     '&:hover': { backgroundColor: `${theme.palette.hover.light} !important` }
   }
 }), { withTheme: true })(KontCard);
-KontCard = connect(
-  state => {
-    const items = getProjectItems(state);
-    return { items };
-  },
-)(KontCard);
 
 function KontLabel(props) {
   const { children } = props;
@@ -266,3 +254,5 @@ function KontInfo(props) {
 KontInfo = withStyles({
   paper: { padding: '1em' }
 })(KontInfo);
+
+export default KontViewer;

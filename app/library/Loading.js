@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+
 import Fade from '@material-ui/core/Fade';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
-import Pane from './Pane';
+
+import { Pane } from 'library';
 
 class Loading extends Component {
   render() {

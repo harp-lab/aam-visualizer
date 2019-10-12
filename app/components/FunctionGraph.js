@@ -6,8 +6,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
 
-import SplitPane from './SplitPane';
-import Pane from './Pane';
+import { Pane, SplitPane } from 'library';
 import Graph from './Graph';
 
 function FunctionGraph() {

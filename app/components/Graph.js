@@ -235,30 +235,20 @@ function Graph(props) {
   }, [hoveredNodes]);
 
   function addClass(nodeIds, className) {
-    const nodes = cy.nodes();
-    const idFunc = node => node.id();
-    const callback = node => node.addClass(className);
-    perfArrayApply(nodes, nodeIds, idFunc, callback);
+    cy.batch(() => {
+      for (const nodeId of nodeIds) {
+        const node = cy.getElementById(nodeId);
+        node.addClass(className);
+      }
+    });
   }
   function removeClass(nodeIds, className) {
-    const nodes = cy.nodes();
-    const idFunc = node => node.id();
-    const callback = node => node.removeClass(className);
-    perfArrayApply(nodes, nodeIds, idFunc, callback);
-  }
-  function perfArrayApply(array, filter, idFunc, callback) {
-    let remElemIds = [...filter];
-    let i = 0;
-    while (i < array.length && remElemIds.length > 0) {
-      const elem = array[i];
-      const id = idFunc(elem);
-      const index = remElemIds.findIndex(elemId => elemId == id);
-      if (index !== -1) {
-        remElemIds.splice(index, 1);
-        callback(elem);
+    cy.batch(() => {
+      for (const nodeId of nodeIds) {
+        const node = cy.getElementById(nodeId);
+        node.removeClass(className);
       }
-      i++;
-    }
+    });
   }
 
   // resize on bound changes

@@ -1,9 +1,11 @@
 import store from '../store';
-import { ADD_PANEL, SET_PANEL, REFRESH_PANELS } from '../actionTypes';
+import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes';
+import { CONFIG_PANEL, ENV_PANEL, KONT_PANEL } from 'store-consts';
 import {
   getSelectedProjectId, getProjectItems,
   getSubGraphId, getGraphSelectedNodes,
-  getPanels } from 'store-selectors';
+  getPanels
+} from 'store-selectors';
 
 function addPanel(projectId, type, panelId, label) {
   const state = store.getState();
@@ -19,9 +21,9 @@ function addPanel(projectId, type, panelId, label) {
     }
   };
 }
-export const addConfig = (projectId, panelId, label) => addPanel(projectId, 'configs', panelId, label);
-export const addEnv = (projectId, panelId, label) => addPanel(projectId, 'envs', panelId, label);
-export const addKont = (projectId, panelId, label) => addPanel(projectId, 'konts', panelId, label);
+export const addConfig = (projectId, panelId, label) => addPanel(projectId, CONFIG_PANEL, panelId, label);
+export const addEnv = (projectId, panelId, label) => addPanel(projectId, ENV_PANEL, panelId, label);
+export const addKont = (projectId, panelId, label) => addPanel(projectId, KONT_PANEL, panelId, label);
 
 function setPanel(type, panelId, data) {
   const state = store.getState();
@@ -36,6 +38,16 @@ function setPanel(type, panelId, data) {
     }
   }
 }
+function setPanels(projectId, type, data) {
+  return {
+    type: SET_PANELS,
+    payload: {
+      projectId,
+      type,
+      data
+    }
+  }
+}
 export const hidePanel = (type, panelId) => setPanel(type, panelId, { hidden: true });
 export const showPanel = (type, panelId) => setPanel(type, panelId, { hidden: false });
 export const savePanel = (type, panelId) => setPanel(type, panelId, { saved: true });
@@ -43,26 +55,26 @@ export const unsavePanel = (type, panelId) => setPanel(type, panelId, { saved: f
 export const selectPanel = (type, panelId) => setPanel(type, panelId, { selected: true });
 export const unselectPanel = (type, panelId) => setPanel(type, panelId, { selected: false });
 
-export const hideConfig = panelId => hidePanel('configs', panelId);
-export const showConfig = panelId => showPanel('configs', panelId);
-export const saveConfig = panelId => savePanel('configs', panelId);
-export const unsaveConfig = panelId => unsavePanel('configs', panelId);
-export const selectConfig = panelId => selectPanel('configs', panelId);
-export const unselectConfig = panelId => unselectPanel('configs', panelId);
+export const hideConfig = panelId => hidePanel(CONFIG_PANEL, panelId);
+export const showConfig = panelId => showPanel(CONFIG_PANEL, panelId);
+export const saveConfig = panelId => savePanel(CONFIG_PANEL, panelId);
+export const unsaveConfig = panelId => unsavePanel(CONFIG_PANEL, panelId);
+export const selectConfig = panelId => selectPanel(CONFIG_PANEL, panelId);
+export const unselectConfig = panelId => unselectPanel(CONFIG_PANEL, panelId);
 
-export const hideKont = panelId => hidePanel('konts', panelId);
-export const showKont = panelId => showPanel('konts', panelId);
-export const saveKont = panelId => savePanel('konts', panelId);
-export const unsaveKont = panelId => unsavePanel('konts', panelId);
-export const selectKont = panelId => selectPanel('konts', panelId);
-export const unselectKont = panelId => unselectPanel('konts', panelId);
+export const hideKont = panelId => hidePanel(KONT_PANEL, panelId);
+export const showKont = panelId => showPanel(KONT_PANEL, panelId);
+export const saveKont = panelId => savePanel(KONT_PANEL, panelId);
+export const unsaveKont = panelId => unsavePanel(KONT_PANEL, panelId);
+export const selectKont = panelId => selectPanel(KONT_PANEL, panelId);
+export const unselectKont = panelId => unselectPanel(KONT_PANEL, panelId);
 
-export const hideEnv = panelId => hidePanel('envs', panelId);
-export const showEnv = panelId => showPanel('envs', panelId);
-export const saveEnv = panelId => savePanel('envs', panelId);
-export const unsaveEnv = panelId => unsavePanel('envs', panelId);
-export const selectEnv = panelId => selectPanel('envs', panelId);
-export const unselectEnv = panelId => unselectPanel('envs', panelId);
+export const hideEnv = panelId => hidePanel(ENV_PANEL, panelId);
+export const showEnv = panelId => showPanel(ENV_PANEL, panelId);
+export const saveEnv = panelId => savePanel(ENV_PANEL, panelId);
+export const unsaveEnv = panelId => unsavePanel(ENV_PANEL, panelId);
+export const selectEnv = panelId => selectPanel(ENV_PANEL, panelId);
+export const unselectEnv = panelId => unselectPanel(ENV_PANEL, panelId);
 
 function refreshPanels(type, func) {
   const state = store.getState();
@@ -87,7 +99,7 @@ export function refreshConfigs() {
   const state = store.getState();
   const subGraphId = getSubGraphId(state);
   const selectedConfigs = getGraphSelectedNodes(state, subGraphId);
-  return refreshPanels('configs', (panelId, data) => {
+  return refreshPanels(CONFIG_PANEL, (panelId, data) => {
     if (selectedConfigs.includes(panelId)) {
       return { selected: true, hidden: false };
     } else {
@@ -112,7 +124,7 @@ export function refreshEnvs() {
         }
     }
   }
-  return refreshPanels('envs', (envId, panel) => {
+  return refreshPanels(ENV_PANEL, (envId, panel) => {
     if (visibleEnvs.includes(envId))
       return { hidden: false };
     else
@@ -134,7 +146,7 @@ export function refreshKonts() {
         }
     }
   }
-  return refreshPanels('konts', (kontId, panel) => {
+  return refreshPanels(KONT_PANEL, (kontId, panel) => {
     if (visibleKonts.includes(kontId))
       return { hidden: false };
     else
@@ -151,10 +163,20 @@ export function generatePanels(projectId) {
     if (items.konts) dispatch(generateKonts(projectId));
   };
 }
+function defaultPanelState(label) {
+  return {
+    label,
+    saved: false,
+    hidden: true,
+    selected: false
+  };
+};
 export function generateConfigs(projectId) {
   return dispatch => {
     const state = store.getState();
     const items = getProjectItems(state, projectId);
+
+    const panels = {};
     for (const [configId, data] of Object.entries(items.configs)) {
       const { form, states } = data;
       let syntax;
@@ -188,26 +210,32 @@ export function generateConfigs(projectId) {
       }
       const label = `${configId}: ${form} - ${syntax}`;
   
-      dispatch(addConfig(projectId, configId, label));
+      panels[configId] = defaultPanelState(label);
     }
+    dispatch(setPanels(projectId, CONFIG_PANEL, panels));
   };
 }
 export function generateEnvs(projectId) {
   return dispatch => {
     const state = store.getState();
     const items = getProjectItems(state, projectId);
+
+    const panels = {};
     for (const [envId, data] of Object.entries(items.envs)) {
       const vars = data.map(entry => entry.varString).join(', ');
       const label = `${envId}: [ ${vars} ]`;
 
-      dispatch(addEnv(projectId, envId, label));
+      panels[envId] = defaultPanelState(label);
     }
+    dispatch(setPanels(projectId, ENV_PANEL, panels));
   };
 }
 export function generateKonts(projectId) {
   return dispatch => {
     const state = store.getState();
     const items = getProjectItems(state, projectId);
+
+    const panels = {};
     for (const [kontId, kont] of Object.entries(items.konts)) {
       const { descs } = items.konts[kontId];
       let label = `${kontId}: `;
@@ -215,7 +243,9 @@ export function generateKonts(projectId) {
         label += `[ ${descs[0]}, ... +${descs.length - 1} ]`;
       else
         label += `[ ${descs[0]} ]`;
-      dispatch(addKont(projectId, kontId, label))
+
+      panels[kontId] = defaultPanelState(label);
     }
+    dispatch(setPanels(projectId, KONT_PANEL, panels));
   };
 }

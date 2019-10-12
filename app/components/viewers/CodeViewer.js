@@ -10,10 +10,10 @@ import {
 
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
-import CodePos from './data/CodePos';
+import CodePos from '../data/CodePos';
 import indigo from '@material-ui/core/colors/indigo';
 
-import CodeMark from './data/CodeMark';
+import CodeMark from '../data/CodeMark';
 
 function CodeViewer(props) {
   const [gutterWidth, setGutterWidth] = useState('auto');

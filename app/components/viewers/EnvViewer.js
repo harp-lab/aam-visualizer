@@ -1,14 +1,15 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { showEnv } from 'store-actions';
+import { useSelector } from 'react-redux';
 import { getPanels, getProjectItems } from 'store-selectors';
 
-import { Link, Tooltip, Typography } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
 
-import Panel from './Panel';
-import { PanelTable, PanelViewer } from 'library';
+import Panel from '../Panel';
+import { PanelTable, PanelViewer, Spacer } from 'library';
 
-function EnvViewer(props) {
+import { EnvLink } from '../links';
+
+function EnvViewer() {
   const { envs } = useSelector(getPanels);
 
   function onGenerate([envId, env]) {
@@ -35,7 +36,6 @@ export default EnvViewer;
 function EnvItem(props) {
   const { envId } = props
   const items = useSelector(getProjectItems);
-  const dispatch = useDispatch();
 
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
@@ -61,22 +61,14 @@ function EnvItem(props) {
               break;
           }
 
-          let addEnvLink;
-          if (env)
-            addEnvLink = (
-              <Tooltip title='View environment'>
-                <Link onClick={ () => dispatch(showEnv(env)) }>
-                  <sup>
-                    { env }
-                  </sup>
-                </Link>
-              </Tooltip>);
-
+          const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
           return (
-            <Typography key={ valId }>
-              { string }
-              { addEnvLink }
-            </Typography>);
+            <Spacer
+              key={ valId }
+              childrenStyle={{ marginRight: 5 }}>
+              <Typography display='inline'>{ string }</Typography>
+              { envElem }
+            </Spacer>);
         });
       return [entry.varString, `[ ${instrEntries} ]`, storeEntries]
     });

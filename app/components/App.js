@@ -2,20 +2,17 @@ import React, { Fragment, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { createProject, forkProject, importData, exportData } from 'store-apis';
 import { logout, selProject } from 'store-actions';
-import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
+import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import ThemeProvider from '@material-ui/styles/ThemeProvider';
+import { AppBar, Button, Toolbar, Typography } from '@material-ui/core';
+import { ThemeProvider } from '@material-ui/styles';
 
 import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
-import RenameDialog from './dialogs/Rename';
+import { RenameDialog } from './dialogs';
 import Snackbar from './Snackbar';
 
 function App() {

@@ -15,7 +15,7 @@ import CancelIcon from '@material-ui/icons/Cancel';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Tooltip from '@material-ui/core/Tooltip';
 
-import DropMenu from './DropMenu';
+import { DropMenu } from 'library';
 
 function ProjectList(props) {
   const timeout = useRef(undefined);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { connect, useSelector, useDispatch } from 'react-redux';
 import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
 import { getPanels } from 'store-selectors';
 
@@ -19,24 +19,26 @@ import withStyles from '@material-ui/styles/withStyles';
 
 function Panel(props) {
   const {
-    panelId, panelType, panelData, children, theme, classes,
-    selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel
-  } = props;
+    panelId, panelType, children, theme, classes,
+    onSelect, onUnselect, onMouseOver, onMouseOut
+  } = props; 
+  const panelData = useSelector(getPanels)[panelType][panelId];
+  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   function select() {
-    selectPanel(panelType, panelId);
-    if (props.onSelect) props.onSelect();
+    dispatch(selectPanel(panelType, panelId));
+    if (onSelect) onSelect();
   }
   function unselect() {
-    unselectPanel(panelType, panelId);
-    if (props.onUnselect) props.onUnselect();
+    dispatch(unselectPanel(panelType, panelId));
+    if (onUnselect) onUnselect();
   }
-  const save = () => savePanel(panelType, panelId);
-  const unsave = () => unsavePanel(panelType, panelId);
-  const hide = () => hidePanel(panelType, panelId);
+  const save = () => dispatch(savePanel(panelType, panelId));
+  const unsave = () => dispatch(unsavePanel(panelType, panelId));
+  const hide = () => dispatch(hidePanel(panelType, panelId));
 
-  const { selected, saved } = panelData;
+  const { label, selected, saved } = panelData;
   let saveButton, selectButton;
   if (props.disableSelect)
     selectButton = <Button
@@ -73,14 +75,18 @@ function Panel(props) {
   return (
     <ExpansionPanel
       onMouseOver={ () => {
-        setHovered(true);
-        props.onMouseOver();
-      } }
+        if (!hovered) {
+          onMouseOver();
+          setHovered(true);
+        }
+      }}
       onMouseOut={ () => {
-        setHovered(false);
-        props.onMouseOut();
-      } }
-      defaultExpanded={ !panelData.saved }>
+        if (hovered) {
+          onMouseOut();
+          setHovered(false);
+        }
+      }}
+      defaultExpanded={ !saved }>
       <ExpansionPanelSummary
         expandIcon={ <ExpandMore /> }
         classes={{
@@ -95,7 +101,7 @@ function Panel(props) {
         { selectButton }
         { saveButton }
         { deleteButton }
-        <Typography>{ panelData.label }</Typography>
+        <Typography>{ label }</Typography>
       </ExpansionPanelSummary>
       <ExpansionPanelDetails>{ children }</ExpansionPanelDetails>
     </ExpansionPanel>);
@@ -119,15 +125,6 @@ Panel = withStyles(theme => ({
   },
   panelExpanded: {}
 }), { withTheme: true })(Panel);
-const mapStateToProps = (state, ownProps) => {
-  const { panelId, panelType } = ownProps;
-  const panelData = getPanels(state)[panelType][panelId];
-  return { panelData };
-};
-export default connect(
-  mapStateToProps,
-  { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel }
-)(Panel);
 
 function Button(props) {
   const { icon, tooltip, disabled, onClick } = props;
@@ -152,3 +149,5 @@ function Button(props) {
       </IconButton>
     </Tooltip>);
 }
+
+export default Panel;

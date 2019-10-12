@@ -5,15 +5,10 @@ import { getCode, getData } from 'store-apis';
 import { getProject, getSelectedProjectId } from 'store-selectors';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 
-import Loading from './Loading';
-import SplitPane from './SplitPane';
-import Pane from './Pane';
+import { Loading, Pane, SplitPane } from 'library';
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
-import CodeViewer from './CodeViewer';
-import ConfigViewer from './ConfigViewer';
-import EnvViewer from './EnvViewer';
-import KontViewer from './KontViewer';
+import { CodeViewer, ConfigViewer, EnvViewer, KontViewer } from './viewers';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
@@ -54,7 +49,7 @@ function Project() {
     const status = await dispatch(getData(projectId));
     switch (status) {
       case 200: {
-        dispatch(generatePanels());
+        dispatch(generatePanels(projectId));
         break;
       }
       case 204: {
@@ -75,11 +70,15 @@ function Project() {
           edit />;
         break;
       case PROCESS_STATUS:
-        viewElement = <Loading status='Processing' variant='circular'/>;
+        viewElement = <Loading
+          status='Processing'
+          variant='circular'/>;
         break;
       case COMPLETE_STATUS:
         if (!items)
-          viewElement = <Loading status='Downloading' variant='circular'/>;
+          viewElement = <Loading
+            status='Downloading'
+            variant='circular'/>;
         else
           viewElement = renderVisual();
         break;
@@ -92,37 +91,26 @@ function Project() {
     return viewElement;
   }
   function renderVisual() {
-
     return (
-        <SplitPane vertical>
-          <Pane width='40%'>
-            <FunctionGraph />
-          </Pane>
-          <Pane width='60%'>
-            <SplitPane horizontal>
-              <Pane height='48%'>
-                <SplitPane vertical>
-                  <Pane width='48%' overflow='auto'>
-                    <CodeViewer />
-                  </Pane>
-                  <Pane width='52%'>
-                    <KontViewer />
-                  </Pane>
-                </SplitPane>
-              </Pane>
-              <Pane height='52%' overflow='auto'>
-                <SplitPane>
-                  <Pane width="50%" overflow='auto'>
-                    <ConfigViewer />
-                  </Pane>
-                  <Pane width="50%" overflow='auto'>
-                    <EnvViewer />
-                  </Pane>
-                </SplitPane>
-              </Pane>
-            </SplitPane>
-          </Pane>
-        </SplitPane>);
+      <SplitPane vertical>
+        <Pane width='40%'><FunctionGraph /></Pane>
+        <Pane width='60%'>
+          <SplitPane horizontal>
+            <Pane height='48%'>
+              <SplitPane vertical>
+                <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
+                <Pane width='52%'><KontViewer /></Pane>
+              </SplitPane>
+            </Pane>
+            <Pane height='52%' overflow='auto'>
+              <SplitPane>
+                <Pane width="50%" overflow='auto'><ConfigViewer /></Pane>
+                <Pane width="50%" overflow='auto'><EnvViewer /></Pane>
+              </SplitPane>
+            </Pane>
+          </SplitPane>
+        </Pane>
+      </SplitPane>);
   }
 
   return render();

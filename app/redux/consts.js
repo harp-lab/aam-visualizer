@@ -8,3 +8,7 @@ export const EDIT_STATUS = 'edit';
 export const PROCESS_STATUS = 'process';
 export const COMPLETE_STATUS = 'done';
 export const ERROR_STATUS = 'error';
+
+export const CONFIG_PANEL = 'configs';
+export const ENV_PANEL = 'envs';
+export const KONT_PANEL = 'konts';

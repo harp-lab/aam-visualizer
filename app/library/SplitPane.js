@@ -1,22 +1,5 @@
 import React, { useState, useRef } from 'react';
 
-function Resizer(props) {
-  let style = { backgroundColor: 'darkgray' };
-  if (props.horizontal)
-    style = { ...style, ...{
-      height: 5,
-      cursor: 'ns-resize'
-    }};
-  else
-    style = { ...style, ...{
-      width: 5,
-      cursor: 'ew-resize'
-    }};
-  return <div
-    style={ style }
-    onMouseDown={ props.onMouseDown } />
-}
-
 function SplitPane(props) {
   const splitElem = useRef(undefined);
   const [resize, setResize] = useState(false);
@@ -61,22 +44,40 @@ function SplitPane(props) {
     resizer = <Resizer vertical onMouseDown={ startDrag } />;
     cursor = 'ew-resize';
   }
+  return (
+    <div
+      ref={ splitElem }
+      style={ {
+        display: 'flex',
+        flexDirection: (props.horizontal ? 'column' : 'row'),
+        flex: '1 1 auto',
+        minHeight: 0,
+        cursor: (resize ? cursor : 'default')
+      } }
+      onMouseMove={ drag }
+      onMouseUp={ stopDrag }
+      onMouseLeave={ stopDrag }>
+      { leftPane }
+      { resizer }
+      { rightPane }
+    </div>);
+}
+
+function Resizer(props) {
+  let style = { backgroundColor: 'darkgray' };
+  if (props.horizontal)
+    style = { ...style, ...{
+      height: 5,
+      cursor: 'ns-resize'
+    }};
+  else
+    style = { ...style, ...{
+      width: 5,
+      cursor: 'ew-resize'
+    }};
   return <div
-    ref={ splitElem }
-    style={ {
-      display: 'flex',
-      flexDirection: (props.horizontal ? 'column' : 'row'),
-      flex: '1 1 auto',
-      minHeight: 0,
-      cursor: (resize ? cursor : 'default')
-    } }
-    onMouseMove={ drag }
-    onMouseUp={ stopDrag }
-    onMouseLeave={ stopDrag }>
-    { leftPane }
-    { resizer }
-    { rightPane }
-  </div>;
+    style={ style }
+    onMouseDown={ props.onMouseDown } />
 }
 
 export default SplitPane;

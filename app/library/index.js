@@ -1,3 +1,9 @@
+export { default as DropMenu } from './DropMenu';
 export { default as Link } from './Link';
+export { default as Loading } from './Loading';
+export { default as Pane } from './Pane';
+export { default as PaneMessage } from './PaneMessage';
 export { default as PanelTable } from './PanelTable';
 export { default as PanelViewer } from './PanelViewer';
+export { default as Spacer } from './Spacer';
+export { default as SplitPane } from './SplitPane';
