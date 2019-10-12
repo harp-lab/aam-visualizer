@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { setRenameDialog, selProject } from 'store-actions';
 import { getList, deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
 import { getUser, getProjects } from 'store-selectors';
-import { PROJECT_VIEW } from 'store-consts';
+import { PROJECT_VIEW, PROCESS_STATUS } from 'store-consts';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -59,7 +59,7 @@ function ProjectList(props) {
         { project.data.status }
       </ListItemText>);
     let removeActionElem;
-    if (project.data.status == project.data.STATUSES.process)
+    if (project.data.status == PROCESS_STATUS)
       removeActionElem = (
       <Tooltip title='Cancel processing'>
         <IconButton onClick={ () => cancelProcess(id)}>

@@ -1,15 +1,11 @@
 import store from '../store';
 import {
-  setView,
   setProjectData, addProject, delProject, selProject,
   generatePanels,
   queueSnackbar
 } from 'store-actions';
 import { getUser, getSelectedProjectId, getProjectData } from 'store-selectors';
-import {
-  LIST_VIEW, PROJECT_VIEW,
-  EDIT_STATUS, PROCESS_STATUS
-} from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS } from 'store-consts';
 
 function apiReq(url, method) {
   const state = store.getState();
@@ -69,7 +65,7 @@ export function forkProject(projectId) {
   return async function(dispatch) {
     let state = store.getState();
     let project = getProjectData(state, projectId);
-    if (project.status !== project.STATUSES.empty) {
+    if (project.status !== EMPTY_STATUS) {
       await dispatch(getCode(projectId));
       state = store.getState();
       project = getProjectData(state, projectId);
@@ -106,14 +102,14 @@ export function getCode(projectId) {
 export function saveCode(projectId, code) {
   return dispatch => {
     const state = store.getState();
-    const { userId, status, STATUSES } = getProjectData(state, projectId);
+    const { userId, status } = getProjectData(state, projectId);
   
     switch (status) {
-      case STATUSES.empty:
-      case STATUSES.edit: {
-        let status = STATUSES.edit;
+      case EMPTY_STATUS:
+      case EDIT_STATUS: {
+        let status = EDIT_STATUS;
         if (code == '')
-          status = STATUSES.empty;
+          status = EMPTY_STATUS;
         
         dispatch(setProjectData(projectId, { status, code }));
         return fetch(`/api/${userId}/projects/${projectId}/save`, {
@@ -210,7 +206,7 @@ export function exportData(projectId) {
 
         // create elem
         const href = URL.createObjectURL(blob);
-        const file = `aam-vis-${projectId}.json`
+        const file = `aam-vis-${projectId}.json`;
         const elem = document.createElement('a');
         Object.assign(elem, {
           href,

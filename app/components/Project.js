@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setTitle, generatePanels } from 'store-actions';
 import { getCode, getData } from 'store-apis';
 import { getProject, getSelectedProjectId } from 'store-selectors';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 
 import Loading from './Loading';
 import SplitPane from './SplitPane';
@@ -22,15 +23,15 @@ function Project() {
 
   // mount/unmount
   useEffect(() => {
-    const { status, STATUSES, code, items, name } = project.data;
+    const { status, code, items, name } = project.data;
     dispatch(setTitle(name || projectId));
     switch (status) {
-      case STATUSES.edit:
+      case EDIT_STATUS:
         if (code == '')
           dispatch(getCode(projectId));
         break;
-      case STATUSES.done:
-      case STATUSES.error:
+      case COMPLETE_STATUS:
+      case ERROR_STATUS:
         if (!items)
           getGraphs();
         break;
@@ -64,25 +65,25 @@ function Project() {
     }
   }
   function render() {
-    const { status, STATUSES, error, items } = project.data;
+    const { status, error, items } = project.data;
     let viewElement;
     switch (status) {
-      case STATUSES.empty:
-      case STATUSES.edit:
+      case EMPTY_STATUS:
+      case EDIT_STATUS:
         viewElement = <Editor
           processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
           edit />;
         break;
-      case STATUSES.process:
+      case PROCESS_STATUS:
         viewElement = <Loading status='Processing' variant='circular'/>;
         break;
-      case STATUSES.done:
+      case COMPLETE_STATUS:
         if (!items)
           viewElement = <Loading status='Downloading' variant='circular'/>;
         else
           viewElement = renderVisual();
         break;
-      case STATUSES.error:
+      case ERROR_STATUS:
         viewElement = <Editor
           error
           errorContent={ error } />;

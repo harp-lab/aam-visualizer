@@ -1,216 +1,120 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
+import React, { Fragment, useState, useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { saveCode, processCode } from 'store-apis';
 import { getSelectedProjectId, getProjectData } from 'store-selectors';
 
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import InputLabel from '@material-ui/core/InputLabel';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import Toolbar from '@material-ui/core/Toolbar';
-import Link from '@material-ui/core/Link';
+import { Button, InputLabel, MenuItem, Select, Toolbar, Typography } from '@material-ui/core';
 import codemirror from 'codemirror/lib/codemirror';
 import 'codemirror/mode/scheme/scheme';
 
-class Editor extends Component {
-  constructor(props) {
-    super(props);
+function Editor(props) {
+  const { edit, processOptions, error, errorContent } = props;
+  const { analysis } = processOptions;
 
-    let processOptions;
-    if (this.props.processOptions) {
-      const analysis = this.props.processOptions.analysis[0];
-      processOptions = { analysis };
-    }
-    this.state = { processOptions };
+  const cmElem = useRef(undefined);
+  const cmConfig = {
+    lineWrapping: true,
+    lineNumbers: true,
+    readOnly: (!edit)
+  };
+  const cmRef = useRef(codemirror);
 
-    this.process = this.process.bind(this);
-  }
-  set value(data) { this.cm.getDoc().setValue(data); }
-  get value() { return this.cm.getDoc().getValue(); }
-  save() { this.props.saveCode(this.props.projectId, this.value); }
-  process() { this.props.processCode(this.props.projectId, this.value, this.state.processOptions); }
-  refresh() {
-    this.value = this.props.code;
-    if (this.props.marks){
-      this.clearMarks();
-      this.renderMarks();
-    }
-  }
-  renderMarks() {
-    const doc = this.cm.getDoc();
-    for (const [id, mark] of Object.entries(this.props.marks)) {
-      // create container
-      const container = document.createElement('div');
-      container.style.cssText = 'display: inline;';
-      container.addEventListener('click', event => {
-        this.props.onNodeSelect(mark.graphId, id);
-      });
+  const [options, setOptions] = useState({ analysis: analysis[0] });
+  const projectId = useSelector(getSelectedProjectId);
+  const { code } = useSelector(getProjectData);
+  const dispatch = useDispatch();
 
-      // create react text
-      const reactElement = (
-        <Typography
-          variant='caption'
-          display='inline'
-          classes={{ root: 'mark' }}>
-          { id }
-        </Typography>);
-      ReactDOM.render(reactElement, container);
-      
-      doc.setBookmark(mark.end, { widget: container, insertLeft: true });
-    }
-  }
-  selectMark() {
-    const selectedId = this.props.selected;
-    const doc = this.cm.getDoc();
+  function setValue(data) { cmRef.current.getDoc().setValue(data); }
+  function getValue() { return cmRef.current.getDoc().getValue(); }
+  function save() { dispatch(saveCode(projectId, getValue())); }
+  function process() { dispatch(processCode(projectId, getValue(), options)); }
 
-    // unselect previous mark
-    let marks;
-    if (this.selectedMark) {
-      this.selectedMark.clear();
+  useEffect(() => {
+    cmRef.current = codemirror.fromTextArea(cmElem.current, cmConfig);
 
-      // unhighlight bookmarks in range
-      marks = doc.getAllMarks();
-      marks.forEach(mark => {
-        if (mark.type == 'bookmark')
-          mark.widgetNode.classList.remove('selected');
-      });
-    }
-    
-    
-    if (selectedId) {
-      const mark = this.props.marks[selectedId];
-      if (mark) {
-        doc.setCursor(mark.start);
-
-        this.selectedMark = doc.markText(mark.start, mark.end, {
-          className: 'selected'});
-
-        // highlight bookmarks in range
-        marks = doc.findMarks(mark.start, mark.end);
-        marks.forEach(mark => {
-          if (mark.type == 'bookmark')
-            mark.widgetNode.classList.add('selected');
-        });
-      }
-    }
-  }
-  clearMarks() {
-    const doc = this.cm.getDoc();
-    doc.getAllMarks().forEach(marker => marker.clear());
-  }
-
-  componentDidMount() {
-    const cmConfig = {
-      lineWrapping: true,
-      lineNumbers: true,
-      readOnly: (!this.props.edit)
+    return () => {
+      cmRef.current.toTextArea();
+      save();
     };
+  }, []);
+  useEffect(() => {
+    setValue(code);
+  }, [code]);
+  
+  let infoElement;
+  let editMenu;
+  if (edit) {
+    infoElement = <Typography>Input code for analysis</Typography>;
 
-    this.cm = codemirror(this.cmRef, cmConfig);
-    this.refresh();
-    this.selectMark();
-  }
-  componentDidUpdate(prevProps) {
-    const dataUpdate = this.props.code !== prevProps.data;
-    const idUpdate = this.props.id !== prevProps.id;
-    const typeUpdate = this.props.type !== prevProps.type;
-    if (dataUpdate || idUpdate || typeUpdate)
-      this.refresh();
-    
-    if (this.props.selected !== prevProps.selected)
-      this.selectMark();
-  }
-  componentWillUnmount() {
-    if (this.props.edit)
-      this.save();
-  }
-  render() {
-    let infoElement;
-    let editMenu;
-    if (this.props.edit) {
-      infoElement = <Typography>Input code for analysis</Typography>;
-
-      const processOptions = this.props.processOptions;
-      const analysisOptions = processOptions.analysis;
-      const analysisMenuItems = analysisOptions.map(option => {
-        return <MenuItem key={ option } value={ option }>{ option }</MenuItem>
-      });
-      editMenu = (
-        <Toolbar>
-          <div style={{ flex: '1 1 auto' }}>
-            <InputLabel>Analysis</InputLabel>
-            <Select
-              value={ this.state.processOptions.analysis }
-              onChange={ event => {
-                const analysis = event.target.value;
-                this.setState(state => {
-                  const processOptions = state.processOptions;
-                  processOptions.analysis = analysis;
-                  return { processOptions };
-                });
-              } }>
-              { analysisMenuItems }
-            </Select>
-          </div>
-          <ProcessButton onClick={ this.process }/>
-        </Toolbar>
-      );
-    }
-    if (this.props.error) {
-      infoElement = (
-        <React.Fragment>
-          <Typography
-            variant='h3'>
-            Analysis error
-          </Typography>
-          <Typography>
-            { this.props.errorContent }
-          </Typography>
-        </React.Fragment>
-      );
-    }
-
-    return (
-      <div
-        style={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'auto'
-        }}>
-        { infoElement }
-        <div
-          ref={ ref => this.cmRef = ref }
-          style={{
-            flex: '1 1 auto',
-            overflow: 'auto',
-            height: '100%'
-          }} />
-        { editMenu }
-      </div>
+    const analysisOptions = processOptions.analysis;
+    const analysisMenuItems = analysisOptions.map(option => {
+      return (
+        <MenuItem
+          key={ option }
+          value={ option }>
+          { option }
+        </MenuItem>);
+    });
+    editMenu = (
+      <Toolbar>
+        <div style={{ flex: '1 1 auto' }}>
+          <InputLabel>Analysis</InputLabel>
+          <Select
+            value={ options.analysis }
+            onChange={ evt => {
+              const analysis = evt.target.value;
+              setOptions({ ...options, analysis });
+            }}>
+            { analysisMenuItems }
+          </Select>
+        </div>
+        <ProcessButton onClick={ process }/>
+      </Toolbar>
+    );
+  } else if (error) {
+    infoElement = (
+      <Fragment>
+        <Typography
+          variant='h3'>
+          Analysis error
+        </Typography>
+        <Typography>
+          { errorContent }
+        </Typography>
+      </Fragment>
     );
   }
-}
-export default connect(
-  state => {
-    const projectId = getSelectedProjectId(state);
-    const { code } = getProjectData(state);
-    return { projectId, code }
-  },
-  { saveCode, processCode }
-)(Editor);
 
-class ProcessButton extends Component {
-  render() {
-    return <Button
-      onClick={ event => {
-        this.props.onClick();
-      } }
-      variant='contained'
-      color='secondary'>
-      process
-    </Button>;
-  }
+  return (
+    <div
+      style={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'auto'
+      }}>
+      { infoElement }
+      <textarea
+        ref={ ref => cmElem.current = ref }
+        style={{
+          flex: '1 1 auto',
+          overflow: 'auto',
+          height: '100%'
+        }} />
+      { editMenu }
+    </div>
+  );
 }
+
+function ProcessButton(props) {
+  const { onClick } = props;
+  return (
+  <Button
+    onClick={ onClick }
+    variant='contained'
+    color='secondary'>
+    process
+  </Button>);
+}
+
+export default Editor;
