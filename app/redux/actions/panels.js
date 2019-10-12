@@ -210,11 +210,11 @@ export function generateKonts(projectId) {
     const items = getProjectItems(state, projectId);
     for (const [kontId, kont] of Object.entries(items.konts)) {
       const { descs } = items.konts[kontId];
-      let label;
+      let label = `${kontId}: `;
       if (descs.length > 1)
-        label = `[ ${descs[0]}, ... +${descs.length - 1} ]`;
+        label += `[ ${descs[0]}, ... +${descs.length - 1} ]`;
       else
-        label = `[ ${descs[0]} ]`;
+        label += `[ ${descs[0]} ]`;
       dispatch(addKont(projectId, kontId, label))
     }
   };
