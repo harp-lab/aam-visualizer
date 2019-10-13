@@ -4,7 +4,7 @@ import {
   generatePanels,
   queueSnackbar
 } from 'store-actions';
-import { getUser, getSelectedProjectId, getProjectData } from 'store-selectors';
+import { getUser, getSelectedProjectId, getProject } from 'store-selectors';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS } from 'store-consts';
 
 function apiReq(url, method) {
@@ -64,11 +64,11 @@ export function deleteProject(projectId) {
 export function forkProject(projectId) {
   return async function(dispatch) {
     let state = store.getState();
-    let project = getProjectData(state, projectId);
+    let project = getProject(state, projectId);
     if (project.status !== EMPTY_STATUS) {
       await dispatch(getCode(projectId));
       state = store.getState();
-      project = getProjectData(state, projectId);
+      project = getProject(state, projectId);
     }
     
     const forkProjectId = await dispatch(createProject());
@@ -102,7 +102,7 @@ export function getCode(projectId) {
 export function saveCode(projectId, code) {
   return dispatch => {
     const state = store.getState();
-    const { userId, status } = getProjectData(state, projectId);
+    const { userId, status } = getProject(state, projectId);
   
     switch (status) {
       case EMPTY_STATUS:
@@ -126,7 +126,7 @@ export function processCode(projectId, code, options) {
     dispatch(saveCode(projectId, code));
 
     const state = store.getState();
-    const { userId } = getProjectData(state, projectId);
+    const { userId } = getProject(state, projectId);
     const res = await fetch(`/api/${userId}/projects/${projectId}/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -200,7 +200,7 @@ export function exportData(projectId) {
       case 200: {
         // create blob
         const state = store.getState();
-        const data = getProjectData(state, projectId);
+        const data = getProject(state, projectId);
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
 

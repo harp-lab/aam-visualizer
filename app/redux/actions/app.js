@@ -1,5 +1,5 @@
 import { delProjects } from 'store-actions';
-import { SET_USER, SET_VIEW, SET_TITLE } from '../actionTypes';
+import { SET_USER, SET_TITLE } from '../actionTypes';
 
 const setUser = userId => ({
   type: SET_USER,

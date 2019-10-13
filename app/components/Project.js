@@ -18,7 +18,7 @@ function Project() {
 
   // mount/unmount
   useEffect(() => {
-    const { status, code, items, name } = project.data;
+    const { status, code, items, name } = project;
     dispatch(setTitle(name || projectId));
     switch (status) {
       case EDIT_STATUS:
@@ -38,12 +38,12 @@ function Project() {
     };
   }, []);
   useEffect(() => {
-    switch (project.data.status) {
+    switch (project.status) {
       case 'process':
         timeout.current = setTimeout(() => getGraphs(), 5000);
         break;
     }
-  }, [project.data.status]);
+  }, [project.status]);
 
   async function getGraphs() {
     const status = await dispatch(getData(projectId));
@@ -60,7 +60,7 @@ function Project() {
     }
   }
   function render() {
-    const { status, error, items } = project.data;
+    const { status, error, items } = project;
     let viewElement;
     switch (status) {
       case EMPTY_STATUS:

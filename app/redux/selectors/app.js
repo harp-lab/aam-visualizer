@@ -1,8 +1,7 @@
-import { getSelectedProjectId } from 'store-selectors';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 
 export function getData(store) {
-  return store.data;
+  return store;
 }
 export function getUser(store) {
   return getData(store).userId;
@@ -20,3 +19,6 @@ export function getView(store) {
 export function getTitle(store) {
   return getData(store).title;
 }
+export function getSelectedProjectId(store) {
+  return getData(store).selectedProjectId;
+};

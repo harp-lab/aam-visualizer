@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { connect, useSelector, useDispatch } from 'react-redux';
 import { selectNodes, hoverNodes } from 'store-actions';
 import {
   getSelectedAsts, getHoveredAsts, getNodeAsts,
   getMainGraphId, getSubGraphId,
   getGraphSelectedNodes, getGraphHoveredNodes, getGraphNodes, getGraphRefData,
-  getProjectData, getProjectItems
+  getProject, getProjectItems
 } from 'store-selectors';
 
 import Typography from '@material-ui/core/Typography';
@@ -16,11 +16,58 @@ import indigo from '@material-ui/core/colors/indigo';
 import CodeMark from '../data/CodeMark';
 
 function CodeViewer(props) {
+  const { code } = useSelector(getProject);
+  const graphIds = [useSelector(getMainGraphId), useSelector(getSubGraphId)];
+  const items = useSelector(getProjectItems);
+  const selected = useSelector(getSelectedAsts);
+  const hovered = useSelector(getHoveredAsts);
+  const dispatch = useDispatch();
+
+  const rawMarks = {};
+  for (const [astId, data] of Object.entries(items.ast)) {
+    const { start, end } = data;
+    const startPos = new CodePos(start[0], start[1]);
+    const endPos = new CodePos(end[0], end[1]);
+    rawMarks[astId] = new CodeMark(startPos, endPos);
+  }
+
+  function getNodes(graphId) {
+    const { graph } = items.graphs[graphId];
+    const nodeIds = [];
+    for (const [nodeId, children] of Object.entries(graph)) {
+      nodeIds.push(nodeId);
+      nodeIds.concat(Object.keys(children));
+    }
+    return nodeIds;
+  }
+  function getRefData(graphId) {
+    switch (graphId) {
+      case 'funcs':
+        return items.funcs;
+      case 'states':
+      default:
+        return items.configs;
+    }
+  }
+  function addMarks(graphId) {
+    const nodeIds = getNodes(graphId);
+    const refData = getRefData(graphId);
+    for (const nodeId of nodeIds) {
+      const astIds = getNodeAsts([nodeId], refData);
+      for (const astId of astIds) {
+        rawMarks[astId].addNode(graphId, nodeId);
+      }
+    }
+  }
+  graphIds.forEach(graphId => addMarks(graphId));
+
+
+
   const [gutterWidth, setGutterWidth] = useState('auto');
-  const { hovered, selected, hoverNodes, selectNodes, theme } = props;
+  const { theme } = props;
 
   // filter marks that do not have linked nodes
-  const marks = Object.entries(props.marks)
+  const marks = Object.entries(rawMarks)
     .reduce((acc, curVal) => {
       const [id, mark] = curVal;
       const graphIds = Object.keys(mark.nodes);
@@ -48,12 +95,12 @@ function CodeViewer(props) {
     unhover();
     if (markId) {
       for (const [graphId, nodes] of Object.entries(marks[markId].nodes))
-        hoverNodes(graphId, nodes);
+        dispatch(hoverNodes(graphId, nodes));
     }
   }
   function unhover() {
-    for (const graphId of props.graphIds)
-      hoverNodes(graphId, undefined);
+    for (const graphId of graphIds)
+      dispatch(hoverNodes(graphId, undefined));
   }
   function click(markId) {
     // only select node if unambiguous
@@ -64,13 +111,13 @@ function CodeViewer(props) {
     if (graphIds.length > 0) {
       const graphId = graphIds[0];
       const graphNodes = nodes[graphId];
-      selectNodes(graphId, graphNodes);
+      dispatch(selectNodes(graphId, graphNodes));
     }
   }
   
 
   // compile code into nested array
-  const lines = props.code
+  const lines = code
     .split(/\r\n|\n/)
     .map(line => {
       return line.match(/\(|\)|\[|\]|\#t|\#f|\w+|\s+/g);
@@ -167,61 +214,29 @@ function CodeViewer(props) {
   return <div style={{ whiteSpace: 'pre' }}>{ element }</div>;
 }
 CodeViewer = withTheme(CodeViewer);
-const mapStateToProps = state => {
-  const { code } = getProjectData(state);
-  const graphIds = [getMainGraphId(state), getSubGraphId(state)];
-  const items = getProjectItems(state);
-
-  const marks = {};
-  for (const [astId, data] of Object.entries(items.ast)) {
-    const { start, end } = data;
-    const startPos = new CodePos(start[0], start[1]);
-    const endPos = new CodePos(end[0], end[1]);
-    marks[astId] = new CodeMark(startPos, endPos);
-  }
-
-  function addMarks(graphId) {
-    const nodeIds = getGraphNodes(state, graphId);
-    const refData = getGraphRefData(state, graphId);
-    for (const nodeId of nodeIds) {
-      const astIds = getNodeAsts([nodeId], refData);
-      for (const astId of astIds) {
-        marks[astId].addNode(graphId, nodeId);
-      }
-    }
-  }
-  graphIds.forEach(graphId => addMarks(graphId));
-
-  const selected = getSelectedAsts(state);
-  const hovered = getHoveredAsts(state);
-
-  return { code, graphIds, marks, selected, hovered };
-};
-export default connect(
-  mapStateToProps,
-  { hoverNodes, selectNodes }
-)(CodeViewer);
 
 function Token(props) {
-  const {content, color} = props;
-  
+  const { content, color } = props;
   return <Span
     content={ content }
     color={ color } />;
 }
 
 function Span(props) {
+  const { content, color, textColor, style, onClick, onMouseOver } = props;
   return (
     <span
-      onMouseOver={ props.onMouseOver }
-      onClick={ props.onClick }
+      onMouseOver={ onMouseOver }
+      onClick={ onClick }
       style={{
         display: 'inline-block',
-        backgroundColor: (props.color || 'inherit'),
-        color: (props.textColor || 'inherit'),
-        ...props.style
+        backgroundColor: (color || 'inherit'),
+        color: (textColor || 'inherit'),
+        ...style
       }}>
-      { props.content }
+      { content }
     </span>);
 }
+
+export default CodeViewer;
 

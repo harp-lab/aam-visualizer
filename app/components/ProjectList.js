@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { setRenameDialog, selProject } from 'store-actions';
 import { getList, deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
-import { getUser, getProjects } from 'store-selectors';
-import { PROJECT_VIEW, PROCESS_STATUS } from 'store-consts';
+import { getProject, getProjectIds } from 'store-selectors';
+import { PROCESS_STATUS } from 'store-consts';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -17,12 +17,10 @@ import Tooltip from '@material-ui/core/Tooltip';
 
 import { DropMenu } from 'library';
 
-function ProjectList(props) {
+function ProjectList() {
+  const projectIds = useSelector(getProjectIds);
+  const dispatch = useDispatch();
   const timeout = useRef(undefined);
-
-  const {
-    projects,
-    getList, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog } = props;
 
   // mount/unmount
   useEffect(() => {
@@ -33,89 +31,92 @@ function ProjectList(props) {
   }, []);
 
   async function update() {
-    const refresh = await getList();
-    if (refresh) timeout.current = setTimeout(getList, 1000);
+    const refresh = await dispatch(getList());
+    if (refresh) timeout.current = setTimeout(dispatch(getList), 1000);
   }
   
-  const projectList = Object.entries(projects).map(([id, project]) => {
-    const analysisElem = (
-      <ListItemText style={{ flex: '0 0 10em' }}>
-        { project.data.analysis }
-      </ListItemText>);
-    const nameElem = (
-      <ListItemText
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}>
-        { (project.data.name || 'unnamed') }
-      </ListItemText>);
-    const idElem = (
-      <ListItemText style={{ flex: '0 0 10em' }}>
-        { id }
-      </ListItemText>);
-    const statusElem = (
-      <ListItemText style={{ flex: '0 0 10em' }}>
-        { project.data.status }
-      </ListItemText>);
-    let removeActionElem;
-    if (project.data.status == PROCESS_STATUS)
-      removeActionElem = (
-      <Tooltip title='Cancel processing'>
-        <IconButton onClick={ () => cancelProcess(id)}>
-          <CancelIcon />
-        </IconButton>
-      </Tooltip>);
-    else
-      removeActionElem = (
-        <Tooltip title='Delete'>
-          <IconButton onClick={ () => deleteProject(id) }>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>);
-    const actionsElem = (
-      <ListItemSecondaryAction>
-        <DropMenu
-          items={ [
-            {label: 'Rename', callback: () => setRenameDialog(id)},
-            {label: 'Export', callback: () => exportData(id)}
-          ] } />
-        <Tooltip title='Fork'>
-          <IconButton onClick={ () => forkProject(id) }>
-            <CallSplitIcon />
-          </IconButton>
-        </Tooltip>
-        { removeActionElem }
-      </ListItemSecondaryAction>);
-
-    return (
-      <ListItem
-        button
-        key={ id }
-        onClick={ () => {
-          selProject(id);
-        } }
-        align='flex-start'
-        style={{ paddingRight: 144+16 }}>
-        { analysisElem }
-        { nameElem }
-        { idElem }
-        { statusElem }
-        { actionsElem }
-      </ListItem>);
-  });
+  const projectList = projectIds.map(
+    projectId => <ProjectListItem
+      key={ projectId }
+      projectId={ projectId } />
+  );
   
   return (
     <List style={{ overflowY: 'auto' }}>
       { projectList }
     </List>);
 }
-const mapStateToProps = state => {
-  const userId = getUser(state);
-  const projects = getProjects(state);
-  return { userId, projects };
-};
-export default connect(
-  mapStateToProps,
-  { getList, selProject, deleteProject, cancelProcess, exportData, forkProject, setRenameDialog }
-)(ProjectList);
+
+function ProjectListItem(props) {
+  const { projectId } = props;
+  const project = useSelector(state => getProject(state, projectId));
+  const dispatch = useDispatch();
+
+  const analysisElem = (
+    <ListItemText style={{ flex: '0 0 10em' }}>
+      { project.analysis }
+    </ListItemText>);
+  const nameElem = (
+    <ListItemText
+      style={{
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
+      { (project.name || 'unnamed') }
+    </ListItemText>);
+  const idElem = (
+    <ListItemText style={{ flex: '0 0 10em' }}>
+      { projectId }
+    </ListItemText>);
+  const statusElem = (
+    <ListItemText style={{ flex: '0 0 10em' }}>
+      { project.status }
+    </ListItemText>);
+
+  let removeActionElem;
+  if (project.status == PROCESS_STATUS)
+    removeActionElem = (
+    <Tooltip title='Cancel processing'>
+      <IconButton onClick={ () => dispatch(cancelProcess(projectId)) }>
+        <CancelIcon />
+      </IconButton>
+    </Tooltip>);
+  else
+    removeActionElem = (
+      <Tooltip title='Delete'>
+        <IconButton onClick={ () => dispatch(deleteProject(projectId)) }>
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>);
+
+  const actionsElem = (
+    <ListItemSecondaryAction>
+      <DropMenu
+        items={ [
+          {label: 'Rename', callback: () => dispatch(setRenameDialog(projectId))},
+          {label: 'Export', callback: () => dispatch(exportData(projectId))}
+        ] } />
+      <Tooltip title='Fork'>
+        <IconButton onClick={ () => dispatch(forkProject(projectId)) }>
+          <CallSplitIcon />
+        </IconButton>
+      </Tooltip>
+      { removeActionElem }
+    </ListItemSecondaryAction>);
+
+  return (
+    <ListItem
+      button
+      key={ projectId }
+      onClick={ () => dispatch(selProject(projectId)) }
+      align='flex-start'
+      style={{ paddingRight: 144+16 }}>
+      { analysisElem }
+      { nameElem }
+      { idElem }
+      { statusElem }
+      { actionsElem }
+    </ListItem>);
+}
+
+export default ProjectList;

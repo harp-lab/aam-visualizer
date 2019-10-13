@@ -5,13 +5,20 @@ import {
 } from '../actionTypes';
 import { CONFIG_PANEL, ENV_PANEL, KONT_PANEL } from 'store-consts';
 
-function dataReducer(state = {}, action) {
+function metadataReducer(state = {}, action) {
   switch (action.type) {
     case SET_METADATA: {
       const { data } = action.payload;
       return { ...state, ...data };
     };
-    default: return state;
+    default: {
+      const { graphs, panels } = state;
+      return {
+        ...state,
+        graphs: graphsReducer(graphs, action),
+        panels: panelsReducer(panels, action)
+      };
+    };
   }
 }
 
@@ -84,10 +91,6 @@ const panelsReducer = combineReducers({
   configs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === CONFIG_PANEL : false),
   envs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === ENV_PANEL : false),
   konts: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === KONT_PANEL : false)
-})
-
-export default combineReducers({
-  data: dataReducer,
-  graphs: graphsReducer,
-  panels: panelsReducer
 });
+
+export default metadataReducer;

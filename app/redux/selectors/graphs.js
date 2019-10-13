@@ -1,4 +1,4 @@
-import { getProjectItems, getProjectMetadata } from './projects';
+import { getProjectItems, getProjectMetadata } from 'store-selectors';
 
 export function getGraphs(store) {
   return getProjectItems(store).graphs;
@@ -8,7 +8,7 @@ export function getGraphsMetadata(store) {
 }
 
 export function getMainGraphId(store) {
-  return getProjectMetadata(store).data.mainGraphId || 'funcs';
+  return getProjectMetadata(store).mainGraphId || 'funcs';
 }
 export function getSubGraphId(store) {
   const mainGraphId = getMainGraphId(store);
@@ -28,7 +28,7 @@ export function getSubGraphId(store) {
 }
 export function getFocusedGraph(store) {
   const defaultGraph = getMainGraphId(store);
-  return getProjectMetadata(store).data.focusedGraph || defaultGraph;
+  return getProjectMetadata(store).focusedGraph || defaultGraph;
 }
 export function getGraphNodes(store, graphId) {
   const { graph } = getGraph(store, graphId);

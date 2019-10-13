@@ -1,24 +1,6 @@
-import {
-  ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS,
-  SEL_PROJECT
-} from '../actionTypes';
+import { ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS } from '../actionTypes';
 import projectReducer from './project';
-import { combineReducers } from 'redux';
 
-function dataReducer(state = {
-  selectedProjectId: undefined
-}, action) {
-  switch (action.type) {
-    case SEL_PROJECT: {
-      const { projectId } = action.payload;
-      return {
-        ...state,
-        selectedProjectId: projectId
-      };
-    }
-    default: return state;
-  }
-}
 function projectsReducer(state = {}, action) {
   switch (action.type) {
     case ADD_PROJECT:
@@ -43,4 +25,4 @@ function projectsReducer(state = {}, action) {
   }
 }
 
-export default combineReducers({ data: dataReducer, projects: projectsReducer });
+export default projectsReducer;

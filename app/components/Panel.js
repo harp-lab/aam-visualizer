@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { connect, useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
 import { getPanels } from 'store-selectors';
 

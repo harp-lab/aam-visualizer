@@ -1,8 +1,6 @@
 import store from '../store';
-import { setMetadata } from './projects';
-import { refresh } from './panels';
-import { getSelectedProjectId } from '../selectors/projects';
-import { getGraph, getMainGraphId, getGraphSelectedNodes } from '../selectors/graphs';
+import { setMetadata, refresh } from 'store-actions';
+import { getSelectedProjectId, getGraph, getMainGraphId, getGraphSelectedNodes } from 'store-selectors';
 import { SET_GRAPH_METADATA } from '../actionTypes';
 
 export function setMainGraphId(graphId) {

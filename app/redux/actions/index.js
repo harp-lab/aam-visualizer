@@ -1,4 +1,4 @@
-export * from './data';
+export * from './app';
 export * from './graphs';
 export * from './notifications';
 export * from './panels';

@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { saveCode, processCode } from 'store-apis';
-import { getSelectedProjectId, getProjectData } from 'store-selectors';
+import { getSelectedProjectId, getProject } from 'store-selectors';
 
 import { Button, InputLabel, MenuItem, Select, Toolbar, Typography } from '@material-ui/core';
 import codemirror from 'codemirror/lib/codemirror';
@@ -21,7 +21,7 @@ function Editor(props) {
 
   const [options, setOptions] = useState({ analysis: analysis[0] });
   const projectId = useSelector(getSelectedProjectId);
-  const { code } = useSelector(getProjectData);
+  const { code } = useSelector(getProject);
   const dispatch = useDispatch();
 
   function setValue(data) { cmRef.current.getDoc().setValue(data); }

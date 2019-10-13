@@ -1,5 +1,4 @@
 export const SET_USER = 'SET_USER';
-export const SET_VIEW = 'SET_VIEW';
 export const SET_TITLE = 'SET_TITLE';
 
 export const QUEUE_SNACKBAR = 'QUEUE_SNACKBAR';

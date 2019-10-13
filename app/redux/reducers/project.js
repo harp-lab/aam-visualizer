@@ -1,22 +1,29 @@
-import { combineReducers } from 'redux';
-import {
-  SET_PROJECT_DATA, SET_PANEL_SAVED, SET_PANEL_HIDDEN, SET_PANEL_SELECTED,
-} from '../actionTypes';
+import { SET_PROJECT_DATA } from '../actionTypes';
 import metadataReducer from './metadata';
 
 const initialState = {
   status: 'empty',
-  code: ''
+  code: '',
+  metadata: metadataReducer(undefined, { type: 'INIT' })
 };
 
-function dataReducer(state = initialState, action) {
+function projectReducer(state = initialState, action) {
   switch (action.type) {
     case SET_PROJECT_DATA: {
       const { data } = action.payload;
-      return { ...state, ...data };
+      return {
+        ...state,
+        ...data
+      };
     };
-    default: return state;
+    default: {
+      const { metadata } = state;
+      return {
+        ...state,
+        metadata: metadataReducer(metadata, action)
+      };
+    }
   }
 }
 
-export default combineReducers({ data: dataReducer, metadata: metadataReducer });
+export default projectReducer;

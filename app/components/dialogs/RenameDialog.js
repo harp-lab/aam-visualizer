@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { rename } from 'store-apis';
 import { setRenameDialog } from 'store-actions';
-import { getRenameDialog, getProjectData } from 'store-selectors';
+import { getRenameDialog, getProject } from 'store-selectors';
 
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -46,7 +46,7 @@ function RenameDialog(props) {
 export default connect(
   state => {
     const projectId = getRenameDialog(state);
-    const name = projectId ? getProjectData(state, projectId).name : '';
+    const name = projectId ? getProject(state, projectId).name : '';
     return { projectId, name };
   },
   { rename, setRenameDialog }
