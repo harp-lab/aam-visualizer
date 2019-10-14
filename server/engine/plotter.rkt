@@ -7,6 +7,8 @@
 
 (provide all-items)
 
+;; String representation of a continuation.
+;; uses ... to avoid non-termination, but it's probably not enough for all cases. Need to rewrite.
 (define (print-k k sigmak)
   (match k
     ['halt (list "halt")]
@@ -21,24 +23,33 @@
                      [(cons `(frame ,cat . ,_) k) (map (lambda(k2)(format "~a::~a" cat k2)) (print-k k sigmak))]
                      [addr (list (format "~a->..." (car addr)))])))))]))
 
+;;main function for creating a hash-table of analysis data
 (define (all-items initial-state states groupings tables)
   (match-define (list initial-func trans subs) groupings)
   (match-define (list store kstore instr id>lambda) tables)
 
-  (define (make-data->symbol id-hash)
-    (lambda (val) (string->symbol (~a (hash-ref id-hash val)))))
+  ;; Two helpers to make data lookups, one creates a hash-table, the other a function
+  ;; enumerate the values of a set, returning a hash-table to look up those values
   (define (make-id-hash set)
     (for/hash ([s set][id (range (set-count set))]) (values s (~a id))))
+  ;; lookup and convert ids to symbols in one step. Symbols are required for hash-keys in output.
+  (define (make-data->symbol id-hash)
+    (lambda (val) (string->symbol (~a (hash-ref id-hash val)))))
 
+  ;; state id lookups
   (define state>id (make-id-hash states))
   (define state->sym (make-data->symbol state>id))
-  
+
+  ;; address id lookups
   (define addr>id (make-id-hash (list->set (hash-keys store))))
   (define addr->sym (make-data->symbol addr>id))
 
+  ;; continuation address id loopups
   (define kaddr>id (make-id-hash (list->set (hash-keys kstore))))
   (define kaddr->sym (make-data->symbol kaddr>id))
 
+  ;; search through all states, collecting sets of each item:
+  ;;   values, environments, instrumentation, continuations
   (match-define (list vals envs instrs konts)
     (foldl
      (lambda (state tables)
@@ -55,25 +66,33 @@
      (list (set)(set)(set)(set))
      (set->list states)))
 
+  ;; environment id lookups
   (define env>id (make-id-hash envs))
   (define env->sym (make-data->symbol env>id))
-  
+
+  ;; instrumentation id lookups
   (define instr>id (make-id-hash instrs))
   (define instr->sym (make-data->symbol instr>id))
 
+  ;; continuation id lookups
   (define kont>id (make-id-hash konts))
   (define kont->sym (make-data->symbol kont>id))
 
+  ;; function id lookups
   (define func>id (make-id-hash (hash-keys trans)))
   (define func->sym (make-data->symbol func>id))
 
+  ;; create an output edge from an input edge
+  ;; saves style info and which functions to highlight when clicked (calls)
   (define (make-edge edge)
     (match edge
+      ;; interfunction edges
       [`(call) (hash 'style (hash 'line-style "solid"))]
       [`(call-and-return) (hash 'style (hash 'line-style "solid"))]
       [`(return) (hash 'style (hash 'line-style "dashed"))]
       [`(stop) (hash 'style (hash 'line-style "solid"))]
-      
+
+      ;; intrafunction edges
       [`(return-out ,func)
        (hash
         'style (hash'line-style "dashed")
@@ -90,6 +109,7 @@
         'calls (set-map funcs (lambda(f)(hash-ref func>id f))))]
       [`(step) (hash 'style (hash 'line-style "solid"))]))
 
+  ;; convert interfunction graph to output format, no change in structure 
   (define func-trans (for/hash ([f (hash-keys trans)])
                        (define f-trans (hash-ref trans f))
                        (values (func->sym f)
@@ -97,13 +117,18 @@
                                  (values (func->sym target)
                                          (make-edge (hash-ref f-trans target)))))))
 
+  ;; search all function graphs for "configurations", saving them in a set mapped to their containing function.
+  ;; configurations may be:
+  ;;   special states (halt, no-return,...)
+  ;;   single states (defined in the initial set to the first fold below)
+  ;;   sets of states (untagged)
   (define confs>func
-    (foldl
+    (foldl ;over functions 
      (lambda (func confs)
        (match-define (list _ f-trans) (hash-ref subs func))
-       (foldl
+       (foldl ;over graph nodes
         (lambda(c confs)
-          (foldl
+          (foldl ;over transition edges
            (lambda(t confs)
              (hash-set confs t func))
            (hash-set confs c func)
@@ -113,14 +138,17 @@
      (for/hash ([s states])(values `(state ,s) (get-li s)))
      (hash-keys subs)))
 
+  ;; configuration id lookups
   (define conf>id (make-id-hash (hash-keys confs>func)))
   (define conf->sym (make-data->symbol conf>id))
 
+  ;; create output graph of primary analysis states by calling step function
   (define state-trans (for/hash ([s states])
                        (match-define `(,st-tr ,_ ,_) (step-state s store kstore instr id>lambda))
                        (values (conf->sym `(state ,s)) (for/hash ([tr st-tr])
                                                        (values (conf->sym `(state ,tr))(hash))))))
-  
+
+  ;; convert set of function graphs to output format, no change in structure (apart from new labels)
   (define func-conf-graphs (for/hash ([f (hash-keys subs)])
                              (match-define (list f-init f-trans) (hash-ref subs f))
                              (values (func->sym f)
@@ -132,10 +160,11 @@
                                                                        (values (conf->sym t)
                                                                                (make-edge (hash-ref c-trans t))))))))))
 
+  ;; value id lookup
   (define val>id (make-id-hash vals))
   (define val->sym (make-data->symbol val>id))
   
-  ;hash
+  ;; convert state to output format, looking up ids for components
   (define (make-state s)
     (match s
       [`(eval ,ast ,rho ,i ,kappa)
@@ -176,24 +205,25 @@
        (hash
         'form "unknown")]))
 
+  ;; unused, data is available in environments
   (define (make-addr addr)
     (match-define (list var instr) addr)
     ;addr is (list variable instr)
     "todo")
 
+  ;; unused, data is available in continuation, addr form
   (define (make-kaddr kaddr)
     ;kaddr is (list lid env)
     "todo")
 
-  ;hash of syncronized lists
+  ;; convert instrumentation to output format
   (define (make-instr i)
     (hash
      'exprs (map (lambda(e)(ast-id e)) i)
      'exprStrings (map (lambda(e)(~a (only-syntax e))) i)))
 
-  ;hash
+  ;; convert function (and special graph nodes) to output format
   (define (make-func func)
-    (define id (hash-ref func>id func))
     (match func
       [`(halt ,d ,rho)
        (hash
@@ -212,7 +242,7 @@
         ;'astLink?
         'more? "todo")]))
 
-  ;hash
+  ;convert config to output format
   (define (make-config conf)
     (define id (hash-ref conf>id conf))
     (match conf
@@ -253,7 +283,7 @@
         'astLink (flatten (map (lambda(s)(hash-ref s 'expr (list))) states-info))
         'states state-ids)]))
 
-  ;list of hashs
+  ;; convert environment to output format, a list with an entry for each variable
   (define (make-env env)
     (for/list ([var (hash-keys env)])
       (define addr (hash-ref env var))
@@ -263,7 +293,7 @@
        'instr (hash-ref instr>id (cadr addr))
        'addr (hash-ref addr>id addr))))
 
-  ;hash
+  ;; convert values to output format
   (define (make-val v)
     (match v
       [(? boolean?)
@@ -279,7 +309,7 @@
         'name (~a (car (get-li e)))
         'env (hash-ref env>id rho))]))
 
-  ;hash forms(halt,frame,addr)
+  ;convert continuation to output format
   (define (make-kont k)
     (define descs (print-k k kstore))
     (match k
@@ -309,7 +339,8 @@
                 (lambda(k)(hash-ref kont>id k))))]))            
 
   ;store-entries are hash addr-id > (list val-id...)
-  
+
+  ;; create final table of items, calling creation functions for each element
   (hash
     'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
     'funcs (for/hash ([f (hash-keys func>id)]) (values (func->sym f) (make-func f)))
