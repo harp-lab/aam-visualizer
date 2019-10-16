@@ -46,7 +46,7 @@ function EnvItem(props) {
         .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const { env, type, astString, valString } = vals[valId];
+          const { env: envId, type, astString, valString } = vals[valId];
           
           let string;
           switch (type) {
