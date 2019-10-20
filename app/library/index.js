@@ -7,3 +7,4 @@ export { default as PanelTable } from './PanelTable';
 export { default as PanelViewer } from './PanelViewer';
 export { default as Spacer } from './Spacer';
 export { default as SplitPane } from './SplitPane';
+export { default as SplitPaneContext } from './SplitPaneContext';

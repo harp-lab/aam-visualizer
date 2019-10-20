@@ -59,18 +59,18 @@ function VisualView() {
     view = (
       <SplitPane vertical>
         <Pane width='40%'><FunctionGraph /></Pane>
-        <Pane width='60%'>
+        <Pane>
           <SplitPane horizontal>
             <Pane height='48%'>
               <SplitPane vertical>
                 <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
-                <Pane width='52%'><KontViewer /></Pane>
+                <Pane><KontViewer /></Pane>
               </SplitPane>
             </Pane>
-            <Pane height='52%' overflow='auto'>
+            <Pane overflow='auto'>
               <SplitPane>
                 <Pane width="50%" overflow='auto'><ConfigViewer /></Pane>
-                <Pane width="50%" overflow='auto'><EnvViewer /></Pane>
+                <Pane overflow='auto'><EnvViewer /></Pane>
               </SplitPane>
             </Pane>
           </SplitPane>

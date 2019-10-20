@@ -91,10 +91,14 @@ export function downloadProject(projectId) {
         await dispatch(getData(projectId));
         break;
       case COMPLETE_STATUS:
-      case ERROR_STATUS:
         if (!clientStatus.items) {
           await dispatch(getData(projectId));
           dispatch(generatePanels(projectId));
+        }
+        break;
+      case ERROR_STATUS:
+        if (!clientStatus.error) {
+          await dispatch(getData(projectId));
         }
         break;
     }

@@ -23,11 +23,10 @@ export function getProjectMetadata(store, projectId) {
   return getProject(store, projectId).metadata;
 }
 export function getProjectClientStatus(store, projectId) {
-  //const { status } = getProjectMetadata(store, projectId);
-  //return status;
-  const { code, items } = getProject(store, projectId);
+  const { code, items, error } = getProject(store, projectId);
   return {
     code: code !== '',
-    items: Boolean(items)
+    items: Boolean(items),
+    error: Boolean(error)
   };
 }
