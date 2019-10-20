@@ -1,3 +1,6 @@
+import store from '../store';
+import { setTitle } from 'store-actions';
+import { getProject } from 'store-selectors';
 import {
   ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
   SET_METADATA
@@ -18,13 +21,26 @@ export const delProject = projectId => ({
 export const delProjects = () => ({
   type: DEL_PROJECTS
 });
-export const selProject = projectId => ({
-  type: SEL_PROJECT,
-  payload: { projectId }
-});
+export function selProject(projectId) {
+  return dispatch => {
+    if (projectId) {
+      const state = store.getState();
+      const { name } = getProject(state, projectId);
+      dispatch(setTitle(name || projectId));
+    }
+    dispatch({
+      type: SEL_PROJECT,
+      payload: { projectId }
+    });
+  }
+} 
 
 export const setMetadata = (projectId, data) => ({
   type: SET_METADATA,
+  payload: { projectId, data }
+});
+export const setStatus = (projectId, data) => ({
+  type: SET_STATUS,
   payload: { projectId, data }
 });
 export function selectAsts(astIds) {

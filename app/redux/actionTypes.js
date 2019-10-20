@@ -9,6 +9,7 @@ export const SET_DIALOG = 'SET_DIALOG';
 export const ADD_PROJECT = 'ADD_PROJECT';
 export const SET_PROJECT_DATA = 'SET_PROJECT_DATA';
 export const SET_METADATA = 'SET_METADATA';
+export const SET_STATUS = 'SET_STATUS';
 export const SET_GRAPH_METADATA = 'SET_GRAPH_METADATA';
 
 export const ADD_PANEL = 'ADD_PANEL';

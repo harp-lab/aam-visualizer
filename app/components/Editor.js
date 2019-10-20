@@ -8,8 +8,8 @@ import codemirror from 'codemirror/lib/codemirror';
 import 'codemirror/mode/scheme/scheme';
 
 function Editor(props) {
-  const { edit, processOptions, error, errorContent } = props;
-  const { analysis } = processOptions;
+  const { edit, error } = props;
+  const analysis = ['0-cfa', '1-cfa', '2-cfa'];
 
   const cmElem = useRef(undefined);
   const cmConfig = {
@@ -21,7 +21,7 @@ function Editor(props) {
 
   const [options, setOptions] = useState({ analysis: analysis[0] });
   const projectId = useSelector(getSelectedProjectId);
-  const { code } = useSelector(getProject);
+  const { code, error: errorContent } = useSelector(getProject);
   const dispatch = useDispatch();
 
   function setValue(data) { cmRef.current.getDoc().setValue(data); }
@@ -46,7 +46,7 @@ function Editor(props) {
   if (edit) {
     infoElement = <Typography>Input code for analysis</Typography>;
 
-    const analysisOptions = processOptions.analysis;
+    const analysisOptions = analysis;
     const analysisMenuItems = analysisOptions.map(option => {
       return (
         <MenuItem

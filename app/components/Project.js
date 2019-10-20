@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setTitle, generatePanels } from 'store-actions';
-import { getCode, getData } from 'store-apis';
-import { getProject, getSelectedProjectId } from 'store-selectors';
+import { downloadProject } from 'store-apis';
+import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 
 import { Loading, Pane, SplitPane } from 'library';
@@ -12,86 +11,52 @@ import { CodeViewer, ConfigViewer, EnvViewer, KontViewer } from './viewers';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
-  const project = useSelector(getProject);
+  const status = useSelector(getProjectServerStatus);
   const dispatch = useDispatch();
   const timeout = useRef(undefined);
 
   // mount/unmount
   useEffect(() => {
-    const { status, code, items, name } = project;
-    dispatch(setTitle(name || projectId));
-    switch (status) {
-      case EDIT_STATUS:
-        if (code == '')
-          dispatch(getCode(projectId));
-        break;
-      case COMPLETE_STATUS:
-      case ERROR_STATUS:
-        if (!items)
-          getGraphs();
-        break;
-    }
+    download();
 
     return () => {
-      dispatch(setTitle(undefined));
       clearTimeout(timeout.current);
     };
   }, []);
   useEffect(() => {
-    switch (project.status) {
-      case 'process':
-        timeout.current = setTimeout(() => getGraphs(), 5000);
-        break;
-    }
-  }, [project.status]);
-
-  async function getGraphs() {
-    const status = await dispatch(getData(projectId));
     switch (status) {
-      case 200: {
-        dispatch(generatePanels(projectId));
-        break;
-      }
-      case 204: {
-        timeout.current = setTimeout(() => getGraphs(), 5000);
-        break;
-      }
-      default: break;
-    }
-  }
-  function render() {
-    const { status, error, items } = project;
-    let viewElement;
-    switch (status) {
-      case EMPTY_STATUS:
-      case EDIT_STATUS:
-        viewElement = <Editor
-          processOptions={{ analysis: ['0-cfa', '1-cfa', '2-cfa'] }}
-          edit />;
-        break;
       case PROCESS_STATUS:
-        viewElement = <Loading
-          status='Processing'
-          variant='circular'/>;
+        timeout.current = setTimeout(download, 5000);
         break;
-      case COMPLETE_STATUS:
-        if (!items)
-          viewElement = <Loading
-            status='Downloading'
-            variant='circular'/>;
-        else
-          viewElement = renderVisual();
-        break;
-      case ERROR_STATUS:
-        viewElement = <Editor
-          error
-          errorContent={ error } />;
-        break;
-    };
-    return viewElement;
-  }
-  function renderVisual() {
-    return (
+    }
+  }, [status]);
+  const download = () => dispatch(downloadProject(projectId));
+
+  let viewElement;
+  switch (status) {
+    case EMPTY_STATUS:
+    case EDIT_STATUS:
+      viewElement = <Editor edit />;
+      break;
+    case PROCESS_STATUS:
+      viewElement = <Loading status='Processing' />;
+      break;
+    case COMPLETE_STATUS:
+      viewElement = <VisualView />;
+      break;
+    case ERROR_STATUS:
+      viewElement = <Editor error />;
+      break;
+  };
+  return viewElement;
+}
+
+function VisualView() {
+  const clientStatus = useSelector(getProjectClientStatus);
+
+  let view = <Loading status='Downloading' />;
+  if (clientStatus.items)
+    view = (
       <SplitPane vertical>
         <Pane width='40%'><FunctionGraph /></Pane>
         <Pane width='60%'>
@@ -111,8 +76,8 @@ function Project() {
           </SplitPane>
         </Pane>
       </SplitPane>);
-  }
 
-  return render();
+  return view;
 }
+
 export default Project;

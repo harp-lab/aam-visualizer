@@ -4,8 +4,8 @@ import {
   generatePanels,
   queueSnackbar
 } from 'store-actions';
-import { getUser, getSelectedProjectId, getProject } from 'store-selectors';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS } from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
+import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
 function apiReq(url, method) {
   const state = store.getState();
@@ -76,6 +76,28 @@ export function forkProject(projectId) {
     const forkData = { code, analysis };
     dispatch(setProjectData(forkProjectId, forkData));
     dispatch(selProject(forkProjectId));
+  };
+}
+export function downloadProject(projectId) {
+  return async function(dispatch) {
+    const state = store.getState();
+    const serverStatus = getProjectServerStatus(state, projectId);
+    const clientStatus = getProjectClientStatus(state, projectId);
+    switch (serverStatus) {
+      case EDIT_STATUS:
+        if (!clientStatus.code) dispatch(getCode(projectId));
+        break;
+      case PROCESS_STATUS:
+        await dispatch(getData(projectId));
+        break;
+      case COMPLETE_STATUS:
+      case ERROR_STATUS:
+        if (!clientStatus.items) {
+          await dispatch(getData(projectId));
+          dispatch(generatePanels(projectId));
+        }
+        break;
+    }
   };
 }
 

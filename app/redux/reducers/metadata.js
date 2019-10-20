@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import {
-  SET_METADATA, SET_GRAPH_METADATA,
+  SET_METADATA, SET_STATUS, SET_GRAPH_METADATA,
   ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS
 } from '../actionTypes';
 import { CONFIG_PANEL, ENV_PANEL, KONT_PANEL } from 'store-consts';
@@ -12,11 +12,12 @@ function metadataReducer(state = {}, action) {
       return { ...state, ...data };
     };
     default: {
-      const { graphs, panels } = state;
+      const { graphs, panels, status } = state;
       return {
         ...state,
         graphs: graphsReducer(graphs, action),
-        panels: panelsReducer(panels, action)
+        panels: panelsReducer(panels, action),
+        status: statusReducer(status, action)
       };
     };
   }
@@ -92,5 +93,15 @@ const panelsReducer = combineReducers({
   envs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === ENV_PANEL : false),
   konts: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === KONT_PANEL : false)
 });
+
+function statusReducer(state = {}, action) {
+  switch (action.type) {
+    case SET_STATUS: {
+      const { data } = action.payload;
+      return { ...state, ...data };
+    }
+    default: return state;
+  }
+}
 
 export default metadataReducer;

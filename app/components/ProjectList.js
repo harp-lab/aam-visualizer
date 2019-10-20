@@ -32,7 +32,7 @@ function ProjectList() {
 
   async function update() {
     const refresh = await dispatch(getList());
-    if (refresh) timeout.current = setTimeout(dispatch(getList), 1000);
+    if (refresh) timeout.current = setTimeout(() => dispatch(getList()), 1000);
   }
   
   const projectList = projectIds.map(

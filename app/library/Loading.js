@@ -1,37 +1,16 @@
-import React, { Component } from 'react';
-
-import Fade from '@material-ui/core/Fade';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
+import React from 'react';
+import { CircularProgress, Fade, LinearProgress, Typography } from '@material-ui/core';
 
 import { Pane } from 'library';
 
-class Loading extends Component {
-  render() {
-    let element;
-    switch (this.props.variant) {
-      case 'linear':
-        element = (
-          <Pane>
-            <LinearProgress />
-            <Typography
-              variant='h6'
-              style={{
-                flex: '1 1 auto',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              { this.props.status }
-            </Typography>
-          </Pane>
-        );
-        break;
-      case 'circular':
-        element = (
-          <Pane
+function Loading(props) {
+  const { status, variant = 'circular' } = props;
+
+  let element;
+  switch (variant) {
+    case 'circular': {
+      element = (
+        <Pane
           style={{
             justifyContent: 'center',
             alignItems: 'center'
@@ -43,15 +22,33 @@ class Loading extends Component {
             <Typography
               variant='h6'
               style={{ marginTop: '2em' }}>
-              { this.props.status }
+              { status }
             </Typography>
           </Fade>
-        </Pane>
-        );
-        break;
+        </Pane>);
+      break;
     }
-    return element;
+    case 'linear': {
+      element = (
+        <Pane>
+          <LinearProgress />
+          <Typography
+            variant='h6'
+            style={{
+              flex: '1 1 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+            { this.props.status }
+          </Typography>
+        </Pane>);
+      break;
+    }
   }
+
+  return element;
 }
 
 export default Loading;

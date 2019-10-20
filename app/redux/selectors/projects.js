@@ -15,9 +15,19 @@ export function getProjectItems(store, projectId) {
   const { items } = getProject(store, projectId);
   return items;
 }
-export function getProjectStatus(store, projectId) {
-  return getProject(store, projectId).status;
+export function getProjectServerStatus(store, projectId) {
+  const { status } = getProject(store, projectId);
+  return status;
 }
-export function getProjectMetadata(store) {
-  return getProject(store).metadata;
+export function getProjectMetadata(store, projectId) {
+  return getProject(store, projectId).metadata;
+}
+export function getProjectClientStatus(store, projectId) {
+  //const { status } = getProjectMetadata(store, projectId);
+  //return status;
+  const { code, items } = getProject(store, projectId);
+  return {
+    code: code !== '',
+    items: Boolean(items)
+  };
 }
