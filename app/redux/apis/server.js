@@ -227,9 +227,13 @@ export function exportData(projectId) {
       case 200: {
         // create blob
         const state = store.getState();
-        const { code, analysis, items } = getProject(state, projectId);
-        const data = { code, analysis, items };
-        const json = JSON.stringify(data, null, 2);
+        const data = getProject(state, projectId);
+        const filteredData = {};
+        for (const [key, value] of Object.entries(data)) {
+          if (['analysis', 'code', 'items'].includes(key))
+            filteredData[key] = value;
+        }
+        const json = JSON.stringify(filteredData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
 
         // create elem

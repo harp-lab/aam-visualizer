@@ -26,9 +26,7 @@ function Graph(graphId, items) {
     case 'funcs': {
       return exportGraph(graph, items.funcs);
     }
-    case 'states': {
-      return exportGraph(graph, items.states);
-    }
+    case 'states':
     default: {
       return exportGraph(graph, items.configs);
     }
