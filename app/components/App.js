@@ -103,7 +103,8 @@ function VersionOverlay() {
         position: 'fixed',
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        zIndex: -1
       }}>
       <Typography
         variant='caption'
