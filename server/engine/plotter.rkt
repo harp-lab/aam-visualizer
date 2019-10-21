@@ -30,22 +30,22 @@
 
   ;; Two helpers to make data lookups, one creates a hash-table, the other a function
   ;; enumerate the values of a set, returning a hash-table to look up those values
-  (define (make-id-hash set)
-    (for/hash ([s set][id (range (set-count set))]) (values s (~a id))))
+  (define (make-id-hash set tag)
+    (for/hash ([s set][id (range (set-count set))]) (values s (~a tag "-" id))))
   ;; lookup and convert ids to symbols in one step. Symbols are required for hash-keys in output.
   (define (make-data->symbol id-hash)
     (lambda (val) (string->symbol (~a (hash-ref id-hash val)))))
 
   ;; state id lookups
-  (define state>id (make-id-hash states))
+  (define state>id (make-id-hash states "state"))
   (define state->sym (make-data->symbol state>id))
 
   ;; address id lookups
-  (define addr>id (make-id-hash (list->set (hash-keys store))))
+  (define addr>id (make-id-hash (list->set (hash-keys store)) "addr"))
   (define addr->sym (make-data->symbol addr>id))
 
   ;; continuation address id loopups
-  (define kaddr>id (make-id-hash (list->set (hash-keys kstore))))
+  (define kaddr>id (make-id-hash (list->set (hash-keys kstore)) "kaddr"))
   (define kaddr->sym (make-data->symbol kaddr>id))
 
   ;; search through all states, collecting sets of each item:
@@ -67,19 +67,19 @@
      (set->list states)))
 
   ;; environment id lookups
-  (define env>id (make-id-hash envs))
+  (define env>id (make-id-hash envs "env"))
   (define env->sym (make-data->symbol env>id))
 
   ;; instrumentation id lookups
-  (define instr>id (make-id-hash instrs))
+  (define instr>id (make-id-hash instrs "instr"))
   (define instr->sym (make-data->symbol instr>id))
 
   ;; continuation id lookups
-  (define kont>id (make-id-hash konts))
+  (define kont>id (make-id-hash konts "stack"))
   (define kont->sym (make-data->symbol kont>id))
 
   ;; function id lookups
-  (define func>id (make-id-hash (hash-keys trans)))
+  (define func>id (make-id-hash (hash-keys trans) "func"))
   (define func->sym (make-data->symbol func>id))
 
   ;; create an output edge from an input edge
@@ -139,7 +139,7 @@
      (hash-keys subs)))
 
   ;; configuration id lookups
-  (define conf>id (make-id-hash (hash-keys confs>func)))
+  (define conf>id (make-id-hash (hash-keys confs>func) "config"))
   (define conf->sym (make-data->symbol conf>id))
 
   ;; create output graph of primary analysis states by calling step function
@@ -161,7 +161,7 @@
                                                                                (make-edge (hash-ref c-trans t))))))))))
 
   ;; value id lookup
-  (define val>id (make-id-hash vals))
+  (define val>id (make-id-hash vals "val"))
   (define val->sym (make-data->symbol val>id))
   
   ;; convert state to output format, looking up ids for components
