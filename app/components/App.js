@@ -6,7 +6,7 @@ import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 
 import { AppBar, Button, Toolbar, Typography } from '@material-ui/core';
-import { ThemeProvider } from '@material-ui/styles';
+import { ThemeProvider, withTheme } from '@material-ui/styles';
 
 import Login from './Login';
 import ProjectList from './ProjectList';
@@ -75,6 +75,7 @@ function App() {
   
   return (
     <ThemeProvider theme={ Theme }>
+      <VersionOverlay />
       <div
         style={{
           display: 'flex',
@@ -92,18 +93,41 @@ function App() {
 }
 export default App;
 
+function VersionOverlay() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        height: '100%',
+        width: '100%',
+        position: 'fixed',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        pointerEvents: 'none'
+      }}>
+      <Typography
+        variant='caption'
+        color='textSecondary'
+        style={{ padding: 5 }}>
+        { process.env.VERSION }
+      </Typography>
+    </div>);
+}
+
 function Message(props) {
+  const { content, theme } = props;
   return (
     <Typography
       style={{
         display: 'flex',
         justifyContent: 'center',
-        backgroundColor: Theme.palette.warn.main,
-        color: Theme.palette.warn.contrastText
+        backgroundColor: theme.palette.warn.main,
+        color: theme.palette.warn.contrastText
       }}>
-      {props.content}
+      { content }
     </Typography>);
 }
+Message = withTheme(Message);
 
 function ProjectListButton() {
   const dispatch = useDispatch();

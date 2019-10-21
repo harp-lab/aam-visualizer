@@ -1,9 +1,14 @@
-var path = require('path');
-var HTMLWebpackPlugin = require('html-webpack-plugin');
-var HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
+const { EnvironmentPlugin } = require('webpack');
+
+const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   template: __dirname + '/app/index.html',
   filename: 'index.html',
   inject: 'body'
+});
+const EnvironmentPluginConfig = new EnvironmentPlugin({
+  VERSION: require('./package.json').version
 });
 
 module.exports = {
@@ -53,7 +58,10 @@ module.exports = {
       chunks: 'all',
     },
   },
-  plugins: [HTMLWebpackPluginConfig],
+  plugins: [
+    HTMLWebpackPluginConfig,
+    EnvironmentPluginConfig
+  ],
   devServer: {
     proxy: {
       '/api': 'http://localhost:8086'

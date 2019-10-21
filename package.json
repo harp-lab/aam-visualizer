@@ -1,10 +1,10 @@
 {
   "name": "aam-visualizer",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack -p --mode=production",
+    "build": "npm version patch --no-git-tag-version && webpack -p --mode=production",
     "start": "node server/main.js",
     "dev-start": "npm run dev-client & nodemon -x \"npm run dev-server\"",
     "dev-client": "webpack-dev-server",
