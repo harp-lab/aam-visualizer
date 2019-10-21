@@ -1,7 +1,7 @@
 import React, { Fragment, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { createProject, forkProject, importData, exportData } from 'store-apis';
-import { logout, selProject } from 'store-actions';
+import { logout, selProject, queueSnackbar } from 'store-actions';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 
@@ -125,9 +125,14 @@ function ImportButton() {
     const fr = new FileReader();
     fr.onload = () => {
       const json = JSON.parse(fr.result);
-      const re = /aam-vis-(.*)\.js/;
-      const projectId = file.name.match(re)[1];
-      dispatch(importData(projectId, json));
+      const re = /aam-vis-(.*)\.json/;
+      const filename = file.name;
+      const reGroups = filename.match(re);
+      if (reGroups) {
+        const projectId = reGroups[1];
+        dispatch(importData(projectId, json));
+      } else
+        dispatch(queueSnackbar(`'${filename}' file name incorrectly formatted ('aam-vis-<projectId>.json')`));
     };
     fr.readAsText(file);
     input.current.value = '';
