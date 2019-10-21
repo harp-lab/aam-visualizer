@@ -11,6 +11,7 @@ import cytoscape from 'cytoscape';
 import withTheme from '@material-ui/styles/withTheme';
 
 import GraphData from './data/Graph';
+import { PaneMessage } from 'library';
 
 function Graph(props) {
   const cyElem = useRef(undefined);
@@ -19,6 +20,7 @@ function Graph(props) {
 
   const { graphId, edgePredicate, onNodeSelect, onNodeUnselect, theme } = props;
   const items = useSelector(getProjectItems);
+  if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
   const data = GraphData(graphId, items);
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
   const focusedGraph = useSelector(getFocusedGraph);

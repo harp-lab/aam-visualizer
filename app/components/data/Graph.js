@@ -8,11 +8,12 @@ function Graph(graphId, items) {
   function exportGraph(graph, refData) {
     const data = [];
     for (const [nodeId, children] of Object.entries(graph)) {
-      const { form } = refData[nodeId];
+      let form;
+      if (refData) form = refData[nodeId].form;
       data.push(Node(nodeId, form));
 
       for (const [childId, edge] of Object.entries(children)) {
-        const { form } = refData[childId];
+        if (refData) form = refData[childId].form;
         data.push(Node(childId, form));
         const edgeId = `${nodeId}-${childId}`;
         data.push(Edge(edgeId, nodeId, childId, edge));
@@ -25,7 +26,9 @@ function Graph(graphId, items) {
     case 'funcs': {
       return exportGraph(graph, items.funcs);
     }
-    case 'states':
+    case 'states': {
+      return exportGraph(graph, items.states);
+    }
     default: {
       return exportGraph(graph, items.configs);
     }

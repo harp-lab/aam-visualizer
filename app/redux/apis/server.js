@@ -214,6 +214,7 @@ export function getData(projectId) {
 
 export function importData(projectId, data) {
   return dispatch => {
+    data.status = COMPLETE_STATUS;
     dispatch(addProject(projectId));
     dispatch(setProjectData(projectId, data));
     dispatch(generatePanels(projectId));
@@ -226,7 +227,8 @@ export function exportData(projectId) {
       case 200: {
         // create blob
         const state = store.getState();
-        const data = getProject(state, projectId);
+        const { code, analysis, items } = getProject(state, projectId);
+        const data = { code, analysis, items };
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
 

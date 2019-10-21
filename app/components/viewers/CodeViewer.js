@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { connect, useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectNodes, hoverNodes } from 'store-actions';
 import {
   getSelectedAsts, getHoveredAsts, getNodeAsts,
   getMainGraphId, getSubGraphId,
-  getGraphSelectedNodes, getGraphHoveredNodes, getGraphNodes, getGraphRefData,
   getProject, getProjectItems
 } from 'store-selectors';
 
@@ -17,18 +16,25 @@ import CodeMark from '../data/CodeMark';
 
 function CodeViewer(props) {
   const { code } = useSelector(getProject);
-  const graphIds = [useSelector(getMainGraphId), useSelector(getSubGraphId)];
+  const mainGraphId = useSelector(getMainGraphId);
+  const subGraphId = useSelector(getSubGraphId);
+  const graphIds = [];
+  if (mainGraphId) graphIds.push(mainGraphId);
+  if (subGraphId) graphIds.push(subGraphId);
   const items = useSelector(getProjectItems);
   const selected = useSelector(getSelectedAsts);
   const hovered = useSelector(getHoveredAsts);
   const dispatch = useDispatch();
 
   const rawMarks = {};
-  for (const [astId, data] of Object.entries(items.ast)) {
-    const { start, end } = data;
-    const startPos = new CodePos(start[0], start[1]);
-    const endPos = new CodePos(end[0], end[1]);
-    rawMarks[astId] = new CodeMark(startPos, endPos);
+  if (items.ast) {
+    for (const [astId, data] of Object.entries(items.ast)) {
+      const { start, end } = data;
+      const startPos = new CodePos(start[0], start[1]);
+      const endPos = new CodePos(end[0], end[1]);
+      rawMarks[astId] = new CodeMark(startPos, endPos);
+    }
+    graphIds.forEach(graphId => addMarks(graphId));
   }
 
   function getNodes(graphId) {
@@ -59,9 +65,6 @@ function CodeViewer(props) {
       }
     }
   }
-  graphIds.forEach(graphId => addMarks(graphId));
-
-
 
   const [gutterWidth, setGutterWidth] = useState('auto');
   const { theme } = props;
@@ -143,8 +146,8 @@ function CodeViewer(props) {
       if (isPrim)
         textColor = indigo[800];
 
-      const hoveredMarks = hovered.map(id => marks[id]);
-      const selectedMarks = selected.map(id => marks[id]);
+      const hoveredMarks = hovered.map(id => marks[id]).filter(mark => mark !== undefined);
+      const selectedMarks = selected.map(id => marks[id]).filter(mark => mark !== undefined);
       const hoveredMark = hoveredMarks.find(mark => mark.includes(tokStart, tokEnd));
       const selectedMark = selectedMarks.find(mark => mark.includes(tokStart, tokEnd));
 

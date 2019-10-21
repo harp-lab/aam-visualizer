@@ -185,23 +185,25 @@ export function generateConfigs(projectId) {
         const state = items.states[stateId];
         switch (state.form) {
           case 'halt':
-            const results = state.results
-              .map(resultId => {
-                const { type, name, valString } = items.vals[resultId];
-  
-                let string;
-                switch (type) {
-                  case 'closure':
-                    string = name;
-                    break;
-                  case 'bool':
-                    string = valString;
-                    break;
-                }
-                return string;
-              })
-              .join(', ');
-            syntax = `[ ${results} ]`
+            if (state.results) {
+              const results = state.results
+                .map(resultId => {
+                  const { type, name, valString } = items.vals[resultId];
+    
+                  let string;
+                  switch (type) {
+                    case 'closure':
+                      string = name;
+                      break;
+                    case 'bool':
+                      string = valString;
+                      break;
+                  }
+                  return string;
+                })
+                .join(', ');
+              syntax = `[ ${results} ]`
+            }
             break;
           default:
             syntax = state.exprString;
