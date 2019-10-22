@@ -18,10 +18,10 @@ function CodeViewer(props) {
   const { code } = useSelector(getProject);
   const mainGraphId = useSelector(getMainGraphId);
   const subGraphId = useSelector(getSubGraphId);
-  const graphIds = [];
-  if (mainGraphId) graphIds.push(mainGraphId);
-  if (subGraphId) graphIds.push(subGraphId);
   const items = useSelector(getProjectItems);
+  const graphIds = [];
+  if (items.graphs[mainGraphId]) graphIds.push(mainGraphId);
+  if (items.graphs[subGraphId]) graphIds.push(subGraphId);
   const selected = useSelector(getSelectedAsts);
   const hovered = useSelector(getHoveredAsts);
   const dispatch = useDispatch();
