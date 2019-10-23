@@ -16,21 +16,23 @@ function apiReq(url, method) {
 export function getList() {
   return async function(dispatch) {
     const res = await apiReq('all', 'GET');
+    let refresh = false;
     switch (res.status) {
       case 200: {
         const data = await res.json();
-        let refresh = false;
-        
         for (const [projectId, projectData] of Object.entries(data)) {
           const { status, name, analysis } = projectData;
           dispatch(setProjectData(projectId, { status, name, analysis }));
           if (status === PROCESS_STATUS)
             refresh = true;
         }
-        return refresh;
+        break;
       }
-      default: return true;
+      default:
+        refresh = true;
+        break;
     }
+    return refresh;
   };
 }
 
@@ -83,13 +85,18 @@ export function downloadProject(projectId) {
     const state = store.getState();
     const serverStatus = getProjectServerStatus(state, projectId);
     const clientStatus = getProjectClientStatus(state, projectId);
+    let refresh = false;
     switch (serverStatus) {
       case EDIT_STATUS:
         if (!clientStatus.code) dispatch(getCode(projectId));
         break;
-      case PROCESS_STATUS:
+      case PROCESS_STATUS: {
         await dispatch(getData(projectId));
+        const state = store.getState();
+        const serverStatus = getProjectServerStatus(state, projectId);
+        refresh = serverStatus === PROCESS_STATUS; 
         break;
+      }
       case COMPLETE_STATUS:
         if (!clientStatus.items) {
           await dispatch(getData(projectId));
@@ -102,6 +109,7 @@ export function downloadProject(projectId) {
         }
         break;
     }
+    return refresh;
   };
 }
 

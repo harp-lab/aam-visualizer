@@ -18,7 +18,6 @@ function Project() {
   // mount/unmount
   useEffect(() => {
     download();
-
     return () => {
       clearTimeout(timeout.current);
     };
@@ -26,11 +25,15 @@ function Project() {
   useEffect(() => {
     switch (status) {
       case PROCESS_STATUS:
-        timeout.current = setTimeout(download, 5000);
+        download();
         break;
     }
   }, [status]);
-  const download = () => dispatch(downloadProject(projectId));
+
+  async function download() {
+    const refresh = await dispatch(downloadProject(projectId));
+    if (refresh) timeout.current = setTimeout(download, 1000);
+  }
 
   let viewElement;
   switch (status) {
