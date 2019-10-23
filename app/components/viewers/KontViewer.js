@@ -1,24 +1,23 @@
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getPanels, getProjectItems } from 'store-selectors';
 
 import {
   Card, CardContent,
-  IconButton,
-  Popover,
   Tooltip,
   Typography
 } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
+import { IconPopover, PanelViewer } from 'library';
 
 import Panel from '../Panel';
-import { PanelViewer } from 'library';
 
 import { ValItem } from '../items';
 import { EnvLink, KontLink } from '../links';
 
 import LayerData from '../data/Layer';
+import DebugPopover from '../../library/DebugPopover';
 
 function KontViewer() {
   const { konts } = useSelector(getPanels);
@@ -190,7 +189,10 @@ function KontCard(props) {
             flexWrap: 'wrap'
           }}>
           { label }
-          { infoButton }
+          <div>
+            <DebugPopover item={ kont } />
+            { infoButton }
+          </div>
         </div>
         <div style={{ display: 'flex' }}>
           { valsElem }
@@ -221,38 +223,13 @@ function KontLabelItem(props) {
     </Tooltip>);
 }
 function KontInfo(props) {
-  const { children, classes } = props;
-  const [anchor, setAnchor] = useState(undefined);
-
-  function open(evt) {
-    evt.stopPropagation();
-    setAnchor(evt.currentTarget);
-  }
-  function close(evt) { 
-    evt.stopPropagation();
-    setAnchor(undefined);
-  }
-
+  const { children } = props;
   return (
-    <Fragment>
-      <Tooltip title='Show info'>
-        <IconButton
-          size='small'
-          onClick={ open }>
-          <Info />
-        </IconButton>
-      </Tooltip>
-      <Popover
-        open={ Boolean(anchor) }
-        anchorEl={ anchor }
-        onClose={ close }
-        classes={{ paper: classes.paper }}>
-        { children }
-      </Popover>
-    </Fragment>);
+    <IconPopover
+      icon={ <Info /> }
+      tooltip='Show info'>
+      { children }
+    </IconPopover>);
 }
-KontInfo = withStyles({
-  paper: { padding: '1em' }
-})(KontInfo);
 
 export default KontViewer;

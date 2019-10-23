@@ -1,5 +1,6 @@
 export { default as DropMenu } from './DropMenu';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as IconPopover } from './IconPopover';
 export { default as Link } from './Link';
 export { default as Loading } from './Loading';
 export { default as Pane } from './Pane';
