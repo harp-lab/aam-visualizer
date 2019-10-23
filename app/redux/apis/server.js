@@ -157,7 +157,7 @@ export function saveCode(projectId, code) {
 }
 export function processCode(projectId, code, options) {
   return async function(dispatch) {
-    dispatch(saveCode(projectId, code));
+    await dispatch(saveCode(projectId, code));
 
     const state = store.getState();
     const { userId } = getProject(state, projectId);
