@@ -123,7 +123,7 @@ function CodeViewer(props) {
   const lines = code
     .split(/\r\n|\n/)
     .map(line => {
-      return line.match(/\(|\)|\[|\]|\#t|\#f|\S+|\s+/g);
+      return line.match(/\(|\)|\[|\]|[^\s\(\)\[\]]+|\s+/g);
     });
   
   // generate lines
