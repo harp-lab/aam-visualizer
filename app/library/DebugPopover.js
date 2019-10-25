@@ -8,11 +8,26 @@ function DebugPopover(props) {
   const { debug } = item;
 
   if (!debug) return null;
+
+  let content;
+  if (debug instanceof String) {
+    content = <Typography>{ debug }</Typography>;
+  } else if (debug instanceof Array) {
+    content = debug.map((debugString, index) => {
+      return (
+        <Typography key={ index }>
+          { debugString }
+        </Typography>);
+    });
+  } else {
+    content = <Typography>Invalid debug property type: { typeof debug }</Typography>;
+  }
+
   return (
     <IconPopover
       icon={ <BugReport /> }
       tooltip='Show debug'>
-      <Typography>{ debug }</Typography>
+      { content }
     </IconPopover>);
 }
 
