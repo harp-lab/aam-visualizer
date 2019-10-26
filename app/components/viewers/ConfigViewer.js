@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { hoverNodes, refreshEnvs, refreshKonts } from 'store-actions';
+import { hoverNodes, refreshEnvs, refreshStacks } from 'store-actions';
+import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 
 import { Card, CardContent, Typography } from '@material-ui/core';
@@ -8,7 +9,7 @@ import { Card, CardContent, Typography } from '@material-ui/core';
 import Panel from '../Panel';
 import { PanelViewer, Spacer } from 'library';
 
-import { EnvLink, KontLink } from '../links';
+import { EnvLink, StackLink } from '../links';
 import { ValItem } from '../items';
 
 function ConfigViewer() {
@@ -19,7 +20,7 @@ function ConfigViewer() {
 
   function refresh() {
     dispatch(refreshEnvs());
-    dispatch(refreshKonts());
+    dispatch(refreshStacks());
   }
   function onGenerate([configId, config]) {
     return (
@@ -83,7 +84,8 @@ function StateCard(props) {
 
   const {
     instr: instrId,
-    kont: kontId,
+    frame: frameId,
+    cstack: cstackId,
     env: envId,
     vals: valIdSets
   } = items.states[stateId];
@@ -92,7 +94,9 @@ function StateCard(props) {
    .exprStrings.join(', ');
   const instrElem = <Typography display='inline'>{ `[ ${ instr } ]` }</Typography>;
 
-  const kontElem = <KontLink kontId={ kontId } />;
+  const stackId = frameId ? frameId : cstackId;
+  const stackType = frameId ? FRAME_STACK : CSTACK_STACK;
+  const stackLink = <StackLink stackId={ stackId } { ...{ stackType } } />;
   const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
 
   let valsElem;
@@ -111,7 +115,7 @@ function StateCard(props) {
       <CardContent style={{ padding: 8 }}>
         <Spacer childrenStyle={{ marginRight: 5 }}>
           { instrElem }
-          { kontElem }
+          { stackLink }
           { envElem }
         </Spacer>
         <div style={{ display: 'flex' }}>

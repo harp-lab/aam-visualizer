@@ -1,2 +1,2 @@
 export { default as EnvLink } from './EnvLink';
-export { default as KontLink } from './KontLink';
+export { default as StackLink } from './StackLink';

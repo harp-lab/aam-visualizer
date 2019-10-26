@@ -3,7 +3,7 @@ import {
   SET_METADATA, SET_STATUS, SET_GRAPH_METADATA,
   ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS
 } from '../actionTypes';
-import { CONFIG_PANEL, ENV_PANEL, KONT_PANEL } from 'store-consts';
+import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL } from 'store-consts';
 
 function metadataReducer(state = {}, action) {
   switch (action.type) {
@@ -91,7 +91,7 @@ function panelReducer(state = {}, action) {
 const panelsReducer = combineReducers({
   configs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === CONFIG_PANEL : false),
   envs: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === ENV_PANEL : false),
-  konts: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === KONT_PANEL : false)
+  stacks: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === STACK_PANEL : false)
 });
 
 function statusReducer(state = {}, action) {

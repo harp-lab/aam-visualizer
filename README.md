@@ -1,18 +1,12 @@
 # Code Vis
 
 ## Description
-
 Web application and server that processes code in analysis engine and visualizes results.
-
-
 
 ## Dependencies
 Node.js v12.4.0
 
-
-
 ## Build instructions
-
 Run `npm install` to install all node modules.
 
 * `npm run build` : builds application

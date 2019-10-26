@@ -7,7 +7,7 @@ import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATU
 import { Loading, Pane, SplitPane } from 'library';
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
-import { CodeViewer, ConfigViewer, EnvViewer, KontViewer } from './viewers';
+import { CodeViewer, ConfigViewer, EnvViewer, StackViewer } from './viewers';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
@@ -67,7 +67,7 @@ function VisualView() {
             <Pane height='48%'>
               <SplitPane vertical>
                 <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
-                <Pane><KontViewer /></Pane>
+                <Pane><StackViewer /></Pane>
               </SplitPane>
             </Pane>
             <Pane overflow='auto'>

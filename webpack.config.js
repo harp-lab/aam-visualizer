@@ -15,6 +15,11 @@ module.exports = {
   entry: __dirname + '/app/index.js',
   resolve: {
     alias: {
+      'component-data': path.resolve(__dirname, 'app/components/data'),
+      'component-dialogs': path.resolve(__dirname, 'app/components/dialogs'),
+      'component-items': path.resolve(__dirname, 'app/components/items'),
+      'component-links': path.resolve(__dirname, 'app/components/links'),
+      'component-viewers': path.resolve(__dirname, 'app/components/viewers'),
       'library': path.resolve(__dirname, 'app/library'),
       'store-actions': path.resolve(__dirname, 'app/redux/actions'),
       'store-apis': path.resolve(__dirname, 'app/redux/apis'),

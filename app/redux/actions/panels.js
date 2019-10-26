@@ -1,6 +1,6 @@
 import store from '../store';
 import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes';
-import { CONFIG_PANEL, ENV_PANEL, KONT_PANEL } from 'store-consts';
+import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
 import {
   getSelectedProjectId, getProjectItems,
   getSubGraphId, getGraphSelectedNodes,
@@ -23,7 +23,7 @@ function addPanel(projectId, type, panelId, label) {
 }
 export const addConfig = (projectId, panelId, label) => addPanel(projectId, CONFIG_PANEL, panelId, label);
 export const addEnv = (projectId, panelId, label) => addPanel(projectId, ENV_PANEL, panelId, label);
-export const addKont = (projectId, panelId, label) => addPanel(projectId, KONT_PANEL, panelId, label);
+export const addStack = (projectId, panelId, label) => addPanel(projectId, STACK_PANEL, panelId, label);
 
 function setPanel(type, panelId, data) {
   const state = store.getState();
@@ -62,12 +62,33 @@ export const unsaveConfig = panelId => unsavePanel(CONFIG_PANEL, panelId);
 export const selectConfig = panelId => selectPanel(CONFIG_PANEL, panelId);
 export const unselectConfig = panelId => unselectPanel(CONFIG_PANEL, panelId);
 
-export const hideKont = panelId => hidePanel(KONT_PANEL, panelId);
-export const showKont = panelId => showPanel(KONT_PANEL, panelId);
-export const saveKont = panelId => savePanel(KONT_PANEL, panelId);
-export const unsaveKont = panelId => unsavePanel(KONT_PANEL, panelId);
-export const selectKont = panelId => selectPanel(KONT_PANEL, panelId);
-export const unselectKont = panelId => unselectPanel(KONT_PANEL, panelId);
+export function hideStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return hidePanel(STACK_PANEL, panelId);
+}
+export function showStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return showPanel(STACK_PANEL, panelId);
+}
+export function saveStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return savePanel(STACK_PANEL, panelId);
+}
+export function unsaveStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return unsavePanel(STACK_PANEL, panelId);
+}
+export function selectStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return selectPanel(STACK_PANEL, panelId);
+}
+export function unselectStack(stackId, stackType) {
+  const panelId = getStackId(stackId, stackType);
+  return unselectPanel(STACK_PANEL, panelId);
+}
+function getStackId(stackId, stackType) {
+  return `${stackType}-${stackId}`;
+}
 
 export const hideEnv = panelId => hidePanel(ENV_PANEL, panelId);
 export const showEnv = panelId => showPanel(ENV_PANEL, panelId);
@@ -92,7 +113,7 @@ export function refresh() {
   return dispatch => {
     dispatch(refreshConfigs());
     dispatch(refreshEnvs());
-    dispatch(refreshKonts());
+    dispatch(refreshStacks());
   };
 }
 export function refreshConfigs() {
@@ -110,7 +131,7 @@ export function refreshConfigs() {
 export function refreshEnvs() {
   const state = store.getState();
   const items = getProjectItems(state);
-  const { configs, envs } = getPanels(state);
+  const { configs } = getPanels(state);
   const visibleEnvs = [];
   for (const [configId, configPanel] of Object.entries(configs)) {
     if (!configPanel.hidden && configPanel.selected) {
@@ -131,23 +152,28 @@ export function refreshEnvs() {
       return { hidden: true };
   });
 }
-export function refreshKonts() {
+export function refreshStacks() {
   const state = store.getState();
   const items = getProjectItems(state);
-  const { configs, konts } = getPanels(state);
-  const visibleKonts = [];
+  const { configs } = getPanels(state);
+
+  const visibleStacks = [];
   for (const [configId, configPanel] of Object.entries(configs)) {
     if (!configPanel.hidden && configPanel.selected) {
       const stateIds = items.configs[configId].states;
       if (stateIds)
         for (const stateId of stateIds) {
-          const kontId = items.states[stateId].kont;
-          visibleKonts.push(kontId);
+          const state = items.states[stateId];
+          const { [FRAME_STACK]: frameId, [CSTACK_STACK]: cstackId } = state;
+          const stackType = frameId ? FRAME_STACK : CSTACK_STACK;
+          const stackId = frameId ? frameId : cstackId;
+          const panelId = getStackId(stackId, stackType);
+          visibleStacks.push(panelId);
         }
     }
   }
-  return refreshPanels(KONT_PANEL, (kontId, panel) => {
-    if (visibleKonts.includes(kontId))
+  return refreshPanels(STACK_PANEL, (stackId, panel) => {
+    if (visibleStacks.includes(stackId))
       return { hidden: false };
     else
       return { hidden: true };
@@ -160,7 +186,7 @@ export function generatePanels(projectId) {
     const items = getProjectItems(state, projectId);
     if (items.configs) dispatch(generateConfigs(projectId));
     if (items.envs) dispatch(generateEnvs(projectId));
-    if (items.konts) dispatch(generateKonts(projectId));
+    if (items.frames || items.cstacks) dispatch(generateStacks(projectId));
   };
 }
 function defaultPanelState(label) {
@@ -232,22 +258,39 @@ export function generateEnvs(projectId) {
     dispatch(setPanels(projectId, ENV_PANEL, panels));
   };
 }
-export function generateKonts(projectId) {
+export function generateStacks(projectId) {
   return dispatch => {
     const state = store.getState();
     const items = getProjectItems(state, projectId);
 
     const panels = {};
-    for (const [kontId, kont] of Object.entries(items.konts)) {
-      const { descs } = items.konts[kontId];
-      let label = `${kontId}: `;
-      if (descs.length > 1)
-        label += `[ ${descs[0]}, ... +${descs.length - 1} ]`;
-      else
-        label += `[ ${descs[0]} ]`;
 
-      panels[kontId] = defaultPanelState(label);
-    }
-    dispatch(setPanels(projectId, KONT_PANEL, panels));
-  };
+    if (items.frames)
+      for (const [frameId, frame] of Object.entries(items.frames)) {
+        const { descs } = frame;
+        let label = `${frameId}: `;
+        if (descs.length > 1)
+          label += `[ ${descs[0]}, ... +${descs.length - 1} ]`;
+        else
+          label += `[ ${descs[0]} ]`;
+        const panelId = getStackId(frameId, FRAME_STACK);
+        panels[panelId] = {
+          ...defaultPanelState(label),
+          frame: frameId
+        };
+      }
+
+    if (items.cstacks)
+      for (const [cstackId, cstack] of Object.entries(items.cstacks)) {
+        let label = `${cstackId}`;
+        const panelId = getStackId(cstackId, CSTACK_STACK);
+        panels[panelId] = {
+          ...defaultPanelState(label),
+          cstack: cstackId
+        };
+      }
+
+
+    dispatch(setPanels(projectId, STACK_PANEL, panels));
+  }
 }
