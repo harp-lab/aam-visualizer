@@ -31,7 +31,7 @@ function FrameCard(props) {
           <EnvLink envId={ env } />
         </FrameLabel>);
       if (nextFrameIds) nextLayer = new LayerData(nextFrameIds);
-      else nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
+      else if (nextCStackIds) nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
       break;
     }
     case 'frame': {

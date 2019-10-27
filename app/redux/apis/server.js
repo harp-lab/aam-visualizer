@@ -12,6 +12,15 @@ function apiReq(url, method) {
   const userId = getUser(state);
   return fetch(`/api/${userId}/${url}`, { method });
 }
+function apiPost(url, obj) {
+  const state = store.getState();
+  const userId = getUser(state);
+  return fetch(`/api/${userId}/${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj)
+  });
+}
 
 export function getList() {
   return async function(dispatch) {
@@ -94,7 +103,7 @@ export function downloadProject(projectId) {
         await dispatch(getData(projectId));
         const state = store.getState();
         const serverStatus = getProjectServerStatus(state, projectId);
-        refresh = serverStatus === PROCESS_STATUS; 
+        refresh = serverStatus === PROCESS_STATUS;
         break;
       }
       case COMPLETE_STATUS:
@@ -115,14 +124,8 @@ export function downloadProject(projectId) {
 
 export function rename(projectId, name) {
   return async function(dispatch) {
-    const state = store.getState();
-    const userId = getUser(state);
     dispatch(setProjectData(projectId, { name }));
-    return fetch(`/api/${userId}/projects/${projectId}/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
+    apiPost(`projects/${projectId}/save`, { name });
   };
 }
 export function getCode(projectId) {
@@ -136,21 +139,16 @@ export function getCode(projectId) {
 export function saveCode(projectId, code) {
   return dispatch => {
     const state = store.getState();
-    const { userId, status } = getProject(state, projectId);
+    const { status } = getProject(state, projectId);
   
     switch (status) {
       case EMPTY_STATUS:
       case EDIT_STATUS: {
         let status = EDIT_STATUS;
-        if (code == '')
-          status = EMPTY_STATUS;
+        if (code === '') status = EMPTY_STATUS;
         
         dispatch(setProjectData(projectId, { status, code }));
-        return fetch(`/api/${userId}/projects/${projectId}/save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
-        });
+        return apiPost(`projects/${projectId}/save`, { code });
       }
     }
   }
@@ -158,14 +156,7 @@ export function saveCode(projectId, code) {
 export function processCode(projectId, code, options) {
   return async function(dispatch) {
     await dispatch(saveCode(projectId, code));
-
-    const state = store.getState();
-    const { userId } = getProject(state, projectId);
-    const res = await fetch(`/api/${userId}/projects/${projectId}/process`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(options)
-    });
+    const res = await apiPost(`projects/${projectId}/process`, options);
     switch (res.status) {
       case 200: {
         dispatch(setProjectData(projectId, { status: 'process' }));
@@ -207,14 +198,12 @@ export function getData(projectId) {
       case 200: {
         const data = await res.json();
         dispatch(setProjectData(projectId, data));
-        return res.status;
+        break;
       }
-      case 204: {
-        return res.status;
-      }
+      case 204: break;
       case 412: {
         dispatch(queueSnackbar('Project data request rejected'));
-        return res.status;
+        break;
       }
     }
   };
@@ -230,9 +219,15 @@ export function importData(projectId, data) {
 }
 export function exportData(projectId) {
   return async function(dispatch) {
-    const status = await dispatch(getData(projectId));
-    switch (status) {
-      case 200: {
+    await dispatch(downloadProject(projectId));
+    const state = store.getState();
+    const serverStatus = getProjectServerStatus(state, projectId);
+    switch (serverStatus) {
+      case PROCESS_STATUS: {
+        dispatch(queueSnackbar('Project still processing'));
+        break;
+      }
+      default: {
         // create blob
         const state = store.getState();
         const data = getProject(state, projectId);
@@ -258,10 +253,6 @@ export function exportData(projectId) {
         // cleanup
         elem.remove();
         URL.revokeObjectURL(href);
-        break;
-      }
-      case 204: {
-        dispatch(queueSnackbar('Project still processing'));
         break;
       }
     }
