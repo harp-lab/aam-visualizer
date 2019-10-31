@@ -174,7 +174,7 @@
         'exprString (~a (only-syntax ast))
         'env (hash-ref env>id rho)
         'instr (hash-ref instr>id i)
-        'kont (hash-ref kont>id kappa))]
+        'frame (hash-ref kont>id kappa))]
       [`(inner ,cat ,ae ,d ,more ,i ,kappa)
        (hash
         'form (symbol->string cat)
@@ -184,7 +184,7 @@
                (lambda(vs)(set-map vs (lambda(v)(hash-ref val>id v))))
                (if (list? d)d(list d)))
         'instr (hash-ref instr>id i)
-        'kont (hash-ref kont>id kappa))]
+        'frame (hash-ref kont>id kappa))]
       [`(notfound ,ae ,rho ,i ,kappa)
        (hash
         'form "not found"
@@ -192,7 +192,7 @@
         'exprString (~a (only-syntax ae))
         'env (hash-ref env>id rho)
         'instr (hash-ref instr>id i)
-        'kont (hash-ref kont>id kappa))]
+        'frame (hash-ref kont>id kappa))]
       [`(halt ,d, rho)
        (hash
         'results (set-map d (lambda(v)(hash-ref val>id v)))
@@ -327,14 +327,14 @@
         'vals (map (lambda(vs) (set-map vs (lambda(v)(hash-ref val>id v)))) vals) 
         'env (hash-ref env>id env)
         'instr (hash-ref instr>id instr)
-        'kont (hash-ref kont>id k))]
+        'next (hash-ref kont>id k))]
       [addr
        (hash
         'form "addr"
         'descs descs
         'func (hash-ref func>id (car addr))
         'env (hash-ref env>id (cadr addr))
-        'konts (set-map
+        'frames (set-map
                 (hash-ref kstore addr)
                 (lambda(k)(hash-ref kont>id k))))]))            
 
@@ -351,7 +351,7 @@
     'configs (for/hash ([c (hash-keys conf>id)]) (values (conf->sym c) (make-config c)))
     'envs (for/hash ([e (hash-keys env>id)]) (values (env->sym e) (make-env e)))
     'instr (for/hash ([i (hash-keys instr>id)]) (values (instr->sym i) (make-instr i)))
-    'konts (for/hash ([k (hash-keys kont>id)]) (values (kont->sym k) (make-kont k)))
+    'frames (for/hash ([k (hash-keys kont>id)]) (values (kont->sym k) (make-kont k)))
     'vals (for/hash ([v (hash-keys val>id)]) (values (val->sym v) (make-val v)))
     'store (for/hash ([a (hash-keys addr>id)])
                       (values (addr->sym a) (set-map (hash-ref store a) (lambda(v)(hash-ref val>id v)))))
