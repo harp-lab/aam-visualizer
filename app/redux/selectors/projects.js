@@ -1,3 +1,5 @@
+import store from '../store';
+import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getSelectedProjectId } from 'store-selectors';
 
 export function getProjects(store) {
@@ -29,4 +31,12 @@ export function getProjectClientStatus(store, projectId) {
     items: Boolean(items),
     error: Boolean(error)
   };
+}
+export function getStackRefData(stackType) {
+  const state = store.getState();
+  const items = getProjectItems(state);
+  switch (stackType) {
+    case CSTACK_STACK: return items.cstacks;
+    case FRAME_STACK: return items.frames;
+  }
 }

@@ -4,7 +4,7 @@ import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 
 import {
   getSelectedProjectId, getProjectItems,
   getSubGraphId, getGraphSelectedNodes,
-  getPanels
+  getPanels, getLabel
 } from 'store-selectors';
 
 function addPanel(projectId, type, panelId, label) {
@@ -236,7 +236,8 @@ export function generateConfigs(projectId) {
             break;
         }
       }
-      const label = `${configId}: ${form} - ${syntax}`;
+      const name = getLabel(data) || configId;
+      const label = `${name}: ${form} - ${syntax}`;
   
       panels[configId] = defaultPanelState(label);
     }
@@ -251,7 +252,8 @@ export function generateEnvs(projectId) {
     const panels = {};
     for (const [envId, data] of Object.entries(items.envs)) {
       const vars = data.map(entry => entry.varString).join(', ');
-      const label = `${envId}: [ ${vars} ]`;
+      const name = getLabel(data) || envId;
+      const label = `${name}: [ ${vars} ]`;
 
       panels[envId] = defaultPanelState(label);
     }
@@ -268,7 +270,8 @@ export function generateStacks(projectId) {
     if (items.frames)
       for (const [frameId, frame] of Object.entries(items.frames)) {
         const { descs } = frame;
-        let label = `${frameId}: `;
+        const name = getLabel(frame) || frameId;
+        let label = `${name}: `;
         if (descs.length > 1)
           label += `[ ${descs[0]}, ... +${descs.length - 1} ]`;
         else
@@ -282,7 +285,8 @@ export function generateStacks(projectId) {
 
     if (items.cstacks)
       for (const [cstackId, cstack] of Object.entries(items.cstacks)) {
-        let label = `${cstackId}`;
+        const name = getLabel(cstack) || cstackId;
+        let label = `${name}`;
         const panelId = getStackId(cstackId, CSTACK_STACK);
         panels[panelId] = {
           ...defaultPanelState(label),

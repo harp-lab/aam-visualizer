@@ -22,3 +22,6 @@ export function getTitle(store) {
 export function getSelectedProjectId(store) {
   return getData(store).selectedProjectId;
 };
+export function getLabel(item) {
+  return item.label;
+};
