@@ -8,7 +8,8 @@ function StackLayer(props) {
       style={{
         display: 'flex',
         flexWrap: 'wrap',
-        margin: '5px 0'
+        margin: '5px 0',
+        justifyContent: 'center'
       }}>
       { children }
     </div>);

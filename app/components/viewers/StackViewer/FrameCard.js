@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
-import { FRAME_STACK, CSTACK_STACK } from 'store-consts';
+import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getProjectItems } from 'store-selectors';
 import { LayerData } from 'component-data';
 import { ValItem } from 'component-items';
@@ -15,12 +15,16 @@ function FrameCard(props) {
   const items = useSelector(getProjectItems);
 
   const frame = items.frames[frameId];
-  const { form, type, vals: valIdSets } = frame;
+  const {
+    form, type, vals: valIdSets,
+    frames: nextFrameIds, cstacks: nextCStackIds, next
+  } = frame;
 
-  let label, content, nextLayer;
+
+  let label, content;
   switch (form) {
     case 'addr': {
-      const { func: funcId, env, frames: nextFrameIds, cstacks: nextCStackIds } = frame;
+      const { func: funcId, env } = frame;
       label = (
         <FrameLabel>
           <StackLink
@@ -30,12 +34,10 @@ function FrameCard(props) {
           <FrameLabelItem label='Function'>{ items.funcs[funcId].form }</FrameLabelItem>
           <EnvLink envId={ env } />
         </FrameLabel>);
-      if (nextFrameIds) nextLayer = new LayerData(nextFrameIds);
-      else if (nextCStackIds) nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
       break;
     }
     case 'frame': {
-      const { env, instr, exprString, next } = frame;
+      const { env, instr, exprString } = frame;
       const instrEntries = items.instr[instr]
         .exprStrings.join(', ');
       label = (
@@ -45,7 +47,6 @@ function FrameCard(props) {
           <FrameLabelItem label='Instrumentation'>{ `[ ${instrEntries} ]` }</FrameLabelItem>
         </FrameLabel>);
       content = <Typography>{ exprString }</Typography>;
-      nextLayer = new LayerData([next]);
       break;
     }
     default:
@@ -58,6 +59,11 @@ function FrameCard(props) {
         </FrameLabel>);
       break;
   }
+
+  let nextLayer;
+  if (nextFrameIds) nextLayer = new LayerData(nextFrameIds, FRAME_STACK);
+  else if (nextCStackIds) nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
+  else if (next) nextLayer = new LayerData([next], FRAME_STACK);
 
   const cardProps = {};
   if (nextLayer) {

@@ -2,7 +2,7 @@ import React from 'react';
 import Typography from '@material-ui/core/Typography';
 
 function PaneMessage(props) {
-  const { content } = props;
+  const { content, buttons } = props;
   return (
     <div
       style={{
@@ -12,7 +12,14 @@ function PaneMessage(props) {
         justifyContent: 'center',
         alignItems: 'center'
       }}>
-      <Typography variant='h6'>{ content }</Typography>
+      <div style={{ display: 'flex' }}>
+        <Typography
+          variant='h6'
+          style={{ margin: '0 1em' }}>
+          { content }
+        </Typography>
+        { buttons }
+      </div>
     </div>);
 }
 
