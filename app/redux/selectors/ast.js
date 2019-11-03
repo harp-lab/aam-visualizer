@@ -1,24 +1,30 @@
-import { getProjectMetadata } from './projects';
-import { getGraphSelectedNodes, getGraphHoveredNodes, getMainGraphId, getSubGraphId, getGraphRefData } from './graphs';
+import { createSelector } from 'reselect';
+import { getSelectedNodes, getHoveredNodes, getMainGraphId, getSubGraphId, getGraphRefData } from 'store-selectors';
 
-export function getSelectedAsts(store) {
-  const graphIds = [getMainGraphId(store), getSubGraphId(store)];
-  const astIds = graphIds.flatMap(graphId => {
-    const selectedNodes = getGraphSelectedNodes(store, graphId);
-    const refData = getGraphRefData(store, graphId);
-    return getNodeAsts(selectedNodes, refData);
-  });
-  return astIds;
-}
-export function getHoveredAsts(store) {
-  const graphIds = [getMainGraphId(store), getSubGraphId(store)];
-  const astIds = graphIds.flatMap(graphId => {
-    const hoveredNodes = getGraphHoveredNodes(store, graphId);
-    const refData = getGraphRefData(store, graphId);
-    return getNodeAsts(hoveredNodes, refData);
-  });
-  return astIds;
-}
+const getSelectedAstsFactory = graphId => createSelector(
+  state => getSelectedNodes(state, graphId),
+  state => getGraphRefData(state, graphId),
+  getNodeAsts
+);
+export const getSelectedAsts = createSelector(
+  state => getSelectedAstsFactory(getMainGraphId(state))(state),
+  state => getSelectedAstsFactory(getSubGraphId(state))(state),
+  (mainGraphAsts, subGraphAsts) => {
+    return [mainGraphAsts, subGraphAsts].flat();
+  }
+);
+
+const getHoveredAstsFactory = graphId => createSelector(
+  state => getHoveredNodes(state, graphId),
+  state => getGraphRefData(state, graphId),
+  getNodeAsts
+);
+export const getHoveredAsts = createSelector(
+  state => getHoveredAstsFactory(getMainGraphId(state))(state),
+  state => getHoveredAstsFactory(getSubGraphId(state))(state),
+  (mainGraphAsts, subGraphAsts) => [mainGraphAsts, subGraphAsts].flat()
+);
+
 export function getNodeAsts(nodeIds, refData) {
   const astIds = new Set();
   if (refData)

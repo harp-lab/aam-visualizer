@@ -1,6 +1,6 @@
 import store from '../store';
 import { setMetadata, refresh } from 'store-actions';
-import { getSelectedProjectId, getGraph, getMainGraphId, getGraphSelectedNodes } from 'store-selectors';
+import { getSelectedProjectId, getGraph, getMainGraphId, getSelectedNodes } from 'store-selectors';
 import { SET_GRAPH_METADATA } from '../actionTypes';
 
 export function setMainGraphId(graphId) {
@@ -28,7 +28,7 @@ export function setGraphMetadata(graphId, data) {
 export function selectNodes(graphId, nodeIds) {
   return dispatch => {
     const state = store.getState();
-    const selectedNodes = getGraphSelectedNodes(state, graphId);
+    const selectedNodes = getSelectedNodes(state, graphId);
     const combinedNodes = new Set([...selectedNodes, ...nodeIds]);
     dispatch(setGraphMetadata(graphId, {
       selectedNodes: [...combinedNodes]
@@ -39,7 +39,7 @@ export function selectNodes(graphId, nodeIds) {
 export function unselectNodes(graphId, nodeIds) {
   return dispatch => {
     const state = store.getState();
-    const selectedNodes = getGraphSelectedNodes(state, graphId);
+    const selectedNodes = getSelectedNodes(state, graphId);
     const combinedNodes = new Set(selectedNodes);
     nodeIds.forEach(nodeId => combinedNodes.delete(nodeId));
     dispatch(setGraphMetadata(graphId, {

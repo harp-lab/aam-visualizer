@@ -1,5 +1,7 @@
+import { createSelector } from 'reselect';
 import { getProjectMetadata } from './projects';
 
-export function getPanels(store) {
-  return getProjectMetadata(store).panels;
-}
+export const getPanels = createSelector(
+  getProjectMetadata,
+  metadata => metadata.panels
+);

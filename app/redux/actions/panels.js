@@ -3,7 +3,7 @@ import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes
 import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
 import {
   getSelectedProjectId, getProjectItems,
-  getSubGraphId, getGraphSelectedNodes,
+  getSubGraphId, getSelectedNodes,
   getPanels, getLabel
 } from 'store-selectors';
 
@@ -119,7 +119,7 @@ export function refresh() {
 export function refreshConfigs() {
   const state = store.getState();
   const subGraphId = getSubGraphId(state);
-  const selectedConfigs = getGraphSelectedNodes(state, subGraphId);
+  const selectedConfigs = getSelectedNodes(state, subGraphId);
   return refreshPanels(CONFIG_PANEL, (panelId, data) => {
     if (selectedConfigs.includes(panelId)) {
       return { selected: true, hidden: false };
