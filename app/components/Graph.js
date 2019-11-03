@@ -14,18 +14,18 @@ import GraphData from './data/Graph';
 import { PaneMessage } from 'library';
 
 function Graph(props) {
-  const cyElem = useRef(undefined);
-  const bounds = useRef(undefined);
-  const events = useRef(false);
-
   const { graphId, edgePredicate, onNodeSelect, onNodeUnselect, theme } = props;
   const items = useSelector(getProjectItems);
   if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
-  const data = GraphData(graphId, items);
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
   const focusedGraph = useSelector(getFocusedGraph);
   const focused = focusedGraph === graphId;
   const dispatch = useDispatch();
+  const cyElem = useRef(undefined);
+  const bounds = useRef(undefined);
+  const events = useRef(false);
+  
+  const data = GraphData(graphId, items);
 
   const config = {
     style: [{

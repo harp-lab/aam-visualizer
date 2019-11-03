@@ -181,8 +181,8 @@ export function refreshStacks() {
 }
 
 export function generatePanels(projectId) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const items = getProjectItems(state, projectId);
     if (items.configs) dispatch(generateConfigs(projectId));
     if (items.envs) dispatch(generateEnvs(projectId));
@@ -198,8 +198,8 @@ function defaultPanelState(label) {
   };
 };
 export function generateConfigs(projectId) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const items = getProjectItems(state, projectId);
 
     const panels = {};
@@ -245,8 +245,8 @@ export function generateConfigs(projectId) {
   };
 }
 export function generateEnvs(projectId) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const items = getProjectItems(state, projectId);
 
     const panels = {};
@@ -261,8 +261,8 @@ export function generateEnvs(projectId) {
   };
 }
 export function generateStacks(projectId) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const items = getProjectItems(state, projectId);
 
     const panels = {};
@@ -293,7 +293,6 @@ export function generateStacks(projectId) {
           cstack: cstackId
         };
       }
-
 
     dispatch(setPanels(projectId, STACK_PANEL, panels));
   }

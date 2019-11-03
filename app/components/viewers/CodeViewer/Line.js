@@ -7,7 +7,7 @@ import Token from './Token';
 
 function Line(props) {
   const { lineId } = props;
-  const { code, unhover, gutterWidth, setGutterWidth } = useContext(Context);
+  const { code, onUnhover, gutterWidth, setGutterWidth } = useContext(Context);
 
   const line = code[lineId];
   const tokElems = Object.keys(line).map(chId => {
@@ -25,7 +25,7 @@ function Line(props) {
         width={ gutterWidth }
         onSet={ setGutterWidth } />
       <Typography
-        onMouseLeave={ () => unhover() }
+        onMouseLeave={ () => onUnhover() }
         variant='body2'
         style={{
           display: 'inline-block',

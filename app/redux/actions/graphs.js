@@ -26,8 +26,8 @@ export function setGraphMetadata(graphId, data) {
   };
 }
 export function selectNodes(graphId, nodeIds) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const selectedNodes = getSelectedNodes(state, graphId);
     const combinedNodes = new Set([...selectedNodes, ...nodeIds]);
     dispatch(setGraphMetadata(graphId, {
@@ -37,8 +37,8 @@ export function selectNodes(graphId, nodeIds) {
   };
 }
 export function unselectNodes(graphId, nodeIds) {
-  return dispatch => {
-    const state = store.getState();
+  return (dispatch, getState) => {
+    const state = getState();
     const selectedNodes = getSelectedNodes(state, graphId);
     const combinedNodes = new Set(selectedNodes);
     nodeIds.forEach(nodeId => combinedNodes.delete(nodeId));
@@ -59,12 +59,12 @@ export function suggestNodes(graphId, nodeIds) {
   });
 }
 export function selectEdges(graphId, edgeIds) {
-  return dispatch => {
+  return (dispatch, getState) => {
     dispatch(setGraphMetadata(graphId, {
       selectedEdges: edgeIds
     }));
 
-    const state = store.getState();
+    const state = getState();
     const { graph } = getGraph(state, graphId);
     const mainGraphId = getMainGraphId(state);
 

@@ -11,7 +11,7 @@ function Token(props) {
   const { ast } = useSelector(getProjectItems);
   const selectedAstIds = useSelector(getSelectedAsts);
   const hoveredAstIds = useSelector(getHoveredAsts);
-  const { astNodes, code, hover, click } = useContext(Context);
+  const { astNodes, code, onHover, onClick } = useContext(Context);
 
   const token = code[lineId][chId];
   const tokStart = [parseInt(lineId), parseInt(chId)];
@@ -83,8 +83,8 @@ function Token(props) {
     key={ chId }
     content={ content }
     textColor={ isPrim ? indigo[800] : undefined }
-    onMouseOver={ () => hover(smallestAstId) }
-    onClick={ () => click(smallestAstId) }
+    onMouseOver={ () => onHover(smallestAstId) }
+    onClick={ () => onClick(smallestAstId) }
     style={{ cursor: 'pointer' }}/>;
 }
 Token = withTheme(Token);

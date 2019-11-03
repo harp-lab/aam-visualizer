@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { batch, useSelector, useDispatch } from 'react-redux';
 import { selectNodes, hoverNodes } from 'store-actions';
 import {
   getNodeAsts,
@@ -69,13 +69,17 @@ function CodeViewer() {
   function hover(markId) {
     unhover();
     if (markId && astNodes[markId]) {
-      for (const [graphId, nodes] of Object.entries(astNodes[markId]))
-        dispatch(hoverNodes(graphId, nodes));
+      batch(() => {
+        for (const [graphId, nodes] of Object.entries(astNodes[markId]))
+          dispatch(hoverNodes(graphId, nodes));
+      });
     }
   }
   function unhover() {
-    for (const graphId of Object.keys(graphData))
-      dispatch(hoverNodes(graphId, undefined));
+    batch(() => {
+      for (const graphId of Object.keys(graphData))
+        dispatch(hoverNodes(graphId, undefined));
+    });
   }
   function click(markId) {
     // only select node if unambiguous
@@ -99,9 +103,9 @@ function CodeViewer() {
       value={{
         astNodes,
         code: parsedCode,
-        hover,
-        unhover,
-        click,
+        onHover: hover,
+        onUnhover: unhover,
+        onClick: click,
         gutterWidth,
         setGutterWidth
       }}>
