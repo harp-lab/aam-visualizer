@@ -5,23 +5,25 @@ import { getProjectItems } from 'store-selectors';
 import { Typography } from '@material-ui/core';
 
 function ValItem(props) {
-  const { valId } = props;
+  const { valId, style } = props;
   const items = useSelector(getProjectItems);
   const { type, astString, valString } = items.vals[valId];
 
   let string;
   switch (type) {
     case 'bool':
-      string = valString;
-      break;
     case 'closure':
-      string = astString;
+    case 'unit':
+      string = label;
       break;
     default:
-      string = `'${type}' value type unsupported`;
+      string = `'${label}' value type unsupported`;
       break;
   }
 
-  return <Typography>{ string }</Typography>;
+  return (
+    <div style={ style }>
+      <Typography display='inline'>{ string }</Typography>
+    </div>);
 }
 export default ValItem;

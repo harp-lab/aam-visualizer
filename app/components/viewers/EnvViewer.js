@@ -1,8 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { ValItem } from 'component-items';
 import { getPanels, getProjectItems } from 'store-selectors';
-
-import { Typography } from '@material-ui/core';
 
 import Panel from '../Panel';
 import { PanelTable, PanelViewer, Spacer } from 'library';
@@ -46,27 +45,14 @@ function EnvItem(props) {
         .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const { env: envId, type, astString, valString } = vals[valId];
-          
-          let string;
-          switch (type) {
-            case 'closure':
-              string = astString;
-              break;
-            case 'bool':
-              string = valString;
-              break;
-            default:
-              string = `'${type}' value type unsupported`;
-              break;
-          }
-
           const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
           return (
             <Spacer
               key={ valId }
               childrenStyle={{ marginRight: 5 }}>
-              <Typography display='inline'>{ string }</Typography>
+              <ValItem
+                valId={ valId }
+                style={{ display: 'inline-block' }} />
               { envElem }
             </Spacer>);
         });
