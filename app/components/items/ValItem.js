@@ -7,7 +7,7 @@ import { Typography } from '@material-ui/core';
 function ValItem(props) {
   const { valId, style } = props;
   const items = useSelector(getProjectItems);
-  const { type, astString, valString } = items.vals[valId];
+  const { type, label } = items.vals[valId];
 
   let string;
   switch (type) {
