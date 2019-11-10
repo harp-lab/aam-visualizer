@@ -30,12 +30,12 @@ function CStackCard(props) {
 
   const cstack = cstacks[cstackId];
   const frameId = cstack[0];
+  const onClick = selected ? () => onUnset(cstackId) : () => onSet(cstackId);
 
   return <FrameCard
     frameId={ frameId }
     selected={ selected }
-    onSet={ layer => onSet(cstackId, layer) }
-    onUnset={ () => onUnset(cstackId) } />;
+    onClick={ onClick } />;
 }
 
 export default CStackLayer;

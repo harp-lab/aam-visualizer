@@ -1,3 +1,11 @@
+## TBD
+* Fixed StackViewer cstack display bug
+* Support for new Val types
+
+## 0.3.12
+* Added Link and Panel optional label display
+* Fixed browser cache issue
+
 ## 0.3.11
 * Added new `items.cstacks`
 * Renamed `items.konts` to `items.frames`

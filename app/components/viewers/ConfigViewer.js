@@ -1,16 +1,14 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { EnvLink, StackLink } from 'component-links';
+import { ValArrayItem } from 'component-items';
 import { hoverNodes, refreshEnvs, refreshStacks } from 'store-actions';
 import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
-
 import { Card, CardContent, Typography } from '@material-ui/core';
 
 import Panel from '../Panel';
 import { PanelViewer, Spacer } from 'library';
-
-import { EnvLink, StackLink } from '../links';
-import { ValItem } from '../items';
 
 function ConfigViewer() {
   const { configs } = useSelector(getPanels);
@@ -81,14 +79,13 @@ function Config(props) {
 function StateCard(props) {
   const { stateId } = props;
   const items = useSelector(getProjectItems);
-
+  const state = items.states[stateId];
   const {
     instr: instrId,
     frame: frameId,
     cstack: cstackId,
-    env: envId,
-    vals: valIdSets
-  } = items.states[stateId];
+    env: envId
+  } = state;
 
   const instr = items.instr[instrId]
    .exprStrings.join(', ');
@@ -99,17 +96,6 @@ function StateCard(props) {
   const stackLink = <StackLink stackId={ stackId } { ...{ stackType } } />;
   const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
 
-  let valsElem;
-  if (valIdSets)
-    valsElem = valIdSets.map((valIds, index) => {
-      const valsElem = valIds.map(valId => <ValItem key={ valId } valId={ valId } />);
-      return (
-        <div
-          key={ index }
-          style={{ flex: '1 1 auto' }}>
-          { valsElem }
-        </div>);
-    });
   return(
     <Card style={{ width: '100%' }}>
       <CardContent style={{ padding: 8 }}>
@@ -118,9 +104,7 @@ function StateCard(props) {
           { stackLink }
           { envElem }
         </Spacer>
-        <div style={{ display: 'flex' }}>
-          { valsElem }
-        </div>
+        <ValArrayItem item={ state } />
       </CardContent>
     </Card>);
 }

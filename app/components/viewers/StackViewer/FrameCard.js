@@ -3,24 +3,25 @@ import { useSelector } from 'react-redux';
 import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
-import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
-import { getProjectItems } from 'store-selectors';
 import { LayerData } from 'component-data';
-import { ValItem } from 'component-items';
+import { ValArrayItem } from 'component-items';
 import { EnvLink, StackLink } from 'component-links';
 import { IconPopover, DebugPopover } from 'library';
+import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
+import { getProjectItems } from 'store-selectors';
 
 function FrameCard(props) {
   const { frameId, selected, theme, classes, onSet, onUnset } = props;
+  let { onClick } = props;
   const items = useSelector(getProjectItems);
 
   const frame = items.frames[frameId];
   const {
-    form, type, vals: valIdSets,
+    form, type,
     frames: nextFrameIds, cstacks: nextCStackIds, next
   } = frame;
 
-
+  // generate frame card label and content
   let label, content;
   switch (form) {
     case 'addr': {
@@ -60,39 +61,27 @@ function FrameCard(props) {
       break;
   }
 
-  let nextLayer;
-  if (nextFrameIds) nextLayer = new LayerData(nextFrameIds, FRAME_STACK);
-  else if (nextCStackIds) nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
-  else if (next) nextLayer = new LayerData([next], FRAME_STACK);
-
-  const cardProps = {};
-  if (nextLayer) {
-    cardProps.classes = { root: classes.enableHover };
-    if (selected) cardProps.onClick = () => onUnset();
-    else cardProps.onClick = () => onSet(nextLayer);
+  // generate onClick from frame data if not defined
+  if (!onClick) {
+    let nextLayer;
+    if (nextFrameIds) nextLayer = new LayerData(nextFrameIds, FRAME_STACK);
+    else if (nextCStackIds) nextLayer = new LayerData(nextCStackIds, CSTACK_STACK);
+    else if (next) nextLayer = new LayerData([next], FRAME_STACK);
+    if (nextLayer) {
+      if (selected) onClick = onUnset;
+      else onClick = () => onSet(nextLayer);
+    }
   }
-  
-  const infoButton = content ? <InfoPopover>{ content }</InfoPopover> : null;
 
-  let valsElem;
-  if (valIdSets)
-    valsElem = valIdSets.map((valIds, index) => {
-      const valsElem = valIds.map(valId => <ValItem key={ valId } valId={ valId } />);
-      return (
-        <div
-          key={ index }
-          style={{ flex: '1 1 auto' }}>
-          { valsElem }
-        </div>);
-    });
   return (
     <Card
       key={ frameId }
-      { ...cardProps }
+      onClick={ onClick }
+      classes={{ root: onClick ? classes.enableHover : undefined }}
       style={{
         flex: '1 0 0',
         backgroundColor: selected ? theme.palette.select.light : undefined,
-        cursor: nextLayer ? 'pointer' : undefined,
+        cursor: onClick ? 'pointer' : undefined,
         minWidth: 100
       }}>
       <CardContent style={{ padding: 8 }}>
@@ -106,10 +95,10 @@ function FrameCard(props) {
           { label }
           <div>
             <DebugPopover item={ frame } />
-            { infoButton }
+            <InfoPopover content={ content } />
           </div>
         </div>
-        <div style={{ display: 'flex' }}>{ valsElem }</div>
+        <ValArrayItem item={ frame } />
       </CardContent>
     </Card>);
 }
@@ -137,13 +126,15 @@ function FrameLabelItem(props) {
 }
 
 function InfoPopover(props) {
-  const { children } = props;
-  return (
-    <IconPopover
-      icon={ <Info /> }
-      tooltip='Show info'>
-      { children }
-    </IconPopover>);
+  const { content } = props;
+  if (content)
+    return (
+      <IconPopover
+        icon={ <Info /> }
+        tooltip='Show info'>
+        { content }
+      </IconPopover>);
+  else return null;
 }
 
 export default FrameCard;
