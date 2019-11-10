@@ -9,8 +9,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "patch": "webpack -p --mode=production",
-    "build": "npm version patch --no-git-tag-version && npm run patch",
+    "build": "webpack -p --mode=production",
+    "release": "npm version patch --no-git-tag-version && npm run patch",
     "start": "node server/main.js",
     "dev-start": "npm run dev-client & nodemon -x \"npm run dev-server\"",
     "dev-client": "webpack-dev-server",
