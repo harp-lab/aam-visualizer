@@ -6,6 +6,7 @@ import {
 } from 'store-actions';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
+import metaprocess from 'metaprocess';
 
 function apiReq(url, method) {
   const state = store.getState();
@@ -213,10 +214,13 @@ export function importData(projectId, data) {
   return dispatch => {
     data.status = COMPLETE_STATUS;
     dispatch(addProject(projectId));
+    data = metaprocess(data) // TODO separate out secondary processing
     dispatch(setProjectData(projectId, data));
     dispatch(generatePanels(projectId));
   }
 }
+
+
 export function exportData(projectId) {
   return async function(dispatch) {
     await dispatch(downloadProject(projectId));
