@@ -9,7 +9,6 @@ function CStack(props) {
   const { cstacks } = useSelector(getProjectItems);
 
   const cstack = cstacks[cstackId];
-  console.log('cstack', cstackId, cstack);
   const frameStacks = cstack.map(frameId => {
     return <FrameStack
       key={ frameId }

@@ -4,9 +4,9 @@ import {
   generatePanels,
   queueSnackbar
 } from 'store-actions';
+import { metaprocess } from 'store-apis';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
-import metaprocess from 'metaprocess';
 
 function apiReq(url, method) {
   const state = store.getState();
