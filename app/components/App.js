@@ -1,77 +1,39 @@
-import React, { Fragment, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { createProject, forkProject, importData, exportData } from 'store-apis';
-import { logout, selProject, queueSnackbar } from 'store-actions';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Typography } from '@material-ui/core';
+import { ThemeProvider, withTheme, makeStyles } from '@material-ui/styles';
+import { RenameDialog } from 'component-dialogs';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
-import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
+import { getView } from 'store-selectors';
 
-import { AppBar, Button, Toolbar, Typography } from '@material-ui/core';
-import { ThemeProvider, withTheme } from '@material-ui/styles';
-
+import AppBar from './AppBar';
 import Login from './Login';
 import ProjectList from './ProjectList';
 import Project from './Project';
 import Theme from './Theme';
-import { RenameDialog } from './dialogs';
 import Snackbar from './Snackbar';
+
+const useStyles = makeStyles(theme => ({
+  message: {
+    zIndex: theme.zIndex.drawer + 1
+  }
+}));
 
 function App() {
   const view = useSelector(getView);
-  const title = useSelector(getTitle);
-  const selectedProjectId = useSelector(getSelectedProjectId);
-  const dispatch = useDispatch();
 
-  let viewElem, leftElems, rightElems;
+  let viewElem;
   switch (view) {
     case LOGIN_VIEW:
       viewElem = <Login />;
       break;
     case LIST_VIEW:
-      leftElems = <ProjectListButton />;
-      rightElems = (
-        <Fragment>
-          <ImportButton />
-          <AppBarButton
-            content='new project'
-            onClick={ () => dispatch(createProject()) } />
-          <LogoutButton />
-        </Fragment>);
       viewElem = <ProjectList />;
       break;
     case PROJECT_VIEW:
-      leftElems = <ProjectListButton />;
-      rightElems = (
-        <Fragment>
-          <AppBarButton
-            content='fork project'
-            onClick={ () => dispatch(forkProject(selectedProjectId)) } />
-          <AppBarButton
-            content='export project'
-            onClick={ () => dispatch(exportData(selectedProjectId)) } />
-          <LogoutButton />
-        </Fragment>);
       viewElem = <Project />;
       break;
   }
-  
-  const appbarElem = (
-    <AppBar position='static'>
-      <Toolbar>
-        { leftElems }
-        <Typography
-          variant='h6'
-          color='inherit'
-          style={{
-            flex: '1 1 auto',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            textAlign: 'center'
-          }}>
-          { title }
-        </Typography>
-        { rightElems }
-      </Toolbar>
-    </AppBar>);
   
   return (
     <ThemeProvider theme={ Theme }>
@@ -84,7 +46,7 @@ function App() {
           overflow: 'hidden'
         }}>
         { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
-        { appbarElem}
+        <AppBar />
         { viewElem }
         <Snackbar />
         <RenameDialog />
@@ -117,6 +79,8 @@ function VersionOverlay() {
 
 function Message(props) {
   const { content, theme } = props;
+  const classes = useStyles();
+
   return (
     <Typography
       style={{
@@ -124,65 +88,9 @@ function Message(props) {
         justifyContent: 'center',
         backgroundColor: theme.palette.warn.main,
         color: theme.palette.warn.contrastText
-      }}>
+      }}
+      className={ classes.message }>
       { content }
     </Typography>);
 }
 Message = withTheme(Message);
-
-function ProjectListButton() {
-  const dispatch = useDispatch();
-  return <AppBarButton
-    content='project list'
-    onClick={ () => dispatch(selProject(undefined)) } />;
-}
-function LogoutButton() {
-  const dispatch = useDispatch();
-  return <AppBarButton
-    content='logout'
-    onClick={ userId => dispatch(logout(userId)) } />
-}
-function ImportButton() {
-  const input = useRef(undefined);
-  const dispatch = useDispatch();
-
-  function change(file) {
-    const fr = new FileReader();
-    fr.onload = () => {
-      const json = JSON.parse(fr.result);
-      const re = /aam-vis-(.*)\.json/;
-      const filename = file.name;
-      const reGroups = filename.match(re);
-      if (reGroups) {
-        const projectId = reGroups[1];
-        dispatch(importData(projectId, json));
-      } else
-        dispatch(queueSnackbar(`'${filename}' file name incorrectly formatted ('aam-vis-<projectId>.json')`));
-    };
-    fr.readAsText(file);
-    input.current.value = '';
-  }
-
-  return (
-    <Fragment>
-      <AppBarButton
-        content='import'
-        onClick={ () => input.current.click() } />
-      <input
-        ref={ input }
-        onChange={ () => change(input.current.files[0]) }
-        type='file'
-        hidden />
-    </Fragment>);
-}
-function AppBarButton(props) {
-  const { content, onClick } = props;
-  return (
-    <Button
-      onClick={ onClick }
-      color='inherit'
-      variant='outlined'
-      style={{ margin: Theme.spacing(1) }}>
-      { content }
-    </Button>);
-}

@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import withTheme from '@material-ui/styles/withTheme';
+import { GraphData } from 'component-data';
+import { PaneMessage } from 'library';
 import {
   setFocusedGraph,
   selectNodes, unselectNodes, hoverNodes, selectEdges,
@@ -8,13 +11,9 @@ import {
 import { getProjectItems, getGraphMetadata, getFocusedGraph } from 'store-selectors';
 
 import cytoscape from 'cytoscape';
-import withTheme from '@material-ui/styles/withTheme';
-
-import GraphData from './data/Graph';
-import { PaneMessage } from 'library';
 
 function Graph(props) {
-  const { graphId, edgePredicate, onNodeSelect, onNodeUnselect, theme } = props;
+  const { graphId, edgePredicate = edge => false, onNodeSelect, onNodeUnselect, theme, style } = props;
   const items = useSelector(getProjectItems);
   if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
@@ -268,7 +267,8 @@ function Graph(props) {
       flex: '1 1 1%',
       display: 'block',
       minHeight: 0,
-      width: '100%'
+      width: '100%',
+      ...style
     }}
     ref={ cyElem } />;
 }

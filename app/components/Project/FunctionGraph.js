@@ -1,12 +1,11 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { getMainGraphId, getSubGraphId } from 'store-selectors';
-
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import withTheme from '@material-ui/styles/withTheme';
-
 import { Pane, SplitPane } from 'library';
+import { getMainGraphId, getSubGraphId } from 'store-selectors';
+
 import Graph from './Graph';
 
 function FunctionGraph() {
@@ -18,8 +17,7 @@ function FunctionGraph() {
       <Pane height='50%'>
         <GraphLabel content={ mainGraphId } />
         <Graph
-          graphId={ mainGraphId }
-          edgePredicate={ edge => false } />
+          graphId={ mainGraphId } />
       </Pane>
       <Pane height='50%'>
         <GraphLabel content={ subGraphId } />

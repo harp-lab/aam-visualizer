@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { Button, TextField } from '@material-ui/core';
 import { login } from 'store-actions'; 
-
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
 
 function Login() {
   const dispatch = useDispatch();

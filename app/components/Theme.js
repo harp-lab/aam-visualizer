@@ -5,6 +5,11 @@ import deepPurple from '@material-ui/core/colors/deepPurple';
 import yellow from '@material-ui/core/colors/yellow';
 
 const theme = createMuiTheme({
+  mixins: {
+    message: {
+      minHeight: 24
+    }
+  },
   palette: {
     secondary: {
       light: blue[300],

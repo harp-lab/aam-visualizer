@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
-import { getPanels } from 'store-selectors';
-
 import {
   ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails,
-  IconButton,
-  Tooltip,
-  Typography
+  IconButton, Tooltip, Typography
 } from '@material-ui/core';
 import {
   CheckBox, CheckBoxOutlineBlank, IndeterminateCheckBox,
-  Delete,
-  ExpandMore,
-  Star, StarBorder
+  Delete, ExpandMore, Star, StarBorder
 } from '@material-ui/icons';
-import withStyles from '@material-ui/styles/withStyles';
+import { withStyles } from '@material-ui/styles';
+import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
+import { getPanels } from 'store-selectors';
 
 function Panel(props) {
   const {

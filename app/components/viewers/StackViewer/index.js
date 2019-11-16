@@ -4,7 +4,7 @@ import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
 import { getPanels } from 'store-selectors';
 import { PanelViewer } from 'library';
 
-import Panel from '../../Panel';
+import Panel from '../Panel';
 
 import CStack from './CStack';
 import FrameStack from './FrameStack';

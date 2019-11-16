@@ -1,12 +1,12 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { ValItem } from 'component-items';
+import { EnvLink } from 'component-links';
+import { PanelTable, PanelViewer, Spacer } from 'library';
 import { getPanels, getProjectItems } from 'store-selectors';
 
-import Panel from '../Panel';
-import { PanelTable, PanelViewer, Spacer } from 'library';
+import Panel from './Panel';
 
-import { EnvLink } from '../links';
 
 function EnvViewer() {
   const { envs } = useSelector(getPanels);

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { IconButton, Snackbar as MUISnackbar } from '@material-ui/core';
+import { Close as CloseIcon } from '@material-ui/icons';
 import { dequeueSnackbar } from 'store-actions';
 import { getSnackbar } from 'store-selectors';
-
-import MUISnackbar from '@material-ui/core/Snackbar';
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@material-ui/icons/Close';
 
 function Snackbar() {
   const message = useSelector(getSnackbar);

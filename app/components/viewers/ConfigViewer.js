@@ -2,13 +2,13 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { EnvLink, StackLink } from 'component-links';
 import { ValArrayItem } from 'component-items';
+import { PanelViewer, Spacer } from 'library';
 import { hoverNodes, refreshEnvs, refreshStacks } from 'store-actions';
 import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 import { Card, CardContent, Typography } from '@material-ui/core';
 
-import Panel from '../Panel';
-import { PanelViewer, Spacer } from 'library';
+import Panel from './Panel';
 
 function ConfigViewer() {
   const { configs } = useSelector(getPanels);
