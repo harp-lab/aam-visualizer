@@ -5,6 +5,10 @@ export const getGraphs = createSelector(
   state => getProjectItems(state),
   items => items.graphs
 );
+export const getGraphIds = createSelector(
+  state => getGraphs(state),
+  graphs => Object.keys(graphs)
+);
 export const getGraphsMetadata = createSelector(
   state => getProjectMetadata(state),
   metadata => metadata.graphs
