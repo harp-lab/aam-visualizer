@@ -18,7 +18,6 @@ const useStyles = makeStyles(theme => ({
 
 function Drawer() {
   const [debug, setDebug] = useState(false);
-
   return (
     <Fragment>
       <DebugDrawer open={ debug } />
@@ -69,7 +68,6 @@ function DebugDrawer(props) {
 }
 function DrawerPadding() {
   const classes = useStyles();
-
   return (
     <Fragment>
       { (process.env.NODE_ENV == 'development' && <div className={ classes.message }/>) }

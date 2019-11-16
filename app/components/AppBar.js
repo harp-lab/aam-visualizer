@@ -93,7 +93,7 @@ function ImportButton() {
     const fr = new FileReader();
     fr.onload = () => {
       const json = JSON.parse(fr.result);
-      const re = /aam-vis-(.*)\.json/;
+      const re = /(.*)\.json/;
       const filename = file.name;
       const reGroups = filename.match(re);
       if (reGroups) {
