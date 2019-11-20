@@ -28,6 +28,13 @@ function Toolbar() {
     else setOpen(drawer);
   }
 
+  let debugButton;
+  if (debug)
+    debugButton = <IconButton
+      icon={ <BugReport /> }
+      tooltip='Show debug'
+      onClick={ () => toggle(DEBUG_DRAWER)} />;
+
   return (
     <Fragment>
       <GraphDrawer open={ open === GRAPH_DRAWER } />
@@ -41,12 +48,7 @@ function Toolbar() {
             icon={ <Share /> }
             tooltip='Show graph'
             onClick={ () => toggle(GRAPH_DRAWER)} />
-          { debug ?
-            <IconButton
-              icon={ <BugReport /> }
-              tooltip='Show debug'
-              onClick={ () => toggle(DEBUG_DRAWER)} />
-            : null }
+          { debugButton }
       </MUIDrawer>
     </Fragment>);
 }
@@ -89,21 +91,25 @@ function GraphDrawer(props) {
         onChange={ evt => setGraph(evt.target.value) }>
         { graphItems }
       </Select>
-      <Graph
-        graphId={ graph }
-        style={{ width: '50vw' }}/>
+      <Graph graphId={ graph } style={{ height: '100%' }}/>
     </Drawer>);
 }
 
 function Drawer(props) {
   const { open, children } = props;
   const classes = useStyles();
+
+  // TODO: implement user draggable drawer width
+
   return (
     <MUIDrawer
       anchor='right'
       variant='persistent'
       open={ open }
-      classes={{ paper: classes.drawer }}>
+      classes={{ paper: classes.drawer }}
+      PaperProps={{
+        style: { width: '50vw' }
+      }} >
       <DrawerPadding />
       { children }
     </MUIDrawer>);

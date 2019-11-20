@@ -16,8 +16,7 @@ function FunctionGraph() {
     <SplitPane horizontal>
       <Pane height='50%'>
         <GraphLabel content={ mainGraphId } />
-        <Graph
-          graphId={ mainGraphId } />
+        <Graph graphId={ mainGraphId } />
       </Pane>
       <Pane height='50%'>
         <GraphLabel content={ subGraphId } />
@@ -25,10 +24,9 @@ function FunctionGraph() {
           graphId={ subGraphId }
           edgePredicate={ edge => {
             const style = edge.data('style');
-            if (style)
-              return style['line-style'] === 'dashed';
+            if (style) return style['line-style'] === 'dashed';
             return false;
-          } } />
+          }} />
       </Pane>
     </SplitPane>);
 }

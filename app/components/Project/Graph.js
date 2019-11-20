@@ -263,14 +263,14 @@ function Graph(props) {
   });
 
   return <div
+    ref={ cyElem }
     style={{
       flex: '1 1 1%',
       display: 'block',
       minHeight: 0,
       width: '100%',
       ...style
-    }}
-    ref={ cyElem } />;
+    }} />;
 }
 Graph = withTheme(Graph);
 export default Graph;

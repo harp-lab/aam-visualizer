@@ -1,5 +1,7 @@
-## TBD
-* added graph selector to Project Drawer
+## 0.3.13
+* added debug drawer to Project Toolbar
+* added graph selector drawer to Project Toolbar
+* new Project Toolbar
 * removed import filename check
 * fixed StackViewer cstack display bug
 * support for new Val types
