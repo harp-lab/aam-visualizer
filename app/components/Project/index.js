@@ -6,9 +6,9 @@ import { downloadProject } from 'store-apis';
 import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 
-import Drawer from './Drawer';
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
+import Toolbar from './Toolbar';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
@@ -81,7 +81,7 @@ function VisualView() {
             </SplitPane>
           </Pane>
         </SplitPane>
-        <Drawer />
+        <Toolbar />
       </Fragment>);
 
   return view;
