@@ -1,13 +1,15 @@
 ## TBD
-* Fixed StackViewer cstack display bug
-* Support for new Val types
+* added graph selector to Project Drawer
+* removed import filename check
+* fixed StackViewer cstack display bug
+* support for new Val types
 
 ## 0.3.12
-* Added Link and Panel optional label display
-* Fixed browser cache issue
+* added Link and Panel optional label display
+* fixed browser cache issue
 
 ## 0.3.11
-* Added new `items.cstacks`
-* Renamed `items.konts` to `items.frames`
-* A `state` in `items.states` can specify either `frame` or `cstack`
-* A `frame` in `items.frames` of form `addr` can specify either `frames` or `cstacks`
+* added new `items.cstacks`
+* renamed `items.konts` to `items.frames`
+* a `state` in `items.states` can specify either `frame` or `cstack`
+* a `frame` in `items.frames` of form `addr` can specify either `frames` or `cstacks`
