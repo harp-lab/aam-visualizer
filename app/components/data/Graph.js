@@ -8,18 +8,25 @@ function Graph(graphId, items) {
   function exportGraph(graph, refData) {
     const data = [];
     for (const [nodeId, children] of Object.entries(graph)) {
-      let form;
-      if (refData) form = refData[nodeId].form;
+      const form = getForm(nodeId, refData);
       data.push(Node(nodeId, form));
 
       for (const [childId, edge] of Object.entries(children)) {
-        if (refData) form = refData[childId].form;
+        const form = getForm(childId, refData);
         data.push(Node(childId, form));
         const edgeId = `${nodeId}-${childId}`;
         data.push(Edge(edgeId, nodeId, childId, edge));
       }
     }
     return data;
+  }
+  function getForm(nodeId, refData) {
+    let form;
+    if (refData) {
+      const nodeRef = refData[nodeId];
+      if (nodeRef) form = nodeRef.form;
+    }
+    return form;
   }
 
   switch (graphId) {

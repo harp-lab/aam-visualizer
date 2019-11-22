@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Drawer as MUIDrawer, MenuItem, Select } from '@material-ui/core';
 import { BugReport, Share } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { DebugItem, IconButton } from 'library';
+import { DebugItem, ErrorBoundary, IconButton } from 'library';
 import { getGraphIds, getProjectItems } from 'store-selectors';
 
 import Graph from './Graph';
@@ -111,7 +111,9 @@ function Drawer(props) {
         style: { width: '50vw' }
       }} >
       <DrawerPadding />
-      { children }
+      <ErrorBoundary>
+        { children }
+      </ErrorBoundary>
     </MUIDrawer>);
 }
 function DrawerPadding() {

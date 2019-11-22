@@ -4,7 +4,7 @@ import {
   generatePanels,
   queueSnackbar
 } from 'store-actions';
-import { metaprocess } from 'store-apis';
+import { process } from 'store-apis';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
 import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
@@ -214,7 +214,7 @@ export function importData(projectId, data) {
   return dispatch => {
     data.status = COMPLETE_STATUS;
     dispatch(addProject(projectId));
-    data = metaprocess(data) // TODO separate out secondary processing
+    data = process(data) // TODO separate out secondary processing
     dispatch(setProjectData(projectId, data));
     dispatch(generatePanels(projectId));
   }
