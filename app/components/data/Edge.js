@@ -1,27 +1,12 @@
-/*class Edge {
-  constructor(source, target, data) {
-    this.source = source;
-    this.target = target;
-
-    const { label, calls, style } = data;
-    this.label = label || '';
-    this.calls = calls;
-    this.style = style;
-  }
-  export(id) {
-    return {
-      data: {
-        id: id,
-        label: this.label,
-        source: this.source,
-        target: this.target,
-        style: this.style
-      }
-    }
-  }
-}*/
-
-function Edge(id, source, target, data) {
+/**
+ * EdgeData generator.
+ * Converts a graph edge to cytoscape data format.
+ * @param {String} id 
+ * @param {String} source 
+ * @param {String} target 
+ * @param {Object} data 
+ */
+function EdgeData(id, source, target, data) {
   const { label = '', style } = data;
   return {
     group: 'edges',
@@ -35,4 +20,4 @@ function Edge(id, source, target, data) {
   }
 }
 
-export default Edge;
+export default EdgeData;

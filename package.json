@@ -14,7 +14,8 @@
     "start": "node server/main.js",
     "dev": "npm run dev-client & nodemon -x \"npm run dev-server\"",
     "dev-client": "webpack-dev-server",
-    "dev-server": "NODE_ENV=development npm run start"
+    "dev-server": "NODE_ENV=development npm run start",
+    "docs": "documentation build app/** -f html -o docs"
   },
   "author": "",
   "license": "ISC",
@@ -39,6 +40,7 @@
     "babel-loader": "^8.0.6",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.2.0",
+    "documentation": "^12.1.4",
     "file-loader": "^4.2.0",
     "html-webpack-plugin": "^3.2.0",
     "node-sass": "^4.13.0",

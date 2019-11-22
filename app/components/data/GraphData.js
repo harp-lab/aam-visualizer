@@ -1,10 +1,18 @@
 import Node from './Node';
 import Edge from './Edge';
 
-function Graph(graphId, items) {
+/**
+ * GraphData generator.
+ * Converts an items graph adjacency list to cytoscape data format.
+ * @param {String} graphId 
+ * @param {Object} items 
+ * @returns {Array} cytoscape data 
+ */
+function GraphData(graphId, items) {
   const graphData = items.graphs[graphId];
   const { graph, start } = graphData;
 
+  // get graph data from ref data
   function exportGraph(graph, refData) {
     const data = [];
     for (const [nodeId, children] of Object.entries(graph)) {
@@ -20,6 +28,8 @@ function Graph(graphId, items) {
     }
     return data;
   }
+
+  // get node form from ref data
   function getForm(nodeId, refData) {
     let form;
     if (refData) {
@@ -40,4 +50,4 @@ function Graph(graphId, items) {
   }
 }
 
-export default Graph;
+export default GraphData;
