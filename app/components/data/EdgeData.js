@@ -1,7 +1,6 @@
 /**
  * EdgeData generator.
  * Converts a graph edge to cytoscape data format.
- * @function
  * @param {String} id edge id
  * @param {String} source source node id
  * @param {String} target target node id

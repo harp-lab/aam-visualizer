@@ -4,7 +4,6 @@ import EdgeData from './EdgeData';
 /**
  * GraphData generator.
  * Converts an items graph adjacency list to cytoscape data format.
- * @function
  * @param {String} graphId graph id
  * @param {Object} items project items object
  * @returns {Array} cytoscape data

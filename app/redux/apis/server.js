@@ -123,6 +123,10 @@ export function downloadProject(projectId) {
   };
 }
 
+/**
+ * @param {String} projectId project id
+ * @param {String} name project name
+ */
 export function rename(projectId, name) {
   return async function(dispatch) {
     dispatch(setProjectData(projectId, { name }));
