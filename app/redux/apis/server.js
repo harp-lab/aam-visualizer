@@ -202,6 +202,7 @@ export function getData(projectId) {
     switch (res.status) {
       case 200: {
         const data = await res.json();
+        process(data) // TODO separate out secondary processing
         dispatch(setProjectData(projectId, data));
         break;
       }
@@ -218,7 +219,7 @@ export function importData(projectId, data) {
   return dispatch => {
     data.status = COMPLETE_STATUS;
     dispatch(addProject(projectId));
-    data = process(data) // TODO separate out secondary processing
+    process(data) // TODO separate out secondary processing
     dispatch(setProjectData(projectId, data));
     dispatch(generatePanels(projectId));
   }
