@@ -23,6 +23,11 @@ export function getProjectServerStatus(store, projectId) {
 export function getProjectMetadata(store, projectId) {
   return getProject(store, projectId).metadata;
 }
+
+/**
+ * @param {Object} store 
+ * @param {String} projectId 
+ */
 export function getProjectClientStatus(store, projectId) {
   const { code, items, error } = getProject(store, projectId);
   return {

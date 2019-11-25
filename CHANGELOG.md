@@ -1,3 +1,7 @@
+## 0.3.14 TBA
+* states are now wrapped with configs automatically
+* added documentation generation
+
 ## 0.3.13
 * added debug drawer to Project Toolbar
 * added graph selector drawer to Project Toolbar

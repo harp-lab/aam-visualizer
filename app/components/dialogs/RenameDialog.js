@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { rename } from 'store-apis';
 import { setRenameDialog } from 'store-actions';
 import { getRenameDialog, getProject } from 'store-selectors';
@@ -10,15 +10,19 @@ import DialogActions from '@material-ui/core/DialogActions';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
-function RenameDialog(props) {
-  const {
-    projectId, name,
-    rename, setRenameDialog
-  } = props;
+/**
+ * RenameDialog component
+ */
+function RenameDialog() {
+  const projectId = useSelector(getRenameDialog);
+  const project = useSelector(state => getProject(state, projectId));
+  const dispatch = useDispatch();
+  const name = project ? project.name : '';
   const [currName, setCurrName] = useState(undefined);
+
   useEffect(() => setCurrName(name || ''), [name]);
 
-  function close() { setRenameDialog(undefined); }
+  function close() { dispatch(setRenameDialog(undefined)); }
 
   return (
     <Dialog
@@ -36,18 +40,11 @@ function RenameDialog(props) {
         <Button
           onClick={ () => {
             close();
-            rename(projectId, currName);
+            dispatch(rename(projectId, currName));
           }}>
           rename
         </Button>
       </DialogActions>
     </Dialog>);
 }
-export default connect(
-  state => {
-    const projectId = getRenameDialog(state);
-    const name = projectId ? getProject(state, projectId).name : '';
-    return { projectId, name };
-  },
-  { rename, setRenameDialog }
-)(RenameDialog);
+export default RenameDialog;

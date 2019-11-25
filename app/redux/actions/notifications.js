@@ -20,10 +20,16 @@ export const hideLoading = () => ({
   type: SET_LOADING,
   payload: { loading: false }
 });
-export const setRenameDialog = projectId => ({
-  type: SET_DIALOG,
-  payload: {
-    dialogId: 'rename',
-    data: projectId
-  }
-});
+
+/**
+ * @param {String} projectId project id
+ */
+export function setRenameDialog(projectId) {
+  return ({
+    type: SET_DIALOG,
+    payload: {
+      dialogId: 'rename',
+      data: projectId
+    }
+  })
+};

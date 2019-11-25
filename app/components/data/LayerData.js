@@ -1,4 +1,10 @@
-class Layer {
+/**
+ * LayerData object.
+ * Manages selected card id.
+ * @param {Array} cardIds card ids to be stored
+ * @param {String} type card type
+ */
+class LayerData {
   constructor(cardIds, type) {
     this.cardIds = cardIds;
     this.cardType = type;
@@ -10,4 +16,4 @@ class Layer {
   get type() { return this.cardType; }
 }
 
-export default Layer;
+export default LayerData;
