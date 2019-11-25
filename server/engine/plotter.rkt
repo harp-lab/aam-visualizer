@@ -345,7 +345,7 @@
     'states (for/hash ([s states]) (values (state->sym s) (make-state s)))
     'funcs (for/hash ([f (hash-keys func>id)]) (values (func->sym f) (make-func f)))
     'graphs (hash-union (hash 
-      'states (hash 'start (hash-ref state>id initial-state) 'graph state-trans)
+      'states (hash 'start (hash-ref conf>id `(state ,initial-state)) 'graph state-trans)
       'funcs (hash 'start (hash-ref func>id initial-func) 'graph func-trans))
       func-conf-graphs)
     'configs (for/hash ([c (hash-keys conf>id)]) (values (conf->sym c) (make-config c)))
