@@ -56,7 +56,7 @@ function EnvItem(props) {
             valId={ valId }
             envId={ envId } />;
         });
-      return [entry.varString, `[ ${instrEntries} ]`, storeEntries]
+      return [entry.label, `[ ${instrEntries} ]`, storeEntries]
     });
   return <PanelTable
     labels={ labels }

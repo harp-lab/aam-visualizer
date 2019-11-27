@@ -251,7 +251,7 @@ export function generateEnvs(projectId) {
 
     const panels = {};
     for (const [envId, env] of Object.entries(items.envs)) {
-      const vars = env.entries.map(entry => entry.varString).join(', ');
+      const vars = env.entries.map(entry => entry.label).join(', ');
       const name = getLabel(env) || envId;
       const label = `${name}: [ ${vars} ]`;
 
