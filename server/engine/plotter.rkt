@@ -285,13 +285,16 @@
 
   ;; convert environment to output format, a list with an entry for each variable
   (define (make-env env)
-    (for/list ([var (hash-keys env)])
-      (define addr (hash-ref env var))
-      (hash
-       'var (ast-id var)
-       'varString (~a (only-syntax var))
-       'instr (hash-ref instr>id (cadr addr))
-       'addr (hash-ref addr>id addr))))
+    (hash
+     ; assume ids look like "env-xx"
+     'label (substring (hash-ref env>id env) 4)
+     'entries (for/list ([var (hash-keys env)])
+                (define addr (hash-ref env var))
+                (hash
+                 'var (ast-id var)
+                 'label (~a (only-syntax var))
+                 'instr (hash-ref instr>id (cadr addr))
+                 'addr (hash-ref addr>id addr)))))
 
   ;; convert values to output format
   (define (make-val v)
@@ -300,12 +303,12 @@
        (hash
         'type "bool"
         'val v
-        'valString (~a v))]
+        'label (~a v))]
       [`(clo ,xs ,e ,rho)
        (hash
         'type "closure"
         'ast (func-id e id>lambda)
-        'astString (format "λ~a~a" (map (lambda(x)(~a (only-syntax x))) xs) (~a (only-syntax e)))
+        'label (format "λ~a~a" (map (lambda(x)(~a (only-syntax x))) xs) (~a (only-syntax e)))
         'name (~a (car (get-li e)))
         'env (hash-ref env>id rho))]))
 
