@@ -7,9 +7,9 @@ import { getProjectItems } from 'store-selectors';
 import { Typography } from '@material-ui/core';
 
 function ValItem(props) {
-  const { valId, envId, style } = props;
+  const { valId, style } = props;
   const items = useSelector(getProjectItems);
-  const { type, label } = items.vals[valId];
+  const { type, label, env: envId } = items.vals[valId];
 
   let string = valId;
   switch (type) {

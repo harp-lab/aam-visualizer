@@ -53,8 +53,7 @@ function EnvItem(props) {
         .map(valId => {
           return <ValItem
             key={ valId }
-            valId={ valId }
-            envId={ envId } />;
+            valId={ valId } />;
         });
       return [entry.label, `[ ${instrEntries} ]`, storeEntries]
     });
