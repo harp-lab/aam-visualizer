@@ -1,13 +1,14 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { ValItem } from 'component-items';
-import { EnvLink } from 'component-links';
-import { PanelTable, PanelViewer, Spacer } from 'library';
+import { PanelTable, PanelViewer } from 'library';
 import { getPanels, getProjectItems } from 'store-selectors';
 
 import Panel from './Panel';
 
-
+/**
+ * Renders env panel viewer
+ */
 function EnvViewer() {
   const { envs } = useSelector(getPanels);
 
@@ -32,6 +33,11 @@ function EnvViewer() {
 }
 export default EnvViewer;
 
+/**
+ * Renders env item
+ * @param {Object} props component props
+ * @param {String} props.envId env id
+ */
 function EnvItem(props) {
   const { envId } = props
   const items = useSelector(getProjectItems);
@@ -39,22 +45,16 @@ function EnvItem(props) {
   const labels = ['var', 'instr', 'store'];
   const { envs, instr, store, vals } = items;
   const env = envs[envId];
-  const entries = env
+  const entries = env.entries
     .map(entry => {
       const instrEntries = instr[entry.instr]
         .exprStrings.join(', ');
       const storeEntries = store[entry.addr]
         .map(valId => {
-          const envElem = envId ? <EnvLink envId={ envId } /> : undefined;
-          return (
-            <Spacer
-              key={ valId }
-              childrenStyle={{ marginRight: 5 }}>
-              <ValItem
-                valId={ valId }
-                style={{ display: 'inline-block' }} />
-              { envElem }
-            </Spacer>);
+          return <ValItem
+            key={ valId }
+            valId={ valId }
+            envId={ envId } />;
         });
       return [entry.varString, `[ ${instrEntries} ]`, storeEntries]
     });

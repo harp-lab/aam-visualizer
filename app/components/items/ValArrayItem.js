@@ -3,12 +3,17 @@ import { ValItem } from 'component-items';
 
 function ValArrayItem(props) {
   const { item } = props;
-  const { vals } = item;
+  const { vals, env: envId } = item;
   
   let valsElem;
   if (vals)
     valsElem = vals.map((valIds, index) => {
-      const valsElem = valIds.map(valId => <ValItem key={ valId } valId={ valId } />);
+      const valsElem = valIds.map(valId => {
+        return <ValItem
+          key={ valId }
+          valId={ valId }
+          envId={ envId } />
+      });
       return (
         <div
           key={ index }

@@ -12,4 +12,4 @@ Run `npm install` to install all node modules.
 * `npm run start` : starts server
 * `npm run dev` : starts server with development environment
 * `npm run test` : runs tests (TODO: none at the moment)
-* `npm run docs` : creates documentation
+* `npm run docs` : creates documentation in `\docs` directory

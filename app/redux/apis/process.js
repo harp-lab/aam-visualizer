@@ -23,16 +23,26 @@ function wrapStates(items) {
   }
 }
 
+/**
+ * Shorten 'straight-line' graph edges
+ * @param {Object} items 
+ * @param {Object} items.graphs 
+ * @param {Object} items.configs 
+ */
 function shortenPaths(items) {
   const { graphs, configs } = items;
 
   for (const [graphId, graphData] of Object.entries(graphs)) {
     const { graph, start } = graphData;
     if (graphId == 'states') {
-      const data = {
-        [start]: { start: true }
-      };
-      const queue = [start];
+
+      // add all entry points to data
+      const data = {};
+      for (const nodeId of start) {
+        data[nodeId] = { start: true }
+      }
+      const queue = start;
+
       while (queue.length > 0) {
         // follow path and mark nodes as visited
         const nodeId = queue.shift();
