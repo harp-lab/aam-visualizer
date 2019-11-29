@@ -70,14 +70,28 @@ function shortenPaths(items) {
       console.log(data);
 
       // follow path from start, storing path until path-start node
-      const pathStarts = [];
+      const pathStarts = new Set();
       for (const [nodeId, nodeData] of Object.entries(data)) {
         if (nodeData.start)
-          pathStarts.push(nodeId);
+          pathStarts.add(nodeId);
       }
-
+      
       console.log(pathStarts);
+      // init bubble hash
+      // iterate through pathStarts
+      // create bubble class
+      // follow path from pathStart
+      // if node is a pathstart, stop path and add edge to another bubble class
+      // otherwise, add node to bubble class
+
     }
+
+  }
+}
+
+//TODO state graph bubbles
+class Bubble {
+  constructor() {
 
   }
 }
