@@ -1,7 +1,7 @@
 export function process(data) {
   const { items } = data;
   wrapStates(items);
-  shortenPaths(items);
+  //shortenPaths(items);
 }
 
 /**

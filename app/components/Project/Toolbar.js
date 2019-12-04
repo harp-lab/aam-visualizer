@@ -62,7 +62,8 @@ function DebugDrawer(props) {
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
           height: '100%',
           margin: '1em'
         }}>
