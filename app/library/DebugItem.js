@@ -4,10 +4,18 @@ import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles(theme => ({
   typography: {
+    fontWeight: 700,
+    lineHeight: 2,
     marginRight: 10
   }
 }));
 
+/**
+ * Renders debug content
+ * @param {Object} props 
+ * @param {Object} props.item data item
+ * @returns rendered component
+ */
 function DebugItem(props) {
   const { item } = props;
   const { debug } = item;
@@ -16,7 +24,7 @@ function DebugItem(props) {
   if (!debug) return <Typography>Debug property undefined</Typography>;
   
   let content;
-  if (debug instanceof String) {
+  if (typeof debug === 'string') {
     content = <Typography>{ debug }</Typography>;
   } else if (debug instanceof Array) {
     content = debug.map((debugString, index) => {
@@ -24,8 +32,10 @@ function DebugItem(props) {
         <div
           key={ index }
           style={{ display: 'flex' }}>
-          <Typography classes={{ root: classes.typography }}>
-            •
+          <Typography
+            variant='caption'
+            classes={{ root: classes.typography }}>
+            { index }
           </Typography>
           <Typography>
             { debugString }
