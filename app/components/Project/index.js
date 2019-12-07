@@ -61,7 +61,6 @@ function VisualView() {
   let drawerWidth = 0;
   if (toolbar.current)
     drawerWidth = toolbar.current.children[0].offsetWidth;
-  console.log(drawerWidth);
 
   let view = <Loading status='Downloading' />;
   if (clientStatus.items)
