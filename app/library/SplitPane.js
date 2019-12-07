@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { SplitPaneContext } from 'library';
 
 function SplitPane(props) {
-  const { horizontal, children } = props;
+  const { horizontal, children, style } = props;
   const splitElem = useRef(undefined);
   const [resize, setResize] = useState(false);
 
@@ -50,7 +50,8 @@ function SplitPane(props) {
         flexDirection: horizontal ? 'column' : 'row',
         flex: '1 1 auto',
         cursor: resize ? cursor : 'default', // TODO make cursor styling apply for all inner elements
-        minHeight: 0
+        minHeight: 0,
+        ...style
       }}
       onMouseMove={ drag }
       onMouseUp={ stopDrag }

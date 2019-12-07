@@ -57,12 +57,19 @@ function Project() {
 
 function VisualView() {
   const clientStatus = useSelector(getProjectClientStatus);
+  const toolbar = useRef(undefined);
+  let drawerWidth = 0;
+  if (toolbar.current)
+    drawerWidth = toolbar.current.children[0].offsetWidth;
+  console.log(drawerWidth);
 
   let view = <Loading status='Downloading' />;
   if (clientStatus.items)
     view = (
       <Fragment>
-        <SplitPane vertical>
+        <SplitPane
+          vertical
+          style={{ width: `calc(100% - ${drawerWidth}px)` }}>
           <Pane width='40%'><FunctionGraph /></Pane>
           <Pane>
             <SplitPane horizontal>
@@ -81,7 +88,7 @@ function VisualView() {
             </SplitPane>
           </Pane>
         </SplitPane>
-        <Toolbar />
+        <Toolbar ref={ toolbar } />
       </Fragment>);
 
   return view;

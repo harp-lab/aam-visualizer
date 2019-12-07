@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, forwardRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Drawer as MUIDrawer, MenuItem, Select } from '@material-ui/core';
 import { BugReport, Share } from '@material-ui/icons';
@@ -19,7 +19,7 @@ const useStyles = makeStyles(theme => ({
 const GRAPH_DRAWER = 'graph';
 const DEBUG_DRAWER = 'debug';
 
-function Toolbar() {
+function Toolbar(props, ref) {
   const { debug } = useSelector(getProjectItems);
   const [open, setOpen] = useState(undefined);
 
@@ -40,6 +40,7 @@ function Toolbar() {
       <GraphDrawer open={ open === GRAPH_DRAWER } />
       <DebugDrawer open={ open === DEBUG_DRAWER } />
       <MUIDrawer
+        ref={ ref }
         anchor='right'
         variant='permanent'
         open={ true }>
@@ -52,6 +53,7 @@ function Toolbar() {
       </MUIDrawer>
     </Fragment>);
 }
+export default forwardRef(Toolbar);
 
 function DebugDrawer(props) {
   const { open } = props;
@@ -125,5 +127,3 @@ function DrawerPadding() {
       <div className={ classes.appbar } />
     </Fragment>);
 }
-
-export default Toolbar;
