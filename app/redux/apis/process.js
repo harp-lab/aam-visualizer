@@ -1,7 +1,7 @@
 export function process(data) {
   const { items } = data;
   wrapStates(items);
-  //shortenPaths(items);
+  bubblePaths(items);
 }
 
 /**
@@ -24,12 +24,12 @@ function wrapStates(items) {
 }
 
 /**
- * Shorten 'straight-line' graph edges
+ * Bubble 'straight-line' graph edges
  * @param {Object} items 
  * @param {Object} items.graphs 
  * @param {Object} items.configs 
  */
-function shortenPaths(items) {
+function bubblePaths(items) {
   const { graphs, configs } = items;
   let bubbleCount = 0;
 
@@ -45,7 +45,10 @@ function shortenPaths(items) {
       const bubbleGraph = getGraph(bubbles);
       console.log('bubble graph', bubbleGraph);
 
-      graphs['test'] = bubbleGraph;
+      graphs[graphId] = bubbleGraph;
+
+      bubbleConfigs(bubbles, configs);
+      console.log('bubble configs', configs);
     }
   }
 }
@@ -177,6 +180,23 @@ function getGraph(bubbles) {
   }
 
   return { graph };
+}
+/**
+ * Bubble configs
+ * @param {Object} bubbles 
+ * @param {Object} configs 
+ */
+function bubbleConfigs(bubbles, configs) {
+  for (const [bubbleId, bubble] of Object.entries(bubbles)) {
+    let states = [];
+    let astLink = [];
+    for (const configId of bubble.nodes) {
+      const config = configs[configId];
+      states = states.concat(config.states);
+      astLink = astLink.concat(config.astLink);
+    }
+    configs[bubbleId] = { states, astLink };
+  }
 }
 
 /**

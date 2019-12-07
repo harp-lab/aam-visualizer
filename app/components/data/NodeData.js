@@ -5,7 +5,7 @@
  * @param {String} form node form
  * @returns {Object} cytoscape data
  */
-function NodeData(id, form) {
+function NodeData(id, form = '') {
   return {
     group: 'nodes',
     data: {
