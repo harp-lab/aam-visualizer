@@ -9,6 +9,9 @@ export const PROCESS_STATUS = 'process';
 export const COMPLETE_STATUS = 'done';
 export const ERROR_STATUS = 'error';
 
+export const CLIENT_WAITING_STATUS = 'waiting';
+export const CLIENT_DOWNLOADED_STATUS = 'downloaded';
+
 export const CONFIG_PANEL = 'configs';
 export const ENV_PANEL = 'envs';
 export const KONT_PANEL = 'konts';

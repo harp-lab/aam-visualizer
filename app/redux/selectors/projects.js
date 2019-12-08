@@ -20,22 +20,27 @@ export function getProjectServerStatus(store, projectId) {
   const { status } = getProject(store, projectId);
   return status;
 }
-export function getProjectMetadata(store, projectId) {
-  return getProject(store, projectId).metadata;
-}
 
 /**
- * @param {Object} store 
- * @param {String} projectId 
+ * @param {Object} state
+ * @param {String} [projectId] project id
+ * @returns {Object} project metadata
  */
-export function getProjectClientStatus(store, projectId) {
-  const { code, items, error } = getProject(store, projectId);
-  return {
-    code: code !== '',
-    items: Boolean(items),
-    error: Boolean(error)
-  };
-}
+export const getProjectMetadata = createSelector(
+  getProject,
+  project => project.metadata
+);
+
+/**
+ * @param {Object} state
+ * @param {String} [projectId] project id
+ * @returns {String} client status
+ */
+export const getProjectClientStatus = createSelector(
+  getProjectMetadata,
+  metadata => metadata.status.client
+);
+
 export function getStackRefData(stackType) {
   const state = store.getState();
   const items = getProjectItems(state);

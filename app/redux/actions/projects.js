@@ -3,7 +3,7 @@ import { setTitle } from 'store-actions';
 import { getProject } from 'store-selectors';
 import {
   ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
-  SET_METADATA
+  SET_METADATA, SET_STATUS
 } from '../actionTypes';
 
 export const addProject = projectId => ({
@@ -43,6 +43,17 @@ export const setStatus = (projectId, data) => ({
   type: SET_STATUS,
   payload: { projectId, data }
 });
+/**
+ * Set client status of project
+ * @param {String} projectId project id
+ * @param {String} status client status
+ * @returns {Function} dispatch
+ */
+export function setClientStatus(projectId, status) {
+  return dispatch => {
+    dispatch(setStatus(projectId, { client: status }));
+  };
+}
 export function selectAsts(astIds) {
   const state = store.getState();
   const projectId = getSelectedProjectId(state);

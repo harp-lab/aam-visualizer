@@ -4,7 +4,7 @@ import { CodeViewer, ConfigViewer, EnvViewer, StackViewer } from 'component-view
 import { Loading, Pane, SplitPane } from 'library';
 import { downloadProject } from 'store-apis';
 import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS } from 'store-consts';
 
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
@@ -63,7 +63,7 @@ function VisualView() {
     drawerWidth = toolbar.current.children[0].offsetWidth;
 
   let view = <Loading status='Downloading' />;
-  if (clientStatus.items)
+  if (clientStatus === CLIENT_DOWNLOADED_STATUS)
     view = (
       <Fragment>
         <SplitPane

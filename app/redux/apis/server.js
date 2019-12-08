@@ -1,11 +1,11 @@
 import store from '../store';
 import {
-  setProjectData, addProject, delProject, selProject,
+  setProjectData, addProject, delProject, selProject, setClientStatus,
   generatePanels,
   queueSnackbar
 } from 'store-actions';
 import { process } from 'store-apis';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS } from 'store-consts';
 import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
 function apiReq(url, method) {
@@ -90,6 +90,12 @@ export function forkProject(projectId) {
     dispatch(selProject(forkProjectId));
   };
 }
+
+/**
+ * Download project
+ * @param {String} projectId project id
+ * @returns {Function} async dispatch
+ */
 export function downloadProject(projectId) {
   return async function(dispatch) {
     const state = store.getState();
@@ -98,7 +104,7 @@ export function downloadProject(projectId) {
     let refresh = false;
     switch (serverStatus) {
       case EDIT_STATUS:
-        if (!clientStatus.code) dispatch(getCode(projectId));
+        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) dispatch(getCode(projectId));
         break;
       case PROCESS_STATUS: {
         await dispatch(getData(projectId));
@@ -108,13 +114,13 @@ export function downloadProject(projectId) {
         break;
       }
       case COMPLETE_STATUS:
-        if (!clientStatus.items) {
+        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) {
           await dispatch(getData(projectId));
           dispatch(generatePanels(projectId));
         }
         break;
       case ERROR_STATUS:
-        if (!clientStatus.error) {
+        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) {
           await dispatch(getData(projectId));
         }
         break;
@@ -196,6 +202,10 @@ export function cancelProcess(projectId) {
   };
 }
 
+/**
+ * Get project data
+ * @param {String} projectId project id
+ */
 export function getData(projectId) {
   return async function(dispatch) {
     const res = await apiReq(`projects/${projectId}/data`, 'GET');
@@ -204,6 +214,7 @@ export function getData(projectId) {
         const data = await res.json();
         process(data) // TODO separate out secondary processing
         dispatch(setProjectData(projectId, data));
+        dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS))
         break;
       }
       case 204: break;
