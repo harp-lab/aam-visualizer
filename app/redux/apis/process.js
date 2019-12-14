@@ -34,21 +34,33 @@ function bubblePaths(items) {
   let bubbleCount = 0;
 
   for (const [graphId, graphData] of Object.entries(graphs)) {
-    if (graphId == 'states') {
-      const pathStarts = getPathStarts(graphData);
-      console.log('path starts', pathStarts);
-      
-      const [newBubbleCount, bubbles] = getBubbles(bubbleCount, pathStarts, graphData);
-      bubbleCount = newBubbleCount;
-      console.log('bubbles', bubbles);
+    console.log(graphId);
+    switch (graphId) {
+      case 'states': {
+        const pathStarts = getPathStarts(graphData);
+        const [newBubbleCount, bubbles] = getBubbles(bubbleCount, pathStarts, graphData);
+        bubbleCount = newBubbleCount;
 
-      const bubbleGraph = getGraph(bubbles);
-      console.log('bubble graph', bubbleGraph);
+        const bubbleGraph = getGraph(bubbles);
+        graphs[graphId] = bubbleGraph;
+  
+        bubbleConfigs(bubbles, configs);
+        break;
+      }
+      case 'func-7': {
+        const pathStarts = getPathStarts(graphData);
+        console.log('path starts', pathStarts);
+        const [newBubbleCount, bubbles] = getBubbles(bubbleCount, pathStarts, graphData);
+        bubbleCount = newBubbleCount;
+        console.log('bubbles', bubbles);
 
-      graphs[graphId] = bubbleGraph;
-
-      bubbleConfigs(bubbles, configs);
-      console.log('bubble configs', configs);
+        // for each bubble (which is a path), get the first config node
+        // get states inside config, only spread bubble if multiple states in config
+        // each state forms own path
+        // follow state paths (optional check against config path), adding to spreaded bubble
+        // issue: spread bubble paths don't really reconnect
+        break;
+      }
     }
   }
 }
@@ -74,17 +86,16 @@ function getPathStarts(graphData) {
     // follow path and mark nodes as visited
     const nodeId = queue.shift();
     const node = graph[nodeId];
-    if (!data[nodeId]) data[nodeId] = {};
     data[nodeId].visited = true;
 
     const childIds = Object.keys(node);
     for (const childId of childIds) {
-      if (childIds.length > 1) { // mark children as start and queue if multiple
-        if (!data[childId]) data[childId] = {};
-        data[childId].start = true;
+      if (!data[childId]) data[childId] = {};
+
+      if (!data[childId].visited) { // queue if not visited
         queue.push(childId);
-      } else if (!data[childId]) { // queue if not visited
-        queue.push(childId);
+        if (childIds.length > 1) // mark as start if multiple
+          data[childId].start = true;
       } else if (data[childId].visited) { // mark as start if visited
         data[childId].start = true;
       }
