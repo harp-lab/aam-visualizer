@@ -54,11 +54,30 @@ function bubblePaths(items) {
         bubbleCount = newBubbleCount;
         console.log('bubbles', bubbles);
 
+        /*
+        spread bubbles
+        hash of bubbleId to [spread bubble ids]
+        for bubble in bubbles
+          if bubble.nodes == 2
+            create new bubble for second config
+            copy outgoing edges from bubble 1 to 2
+            set outgoing edge linking bubble 1 to 2
+          else if bubble.nodes > 2
+            get first config in bubble.nodes
+            create spread bubble for each state in config
+            for config in rest of bubble.nodes but excluding last config
+              add state to corresponding spread bubble (assuming states are ordered in configs)
+            create new bubble with last config and outbound edges
+            add outbound edges from all spread bubbles to ending bubble
+            store spread bubbleIds into hash
+        for bubble in hash
+          go through bubbles and change outbound edges to original bubble to spread bubbles
+        */
         // for each bubble (which is a path), get the first config node
         // get states inside config, only spread bubble if multiple states in config
         // each state forms own path
         // follow state paths (optional check against config path), adding to spreaded bubble
-        // issue: spread bubble paths don't really reconnect
+        // last bubble in path is all spread paths' last configs combined
         break;
       }
     }
