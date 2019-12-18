@@ -63,19 +63,36 @@ function bubblePaths(items) {
             bubble.nodes = [bubble.nodes[0]];
             bubble.edges = [spreadBubble.nodes[0]];
           } else if (bubble.nodes.length > 2) {
-            // create spread bubble for each config state
+            // create spread bubble for each state in first config
             const configId = bubble.nodes[0];
-            const config = configs[configId];
+            const { states } = configs[configId];
             const spreadBubbles = [];
-            for (const stateId of config.states) {
+            for (const stateId of states) {
               const spreadBubbleId = counter.getId();
               spreadBubbles.push(spreadBubbleId);
               bubbles[spreadBubbleId] = new BubbleData(stateId);
             }
-            
-            // for config in rest of bubble.nodes but excluding last config
-            //   add state to corresponding spread bubble (assuming states are ordered in configs)
+
+            // for rest of configs excluding last
+            for (const configId of bubble.nodes.slice(1, -1)) {
+              // add state to corresponding spread bubble (assumes config states are ordered)
+              const { states } = configs[configId];
+              states.forEach((stateId, index) => {
+                const spreadBubbleId = spreadBubbles[index];
+                bubbles[spreadBubbleId].addNode(stateId);
+              });
+            }
+            // turn each spread bubble that contains sequential states into a single config bubble
+            // generate new config for each spread bubble
+
             // create new bubble with last config and outbound edges
+            const lastSpreadBubbleId = counter.getId();
+            const lastSpreadBubble = new BubbleData();
+            lastSpreadBubble.nodes = bubble.nodes.slice(-1);
+            lastSpreadBubble.edges = bubble.edges;
+            bubbles[lastSpreadBubbleId] = lastSpreadBubble;
+
+
             // add outbound edges from all spread bubbles to ending bubble
             // store spread bubbleIds into hash
           }
