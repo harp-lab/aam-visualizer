@@ -31,15 +31,14 @@ function wrapStates(items) {
  */
 function bubblePaths(items) {
   const { graphs, configs } = items;
-  let bubbleCount = 0;
+  const counter = new BubbleCounter();
 
   for (const [graphId, graphData] of Object.entries(graphs)) {
     console.log(graphId);
     switch (graphId) {
       case 'states': {
         const pathStarts = getPathStarts(graphData);
-        const [newBubbleCount, bubbles] = getBubbles(bubbleCount, pathStarts, graphData);
-        bubbleCount = newBubbleCount;
+        const bubbles = getBubbles(counter, pathStarts, graphData);
 
         const bubbleGraph = getGraph(bubbles);
         graphs[graphId] = bubbleGraph;
@@ -50,34 +49,39 @@ function bubblePaths(items) {
       case 'func-7': {
         const pathStarts = getPathStarts(graphData);
         console.log('path starts', pathStarts);
-        const [newBubbleCount, bubbles] = getBubbles(bubbleCount, pathStarts, graphData);
-        bubbleCount = newBubbleCount;
+        const bubbles = getBubbles(counter, pathStarts, graphData);
         console.log('bubbles', bubbles);
 
-        /*
-        spread bubbles
-        hash of bubbleId to [spread bubble ids]
-        for bubble in bubbles
-          if bubble.nodes == 2
-            create new bubble for second config
-            copy outgoing edges from bubble 1 to 2
-            set outgoing edge linking bubble 1 to 2
-          else if bubble.nodes > 2
-            get first config in bubble.nodes
-            create spread bubble for each state in config
-            for config in rest of bubble.nodes but excluding last config
-              add state to corresponding spread bubble (assuming states are ordered in configs)
-            create new bubble with last config and outbound edges
-            add outbound edges from all spread bubbles to ending bubble
-            store spread bubbleIds into hash
-        for bubble in hash
-          go through bubbles and change outbound edges to original bubble to spread bubbles
-        */
-        // for each bubble (which is a path), get the first config node
-        // get states inside config, only spread bubble if multiple states in config
-        // each state forms own path
-        // follow state paths (optional check against config path), adding to spreaded bubble
-        // last bubble in path is all spread paths' last configs combined
+        const spreadIds = {};
+        for (const [bubbleId, bubble] of Object.entries(bubbles)) {
+          if (bubble.nodes.length === 2) { // spread bubble into 2 single config bubbles
+            const spreadBubbleId = counter.getId();
+            const spreadBubble = new BubbleData(bubble.nodes[1]);
+            spreadBubble.edges = bubble.edges;
+            bubbles[spreadBubbleId] = spreadBubble;
+
+            bubble.nodes = [bubble.nodes[0]];
+            bubble.edges = [spreadBubble.nodes[0]];
+          } else if (bubble.nodes.length > 2) {
+            // create spread bubble for each config state
+            const configId = bubble.nodes[0];
+            const config = configs[configId];
+            const spreadBubbles = [];
+            for (const stateId of config.states) {
+              const spreadBubbleId = counter.getId();
+              spreadBubbles.push(spreadBubbleId);
+              bubbles[spreadBubbleId] = new BubbleData(stateId);
+            }
+            
+            // for config in rest of bubble.nodes but excluding last config
+            //   add state to corresponding spread bubble (assuming states are ordered in configs)
+            // create new bubble with last config and outbound edges
+            // add outbound edges from all spread bubbles to ending bubble
+            // store spread bubbleIds into hash
+          }
+        }
+        // for bubble in hash
+        // go through bubbles and change outbound edges to original bubble to spread bubbles
         break;
       }
     }
@@ -132,19 +136,18 @@ function getPathStarts(graphData) {
 
 /**
  * Get graph bubbles
- * @param {Number} bubbleCount count of bubbles, used for generating new unique bubble ids
+ * @param {BubbleCounter} counter bubble counter object, used for generating new unique bubble ids
  * @param {Object} pathStarts path start node ids
  * @param {Object} graphData 
  * @param {Object} graphData.graph graph adjacency list
  */
-function getBubbles(bubbleCount, pathStarts, graphData) {
+function getBubbles(counter, pathStarts, graphData) {
   const { graph, start } = graphData;
   const bubbles = {};
 
   for (const pathStart of Object.keys(pathStarts)) {
     // generate bubble id
-    bubbleCount += 1;
-    const bubbleId = `bubble-${bubbleCount}`;
+    const bubbleId = counter.getId();
 
     // create new bubble
     pathStarts[pathStart] = bubbleId;
@@ -179,7 +182,7 @@ function getBubbles(bubbleCount, pathStarts, graphData) {
     }
   }
 
-  return [bubbleCount, bubbles];
+  return bubbles;
 }
 /**
  * Convert bubbles to cytoscape data format
@@ -226,6 +229,18 @@ function bubbleConfigs(bubbles, configs) {
       astLink = astLink.concat(config.astLink);
     }
     configs[bubbleId] = { states, astLink };
+  }
+}
+
+
+/** Counter of bubbles and generates unique bubble ids */
+class BubbleCounter {
+  constructor() {
+    this.count = 0;
+  }
+  getId() {
+    this.count += 1;
+    return `bubble-${this.count}`;
   }
 }
 
