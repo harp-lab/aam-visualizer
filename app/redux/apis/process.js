@@ -42,21 +42,19 @@ function bubblePaths(items) {
         const bubbles = getBubbles(counter, pathStarts, graphData);
         console.log('bubbles', bubbles);
 
-        const bubbleGraph = getGraph(bubbles);
-        graphs[graphId] = bubbleGraph;
+        graphs[graphId] = getGraph(bubbles);
   
         bubbleConfigs(bubbles, configs);
         break;
       }
       case 'func-7': {
         const pathStarts = getPathStarts(graphData);
-        console.log('path starts', pathStarts);
         const bubbles = getBubbles(counter, pathStarts, graphData);
-        console.log('bubbles', bubbles);
-
+        
         const spreadIds = {};
         for (const [bubbleId, bubble] of Object.entries(bubbles)) {
           if (bubble instanceof BubbleData) {
+            console.log('bubble id', bubbleId);
             if (bubble.nodes.length === 2) { // spread bubble into 2 nodes
               const lastNodeId = bubble.nodes[1];
               bubbles[lastNodeId] = new NodeData(bubble);
@@ -65,17 +63,26 @@ function bubblePaths(items) {
               const node = new NodeData();
               node.addEdge(lastNodeId);
               bubbles[firstNodeId] = node;
-              delete bubbles[bubbleId];
             } else if (bubble.nodes.length > 2) {
-              // create spread bubble for each state in first config
+              // create new bubble with last config and outbound edges
+              const lastNodeId = bubble.nodes[bubble.nodes.length - 1];
+              bubbles[lastNodeId] = new NodeData(bubble);
+
+              // create spread bubble for each state in first config with outbound edge to ending node
               const configId = bubble.nodes[0];
               const { states: stateIds } = configs[configId];
               const spreadBubbleIds = [];
+              spreadIds[configId] = [];
               for (const stateId of stateIds) {
                 const bubbleId = counter.getId();
                 spreadBubbleIds.push(bubbleId);
-                bubbles[bubbleId] = new BubbleData(stateId);
+                spreadIds[configId].push(bubbleId);
+                const bubble = new BubbleData(stateId);
+                bubble.addEdge(lastNodeId);
+                bubbles[bubbleId] = bubble;
               }
+              // store spread bubble ids into hash
+              spreadIds[bubbleId] = spreadBubbleIds;
 
               // for rest of configs excluding last
               for (const configId of bubble.nodes.slice(1, -1)) {
@@ -91,27 +98,26 @@ function bubblePaths(items) {
               for (const bubbleId of spreadBubbleIds) {
                 const bubble = bubbles[bubbleId];
                 const stateIds = bubble.nodes;
-                console.log(stateIds);
                 const astLink = stateIds.map(stateId => states[stateId].expr);
                 configs[bubbleId] = { states: stateIds, astLink };
 
                 // convert spread bubble to node
                 bubbles[bubbleId] = new NodeData(bubble);
               }
-
-              // create new bubble with last config and outbound edges
-              const lastNodeId = bubble.nodes.slice(-1);
-              bubbles[lastNodeId] = new NodeData(bubble);
-
-              // add outbound edges from all spread bubbles to ending bubble
-              // store spread bubbleIds into hash
             }
+            delete bubbles[bubbleId];
           }
         }
-
-        // for bubble in hash
+        
         // go through bubbles and change outbound edges to original bubble to spread bubbles
+        for (const [bubbleId, bubble] of Object.entries(bubbles)) {
+          bubble.spreadEdges(spreadIds);
+        }
 
+        graphs['test'] = getGraph(bubbles);
+        
+        console.log('bubbles', bubbles);
+        console.log('spread', spreadIds);
         break;
       }
     }
@@ -278,8 +284,7 @@ class BubbleCounter {
 class NodeData {
   constructor(bubble) {
     if (bubble) this.edges = bubble.edges;
-
-    this.edges = [];
+    else this.edges = [];
   }
   addEdge(nodeId) { this.edges.push(nodeId); }
   /**
@@ -294,6 +299,21 @@ class NodeData {
       }
       return nodeId;
     });
+  }
+  /**
+   * Spread edges from bubble id to spread bubble ids
+   * @param {Object} bubbles hash of bubble id keys and spread bubble id list values
+   */
+  spreadEdges(bubbles) {
+    this.edges = this.edges
+      .map(nodeId => {
+        for (const [bubbleId, spreadBubbleIds] of Object.entries(bubbles)) {
+          if (nodeId === bubbleId)
+            return spreadBubbleIds
+        }
+        return nodeId
+      })
+      .flat();
   }
   exportEdges() {
     const edges = {};
