@@ -64,6 +64,18 @@ export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[gra
 export const getSelectedNodes = (store, graphId) => getGraphMetadata(store, graphId).selectedNodes || [];
 export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graphId).hoveredNodes || [];
 export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
+
+/**
+ * Get bubbled state of graph
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Boolean} graph bubbled state
+ */
+export const getBubbling = createSelector(
+  getGraphMetadata,
+  metadata => Boolean(metadata.bubbled)
+);
+
 export function getGraphRefData(store, graphId) {
   const items = getProjectItems(store);
   switch (graphId) {
@@ -73,4 +85,13 @@ export function getGraphRefData(store, graphId) {
     default:
       return items.configs;
   }
+}
+
+/**
+ * Get bubbled graph id
+ * @param {String} graphId graph id
+ * @returns {String} bubbled graph id
+ */
+export function getBubbledGraphId(graphId) {
+  return `bubbled-${graphId}`;
 }

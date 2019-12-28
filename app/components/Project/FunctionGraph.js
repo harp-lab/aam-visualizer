@@ -1,27 +1,30 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import withTheme from '@material-ui/styles/withTheme';
+import { useSelector, useDispatch } from 'react-redux';
+import { Switch, Toolbar, Typography } from '@material-ui/core';
+import { useTheme } from '@material-ui/styles';
 import { Pane, SplitPane } from 'library';
-import { getMainGraphId, getSubGraphId } from 'store-selectors';
+import { toggleBubbling } from 'store-actions';
+import { getMainGraphId, getSubGraphId, getBubbling, getBubbledGraphId } from 'store-selectors';
 
 import Graph from './Graph';
 
+/** FunctionGraph component */
 function FunctionGraph() {
   const mainGraphId = useSelector(getMainGraphId);
   const subGraphId = useSelector(getSubGraphId);
+  const mainBubbled = useSelector(state => getBubbling(state, mainGraphId));
+  const subBubbled = useSelector(state => getBubbling(state, subGraphId));
 
   return  (
     <SplitPane horizontal>
       <Pane height='50%'>
-        <GraphLabel content={ mainGraphId } />
-        <Graph graphId={ mainGraphId } />
+        <GraphLabel graphId={ mainGraphId } />
+        <Graph graphId={ mainBubbled ? getBubbledGraphId(mainGraphId) : mainGraphId } />
       </Pane>
       <Pane height='50%'>
-        <GraphLabel content={ subGraphId } />
+        <GraphLabel graphId={ subGraphId } />
         <Graph
-          graphId={ subGraphId }
+          graphId={ subBubbled ? getBubbledGraphId(subGraphId) : subGraphId }
           edgePredicate={ edge => {
             const style = edge.data('style');
             if (style) return style['line-style'] === 'dashed';
@@ -31,20 +34,39 @@ function FunctionGraph() {
     </SplitPane>);
 }
 
+/**
+ * GraphLabel component
+ * @param {Object} props 
+ * @param {String} props.graphId graph id
+ */
 function GraphLabel(props) {
-  const { content, theme } = props;
+  const { graphId } = props;
+  const theme = useTheme();
+
   return (
     <Toolbar
       variant='dense'
       style={{
         backgroundColor: theme.palette.grey[300],
         color: theme.palette.text.primary,
-        width: '100%',
         minHeight: 'unset'
       }}>
-      <Typography>{ content }</Typography>
+      <Typography>{ graphId }</Typography>
+      <BubbleSwitch graphId={ graphId } />
     </Toolbar>);
 }
-GraphLabel = withTheme(GraphLabel);
+
+/**
+ * BubbleSwitch component
+ * @param {Object} props 
+ * @param {String} props.graphId graph id
+ */
+function BubbleSwitch(props) {
+  const { graphId } = props;
+  const bubbled = useSelector(state => getBubbling(state, graphId));
+  const dispatch = useDispatch();
+
+  return <Switch checked={ bubbled } onChange={ () => dispatch(toggleBubbling(graphId)) } />;
+}
 
 export default FunctionGraph;

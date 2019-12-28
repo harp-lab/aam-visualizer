@@ -10,9 +10,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
-/**
- * RenameDialog component
- */
+/** RenameDialog component */
 function RenameDialog() {
   const projectId = useSelector(getRenameDialog);
   const project = useSelector(state => getProject(state, projectId));

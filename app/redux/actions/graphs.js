@@ -1,6 +1,6 @@
 import store from '../store';
 import { setMetadata, refresh } from 'store-actions';
-import { getSelectedProjectId, getGraph, getMainGraphId, getSelectedNodes } from 'store-selectors';
+import { getSelectedProjectId, getGraph, getMainGraphId, getSelectedNodes, getBubbling } from 'store-selectors';
 import { SET_GRAPH_METADATA } from '../actionTypes';
 
 export function setMainGraphId(graphId) {
@@ -83,4 +83,14 @@ export function selectEdges(graphId, edgeIds) {
 }
 export function setPositions(graphId, positions) {
   return setGraphMetadata(graphId, { positions });
+}
+
+/**
+ * Toggle bubbling state of graph
+ * @param {String} graphId 
+ */
+export function toggleBubbling(graphId) {
+  const state = store.getState();
+  const bubbled = getBubbling(state, graphId);
+  return setGraphMetadata(graphId, { bubbled: !bubbled });
 }
