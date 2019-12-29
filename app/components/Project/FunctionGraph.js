@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Switch, Toolbar, Typography } from '@material-ui/core';
+import { FormGroup, FormControlLabel, Switch, Toolbar, Typography } from '@material-ui/core';
 import { useTheme } from '@material-ui/styles';
 import { Pane, SplitPane } from 'library';
 import { toggleBubbling } from 'store-actions';
@@ -64,7 +64,18 @@ function BubbleSwitch(props) {
   const bubbled = useSelector(state => getBubbling(state, graphId));
   const dispatch = useDispatch();
 
-  return <Switch checked={ bubbled } onChange={ () => dispatch(toggleBubbling(graphId)) } />;
+  return (
+    <FormGroup>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={ bubbled }
+            onChange={ () => dispatch(toggleBubbling(graphId)) }
+            size='small' />
+        }
+        label='bubbling'/>
+    </FormGroup>
+  );
 }
 
 export default FunctionGraph;
