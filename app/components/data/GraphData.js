@@ -4,12 +4,11 @@ import EdgeData from './EdgeData';
 /**
  * GraphData generator.
  * Converts an items graph adjacency list to cytoscape data format.
- * @param {String} graphId graph id
+ * @param {Object} graphData graph data
  * @param {Object} items project items object
  * @returns {Array} cytoscape data
  */
-function GraphData(graphId, items) {
-  const graphData = items.graphs[graphId];
+function GraphData(graphData, refData) {
   const { graph, start } = graphData;
 
   // get graph data from ref data
@@ -39,15 +38,7 @@ function GraphData(graphId, items) {
     return form;
   }
 
-  switch (graphId) {
-    case 'funcs': {
-      return exportGraph(graph, items.funcs);
-    }
-    case 'states':
-    default: {
-      return exportGraph(graph, items.configs);
-    }
-  }
+  return exportGraph(graph, refData);
 }
 
 export default GraphData;

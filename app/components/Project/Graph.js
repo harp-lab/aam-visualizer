@@ -8,7 +8,7 @@ import {
   selectNodes, unselectNodes, hoverNodes, selectEdges,
   setPositions
 } from 'store-actions'
-import { getProjectItems, getGraphMetadata, getFocusedGraph } from 'store-selectors';
+import { getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store-selectors';
 
 import cytoscape from 'cytoscape';
 
@@ -16,6 +16,8 @@ function Graph(props) {
   const { graphId, edgePredicate = edge => false, onNodeSelect, onNodeUnselect, theme, style } = props;
   const items = useSelector(getProjectItems);
   if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
+  const graphData = useSelector(state => getGraph(state, graphId));
+  const refData = useSelector(state => getGraphRefData(state, graphId));
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
   const focusedGraph = useSelector(getFocusedGraph);
   const focused = focusedGraph === graphId;
@@ -23,8 +25,7 @@ function Graph(props) {
   const cyElem = useRef(undefined);
   const bounds = useRef(undefined);
   const events = useRef(false);
-  
-  const data = GraphData(graphId, items);
+  const data = GraphData(graphData, refData);
 
   const config = {
     style: [{
@@ -191,7 +192,7 @@ function Graph(props) {
       // remove nodes
       cy.nodes().remove();
     };
-  }, [graphId]);
+  }, [graphData]);
   
   // marking nodes
   useEffect(() => {

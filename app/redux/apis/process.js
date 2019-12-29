@@ -31,27 +31,28 @@ function wrapStates(items) {
  */
 function bubblePaths(items) {
   const { graphs, configs } = items;
+  const bubbled = {};
   const counter = new BubbleCounter();
 
   for (const [graphId, graphData] of Object.entries(graphs)) {
-    const bubbledGraphId = `bubbled-${graphId}`;
     switch (graphId) {
       case 'states': {
         const pathStarts = getPathStarts(graphData);
         const bubbles = getBubbles(counter, pathStarts, graphData);
         bubbleConfigs(bubbles, configs);
-        graphs[bubbledGraphId] = getGraph(bubbles);
+        bubbled[graphId] = getGraph(bubbles);
         break;
       }
       default: {
         const pathStarts = getPathStarts(graphData);
         const bubbles = getBubbles(counter, pathStarts, graphData);
         spreadBubbles(counter, bubbles, graphData, items);
-        graphs[bubbledGraphId] = getGraph(bubbles);
+        bubbled[graphId] = getGraph(bubbles);
         break;
       }
     }
   }
+  graphs['bubbled'] = bubbled;
 }
 /**
  * Get graph path start node ids

@@ -14,10 +14,43 @@ export const getGraphsMetadata = createSelector(
   metadata => metadata.graphs
 );
 
+export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[graphId] || {};
+export const getSelectedNodes = (store, graphId) => getGraphMetadata(store, graphId).selectedNodes || [];
+export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graphId).hoveredNodes || [];
+export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
+
+/**
+ * Get bubbled state of graph
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Boolean} graph bubbled state
+ */
+export const getBubbling = createSelector(
+  getGraphMetadata,
+  metadata => {
+    const bubbled = metadata.bubbled;
+    if (bubbled === undefined)
+      return true
+    else
+      return bubbled;
+  }
+);
+
+/**
+ * Get main graph id
+ * @param {Object} state
+ * @returns {String} main graph id
+ */
 export const getMainGraphId = createSelector(
   state => getProjectMetadata(state),
   metadata => metadata.mainGraphId || 'funcs'
 );
+
+/**
+ * Get sub graph id
+ * @param {Object} state
+ * @returns {String} sub graph id
+ */
 export const getSubGraphId = createSelector(
   state => getSelectedNodes(state, getMainGraphId(state)),
   state => getProjectItems(state),
@@ -33,6 +66,7 @@ export const getSubGraphId = createSelector(
     return subGraphId;
   }
 );
+
 export const getFocusedGraph = createSelector(
   state => getProjectMetadata(state),
   getMainGraphId,
@@ -48,50 +82,40 @@ export function getGraphNodes(store, graphId) {
   return nodeIds;
 }
 
-export const getGraph = (store, graphId) => getGraphs(store)[graphId];
-export const getMainGraph = createSelector(
-  getGraphs,
-  getMainGraphId,
-  (graphs, graphId) => graphs[graphId]
-);
-export const getSubGraph = createSelector(
-  getGraphs,
-  getSubGraphId,
-  (graphs, graphId) => graphs[graphId]
-);
-
-export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[graphId] || {};
-export const getSelectedNodes = (store, graphId) => getGraphMetadata(store, graphId).selectedNodes || [];
-export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graphId).hoveredNodes || [];
-export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
-
 /**
- * Get bubbled state of graph
+ * Get graph data
  * @param {Object} state
  * @param {String} graphId graph id
- * @returns {Boolean} graph bubbled state
+ * @returns {Object} graph data
  */
-export const getBubbling = createSelector(
-  getGraphMetadata,
-  metadata => Boolean(metadata.bubbled)
+export const getGraph = createSelector(
+  getGraphs,
+  (state, graphId) => graphId,
+  getBubbling,
+  (graphs, graphId, bubbled) => {
+    if (bubbled)
+      return graphs['bubbled'][graphId];
+    else
+      return graphs[graphId];
+  }
 );
 
-export function getGraphRefData(store, graphId) {
-  const items = getProjectItems(store);
-  switch (graphId) {
-    case 'funcs':
-      return items.funcs;
-    case 'states':
-    default:
-      return items.configs;
-  }
-}
-
 /**
- * Get bubbled graph id
- * @param {String} graphId graph id
- * @returns {String} bubbled graph id
+ * Get graph reference data
+ * @param {Object} state
+ * @param {String} graphId graphId
+ * @returns {Object} graph reference data
  */
-export function getBubbledGraphId(graphId) {
-  return `bubbled-${graphId}`;
-}
+export const getGraphRefData = createSelector(
+  (state, graphId) => getProjectItems(state),
+  (state, graphId) => graphId,
+  (items, graphId) => {
+    switch (graphId) {
+      case 'funcs':
+        return items.funcs;
+      case 'states':
+      default:
+        return items.configs;
+    }
+  }
+);

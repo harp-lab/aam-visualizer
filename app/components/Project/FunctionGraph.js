@@ -4,7 +4,7 @@ import { Switch, Toolbar, Typography } from '@material-ui/core';
 import { useTheme } from '@material-ui/styles';
 import { Pane, SplitPane } from 'library';
 import { toggleBubbling } from 'store-actions';
-import { getMainGraphId, getSubGraphId, getBubbling, getBubbledGraphId } from 'store-selectors';
+import { getMainGraphId, getSubGraphId, getBubbling } from 'store-selectors';
 
 import Graph from './Graph';
 
@@ -12,19 +12,17 @@ import Graph from './Graph';
 function FunctionGraph() {
   const mainGraphId = useSelector(getMainGraphId);
   const subGraphId = useSelector(getSubGraphId);
-  const mainBubbled = useSelector(state => getBubbling(state, mainGraphId));
-  const subBubbled = useSelector(state => getBubbling(state, subGraphId));
 
   return  (
     <SplitPane horizontal>
       <Pane height='50%'>
         <GraphLabel graphId={ mainGraphId } />
-        <Graph graphId={ mainBubbled ? getBubbledGraphId(mainGraphId) : mainGraphId } />
+        <Graph graphId={ mainGraphId } />
       </Pane>
       <Pane height='50%'>
         <GraphLabel graphId={ subGraphId } />
         <Graph
-          graphId={ subBubbled ? getBubbledGraphId(subGraphId) : subGraphId }
+          graphId={ subGraphId }
           edgePredicate={ edge => {
             const style = edge.data('style');
             if (style) return style['line-style'] === 'dashed';
