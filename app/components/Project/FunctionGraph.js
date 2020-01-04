@@ -1,8 +1,9 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { FormGroup, FormControlLabel, Switch, Toolbar, Typography } from '@material-ui/core';
+import { Toolbar, Typography } from '@material-ui/core';
+import { BubbleChart } from '@material-ui/icons';
 import { useTheme } from '@material-ui/styles';
-import { Pane, SplitPane } from 'library';
+import { IconToggle, Pane, Spacer, SplitPane } from 'library';
 import { toggleBubbling } from 'store-actions';
 import { getMainGraphId, getSubGraphId, getBubbling } from 'store-selectors';
 
@@ -49,33 +50,31 @@ function GraphLabel(props) {
         color: theme.palette.text.primary,
         minHeight: 'unset'
       }}>
-      <Typography>{ graphId }</Typography>
-      <BubbleSwitch graphId={ graphId } />
+      <Spacer
+        childrenStyle={{ marginRight: '1em' }}
+        noDiv >
+        <Typography>{ graphId }</Typography>
+        <BubbleToggle graphId={ graphId } />
+      </Spacer>
     </Toolbar>);
 }
 
 /**
- * BubbleSwitch component
+ * BubbleToggle component
  * @param {Object} props 
  * @param {String} props.graphId graph id
  */
-function BubbleSwitch(props) {
+function BubbleToggle(props) {
   const { graphId } = props;
   const bubbled = useSelector(state => getBubbling(state, graphId));
   const dispatch = useDispatch();
 
-  return (
-    <FormGroup>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={ bubbled }
-            onChange={ () => dispatch(toggleBubbling(graphId)) }
-            size='small' />
-        }
-        label='bubbling'/>
-    </FormGroup>
-  );
+  return <IconToggle
+    icon={ <BubbleChart /> }
+    tooltip='bubbling'
+    enabled={ bubbled }
+    onToggle={ () => dispatch(toggleBubbling(graphId)) }
+    style={{ padding: 0 }} />;
 }
 
 export default FunctionGraph;
