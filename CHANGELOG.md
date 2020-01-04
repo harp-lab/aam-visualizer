@@ -6,6 +6,7 @@
 * env now has optional `label` property
 * states are now wrapped with configs automatically
 * added documentation generation
+* added bubbling feature
 
 ## 0.3.13
 * added debug drawer to Project Toolbar
