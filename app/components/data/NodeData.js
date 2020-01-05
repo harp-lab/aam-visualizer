@@ -2,16 +2,20 @@
  * NodeData generator.
  * Converts a graph node to cytoscape data format.
  * @param {String} id node id
- * @param {String} form node form
+ * @param {Object} data node data
+ * @param {String} [data.form = ''] form
+ * @param {Object} [data.style] style data
  * @returns {Object} cytoscape data
  */
-function NodeData(id, form = '') {
+function NodeData(id, data) {
+  const { form = '', style } = data;
   return {
     group: 'nodes',
     data: {
       id,
       label: `${id}\n${form}`,
-      form
+      form,
+      style
     }
   };
 }

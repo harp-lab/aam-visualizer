@@ -7,6 +7,7 @@
 * states are now wrapped with configs automatically
 * added documentation generation
 * added bubbling feature
+* graphs now mark entrypoints
 
 ## 0.3.13
 * added debug drawer to Project Toolbar

@@ -29,14 +29,16 @@ export function getNodeAsts(nodeIds, refData) {
   const astIds = new Set();
   if (refData)
     for (const nodeId of nodeIds) {
-      const { astLink, expr } = refData[nodeId];
-      let nodeAstIds = [];
-      if (astLink)
-        nodeAstIds = astLink;
-      else if (expr)
-        nodeAstIds = [expr];
-      
-      nodeAstIds.forEach(astId => astIds.add(astId));
+      if (refData[nodeId]) {
+        const { astLink, expr } = refData[nodeId];
+        let nodeAstIds = [];
+        if (astLink)
+          nodeAstIds = astLink;
+        else if (expr)
+          nodeAstIds = [expr];
+        
+        nodeAstIds.forEach(astId => astIds.add(astId));
+      }
     }
   return [...astIds];
 }

@@ -32,7 +32,8 @@ function Graph(props) {
         selector: 'node',
         style: {
           'label': 'data(label)',
-          'text-wrap': 'wrap'
+          'text-wrap': 'wrap',
+          'visibility': getStyle('visibility', 'visible')
         }
       }, {
         selector: 'node:selected',
@@ -42,8 +43,10 @@ function Graph(props) {
         style: {
           'label': 'data(label)',
           'curve-style': 'bezier',
+          'line-color': getStyle('line-color', theme.palette.grey['500']),
+          'line-style': getStyle('line-style', 'solid'),
           'target-arrow-shape': 'triangle',
-          'line-style': getStyle('line-style', 'solid')
+          'target-arrow-color': getStyle('target-arrow-color', theme.palette.grey['500'])
         }
       }, {
         selector: 'edge:selected',
@@ -69,12 +72,10 @@ function Graph(props) {
   function getStyle(prop, defaultStyle) {
     return element => {
       const style = element.data('style');
-      let output;
       if (style && style[prop])
-        output = style[prop];
+        return style[prop];
       else
-        output = defaultStyle;
-      return output;
+        return defaultStyle;
     }
   }
   const cyRef = useRef(cytoscape(config));
