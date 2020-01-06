@@ -1,3 +1,5 @@
+// TODO change graphData.start to array of entrypoints instead of one entrypoint
+
 export function process(data) {
   const { items } = data;
   wrapStates(items);
@@ -109,7 +111,8 @@ function getPathStarts(graphData) {
  * @param {Object} graphData.graph graph adjacency list
  */
 function getBubbles(counter, pathStarts, graphData) {
-  const { graph, start } = graphData;
+  let { graph, start } = graphData;
+  start = [start];
   const bubbles = {};
 
   for (const pathStart of Object.keys(pathStarts)) {
@@ -119,6 +122,9 @@ function getBubbles(counter, pathStarts, graphData) {
     // create new bubble
     pathStarts[pathStart] = bubbleId;
     const bubble = new Bubble(pathStart);
+    console.log(start, pathStart);
+    if (start.includes(pathStart))
+      bubble.setEntry(true);
     bubbles[bubbleId] = bubble;
 
     // traverse path, creating bubbles
@@ -154,6 +160,7 @@ function getBubbles(counter, pathStarts, graphData) {
     if (bubble.isSingleton()) {
       const nodeId = bubble.nodes[0];
       const node = new Node();
+      node.entry = bubble.entry;
       node.edges = bubble.edges;
       bubbles[nodeId] = node;
       delete bubbles[bubbleId];
@@ -184,6 +191,7 @@ function spreadBubbles(counter, bubbles, graphData, items) {
 
         const firstNodeId = bubble.nodes[0];
         const node = new Node();
+        node.entry = bubble.entry;
         const edgeData = graph[firstNodeId][lastNodeId]
         node.addEdge(lastNodeId, edgeData);
         bubbles[firstNodeId] = node;
@@ -197,10 +205,12 @@ function spreadBubbles(counter, bubbles, graphData, items) {
         const { states: stateIds } = configs[configId];
         const spreadBubbleIds = [];
         const edgeData = graph[bubble.nodes[length - 2]][lastConfigId];
+        const entry = bubble.entry;
         for (const stateId of stateIds) {
           const bubbleId = counter.getId();
           spreadBubbleIds.push(bubbleId);
           const bubble = new Bubble(stateId);
+          bubble.entry = entry
           bubble.addEdge(lastConfigId, edgeData);
           bubbles[bubbleId] = bubble;
         }
@@ -225,7 +235,9 @@ function spreadBubbles(counter, bubbles, graphData, items) {
           configs[bubbleId] = { states: stateIds, astLink };
 
           // convert spread bubble to node
-          bubbles[bubbleId] = new Node(bubble);
+          const node = new Node(bubble);
+          node.entry = bubble.entry;
+          bubbles[bubbleId] = node;
         }
       }
       delete bubbles[bubbleId];
@@ -245,12 +257,15 @@ function spreadBubbles(counter, bubbles, graphData, items) {
 function getGraph(bubbles) {
   // convert bubble node id edges to bubble id edges
   const graph = {};
+  const start = [];
   for (const [nodeId, bubble] of Object.entries(bubbles)) {
     bubble.linkEdges(bubbles);
     graph[nodeId] = bubble.edges;
+    if (bubble.entry)
+      start.push(nodeId);
   }
 
-  return { graph };
+  return { graph, start };
 }
 /**
  * Bubble configs
@@ -292,7 +307,17 @@ class Node {
   constructor(bubble) {
     if (bubble) this.edges = bubble.edges;
     else this.edges = {};
+
+    this.entry = false;
   }
+  /**
+   * 
+   * @param {Boolean} entry 
+   */
+  setEntry(entry) {
+    this.entry = entry;
+  }
+
   /**
    * Add edge
    * @param {Object} edgeData edge data
