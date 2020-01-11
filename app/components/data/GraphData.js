@@ -18,24 +18,27 @@ function GraphData(graphData, refData) {
    */
   function exportGraph(graphData, refData) {
     const { graph, start } = graphData;
+
+    /**
+     * Convert node id to cytoscape data
+     * @param {String} nodeId node id
+     * @returns {Object} cytoscape data
+     */
+    function exportNode(nodeId) {
+      const data = {
+        form: getForm(nodeId, refData),
+        entrypoint: start.includes(nodeId) ? true : undefined
+      };
+      return NodeData(nodeId, data);
+    }
+
     const data = [];
     for (const [nodeId, children] of Object.entries(graph)) {
-      const nodeData = {
-        form: getForm(nodeId, refData)
-      };
-      if (start.includes(nodeId))
-        nodeData.entrypoint = true;
-      data.push(NodeData(nodeId, nodeData));
+      data.push(exportNode(nodeId));
 
       for (const [childId, edge] of Object.entries(children)) {
-        if (!graph[childId]) {
-          const nodeData = {
-            form: getForm(nodeId, refData)
-          };
-          if (start.includes(nodeId))
-            nodeData.entrypoint = true;
-          data.push(NodeData(nodeId, nodeData));
-        }
+        if (!graph[childId])
+          data.push(exportNode(nodeId));
         const edgeId = `${nodeId}-${childId}`;
         data.push(EdgeData(edgeId, nodeId, childId, edge));
       }
