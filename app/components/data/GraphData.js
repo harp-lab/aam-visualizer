@@ -12,19 +12,30 @@ function GraphData(graphData, refData) {
 
   /**
    * Convert graph data to cytoscape data
-   * @param {Object} graph graph adjacency list
+   * @param {Object} graphData graph data
    * @param {Object} refData node reference data
    * @returns {Array} cytoscape data
    */
-  function exportGraph(graph, refData) {
+  function exportGraph(graphData, refData) {
+    const { graph, start } = graphData;
     const data = [];
     for (const [nodeId, children] of Object.entries(graph)) {
-      const form = getForm(nodeId, refData);
-      data.push(NodeData(nodeId, { form }));
+      const nodeData = {
+        form: getForm(nodeId, refData)
+      };
+      if (start.includes(nodeId))
+        nodeData.entrypoint = true;
+      data.push(NodeData(nodeId, nodeData));
 
       for (const [childId, edge] of Object.entries(children)) {
-        const form = getForm(childId, refData);
-        data.push(NodeData(childId, { form }));
+        if (!graph[childId]) {
+          const nodeData = {
+            form: getForm(nodeId, refData)
+          };
+          if (start.includes(nodeId))
+            nodeData.entrypoint = true;
+          data.push(NodeData(nodeId, nodeData));
+        }
         const edgeId = `${nodeId}-${childId}`;
         data.push(EdgeData(edgeId, nodeId, childId, edge));
       }
@@ -47,36 +58,7 @@ function GraphData(graphData, refData) {
     return form;
   }
 
-  /**
-   * Add hidden nodes with edges to graph entrypoints
-   * @param {Object} data cytoscape data
-   */
-  function addEntryEdges(data) {
-    if (start) {
-      if (!(start instanceof Array)) 
-        start = [start];
-      for (const nodeId of start) {
-        const entryId = `start-${nodeId}`;
-        const nodeData = NodeData(entryId, {
-          style: {
-            visibility: 'hidden'
-          }
-        });
-        data.push(nodeData);
-        const edgeId = `${entryId}-${nodeId}`;
-        const edgeData = {
-          style: {
-            'line-color': '#3f51b5',
-            'target-arrow-color': '#3f51b5'
-          }
-        };
-        data.push(EdgeData(edgeId, entryId, nodeId, edgeData));
-      }
-    }
-  }
-
-  const cyData = exportGraph(graph, refData);
-  addEntryEdges(cyData);
+  const cyData = exportGraph(graphData, refData);
   return cyData;
 }
 

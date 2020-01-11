@@ -32,8 +32,13 @@ function Graph(props) {
         selector: 'node',
         style: {
           'label': 'data(label)',
-          'text-wrap': 'wrap',
-          'visibility': getStyle('visibility', 'visible')
+          'text-wrap': 'wrap'
+        }
+      }, {
+        selector: 'node[entrypoint]',
+        style: {
+          'shape': 'round-tag',
+          'background-color': theme.palette.primary.main
         }
       }, {
         selector: 'node:selected',

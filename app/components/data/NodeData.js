@@ -8,14 +8,15 @@
  * @returns {Object} cytoscape data
  */
 function NodeData(id, data) {
-  const { form = '', style } = data;
+  const { form = '', style, ...rest } = data;
   return {
     group: 'nodes',
     data: {
       id,
       label: `${id}\n${form}`,
       form,
-      style
+      style,
+      ...rest
     }
   };
 }

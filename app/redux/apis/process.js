@@ -2,8 +2,24 @@
 
 export function process(data) {
   const { items } = data;
+  legacy(items);
   wrapStates(items);
   bubblePaths(items);
+}
+
+/**
+ * Handle legacy data format conversion
+ * @param {Object} items project items
+ * @param {Object} items.graphs
+ */
+function legacy(items) {
+  const { graphs } = items;
+  for (const [graphId, graphData] of Object.entries(graphs)) {
+    const { start } = graphData;
+    if (!(start instanceof Array)) {
+      graphData.start = [start];
+    }
+  }
 }
 
 /**
@@ -64,15 +80,14 @@ function bubblePaths(items) {
  * @returns {Object} path start node ids
  */
 function getPathStarts(graphData) {
-  let { graph, start } = graphData;
-  start = [start];
+  const { graph, start } = graphData;
 
   // add all entry points to data
   const data = {};
   for (const nodeId of start) {
     data[nodeId] = { start: true }
   }
-  const queue = start;
+  const queue = [...start];
 
   while (queue.length > 0) {
     // follow path and mark nodes as visited
@@ -111,8 +126,7 @@ function getPathStarts(graphData) {
  * @param {Object} graphData.graph graph adjacency list
  */
 function getBubbles(counter, pathStarts, graphData) {
-  let { graph, start } = graphData;
-  start = [start];
+  const { graph, start } = graphData;
   const bubbles = {};
 
   for (const pathStart of Object.keys(pathStarts)) {
@@ -122,7 +136,6 @@ function getBubbles(counter, pathStarts, graphData) {
     // create new bubble
     pathStarts[pathStart] = bubbleId;
     const bubble = new Bubble(pathStart);
-    console.log(start, pathStart);
     if (start.includes(pathStart))
       bubble.setEntry(true);
     bubbles[bubbleId] = bubble;
