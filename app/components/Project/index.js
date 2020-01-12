@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef } from 'react';
+import React, { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { CodeViewer, ConfigViewer, EnvViewer, StackViewer } from 'component-viewers';
 import { Loading, Pane, SplitPane } from 'library';
@@ -57,38 +57,45 @@ function Project() {
 
 function VisualView() {
   const clientStatus = useSelector(getProjectClientStatus);
-  const toolbar = useRef(undefined);
-  let drawerWidth = 0;
-  if (toolbar.current)
-    drawerWidth = toolbar.current.children[0].offsetWidth;
+  const [toolbarWidth, setToolbarWidth] = useState(0);
+  const test = useCallback(node => {
+  if (node)
+    setToolbarWidth(node.children[0].offsetWidth);
+  }, []);
 
-  let view = <Loading status='Downloading' />;
-  if (clientStatus === CLIENT_DOWNLOADED_STATUS)
-    view = (
-      <Fragment>
-        <SplitPane
-          vertical
-          style={{ width: `calc(100% - ${drawerWidth}px)` }}>
-          <Pane width='40%'><FunctionGraph /></Pane>
-          <Pane>
-            <SplitPane horizontal>
-              <Pane height='48%'>
-                <SplitPane vertical>
-                  <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
-                  <Pane><StackViewer /></Pane>
-                </SplitPane>
-              </Pane>
-              <Pane overflow='auto'>
-                <SplitPane>
-                  <Pane width="50%" overflow='auto'><ConfigViewer /></Pane>
-                  <Pane overflow='auto'><EnvViewer /></Pane>
-                </SplitPane>
-              </Pane>
-            </SplitPane>
-          </Pane>
-        </SplitPane>
-        <Toolbar ref={ toolbar } />
-      </Fragment>);
+  let view;
+  switch (clientStatus) {
+    case CLIENT_DOWNLOADED_STATUS:
+      view = (
+        <Fragment>
+          <SplitPane
+            vertical
+            style={{ width: `calc(100% - ${toolbarWidth}px)` }}>
+            <Pane width='40%'><FunctionGraph /></Pane>
+            <Pane>
+              <SplitPane horizontal>
+                <Pane height='48%'>
+                  <SplitPane vertical>
+                    <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
+                    <Pane><StackViewer /></Pane>
+                  </SplitPane>
+                </Pane>
+                <Pane overflow='auto'>
+                  <SplitPane>
+                    <Pane width="50%" overflow='auto'><ConfigViewer /></Pane>
+                    <Pane overflow='auto'><EnvViewer /></Pane>
+                  </SplitPane>
+                </Pane>
+              </SplitPane>
+            </Pane>
+          </SplitPane>
+          <Toolbar ref={ test } />
+        </Fragment>);
+      break;
+    default:
+      view = <Loading status='Downloading' />;
+      break;
+  }
 
   return view;
 }
