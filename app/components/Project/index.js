@@ -59,8 +59,8 @@ function VisualView() {
   const clientStatus = useSelector(getProjectClientStatus);
   const [toolbarWidth, setToolbarWidth] = useState(0);
   const test = useCallback(node => {
-  if (node)
-    setToolbarWidth(node.children[0].offsetWidth);
+    if (node)
+      setToolbarWidth(node.children[0].offsetWidth);
   }, []);
 
   let view;

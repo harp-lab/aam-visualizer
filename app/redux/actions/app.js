@@ -1,4 +1,4 @@
-import { delProjects } from 'store-actions';
+import { selProject, delProjects } from 'store-actions';
 import { SET_USER, SET_TITLE } from '../actionTypes';
 
 const setUser = userId => ({
@@ -13,6 +13,7 @@ export function login(userId) {
 export function logout(userId) {
   return dispatch => {
     dispatch(setUser(undefined));
+    dispatch(selProject(undefined));
     dispatch(delProjects());
   };
 }
