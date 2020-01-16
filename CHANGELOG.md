@@ -1,4 +1,4 @@
-## 0.3.14 TBA
+## 0.3.14
 * graph `start` property is now an array instead of a string id to support multiple entry points
 * env data structure changed from array to dictionary with array moved to `entries` property
 (e.g. `<envId>: { "label": <String>, "entries": [<entry>, ...] }`)
