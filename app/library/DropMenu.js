@@ -1,10 +1,13 @@
 import React, { Fragment, useState } from 'react';
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Tooltip from '@material-ui/core/Tooltip';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import { Menu, MenuItem } from '@material-ui/core';
+import { MoreVert } from '@material-ui/icons';
+import { IconButton } from 'library';
 
+/**
+ * Icon button with dropdown menu
+ * @param {Object} props 
+ * @param {Array} props.items array of menu item Objects with 'label' and 'callback' props
+ */
 function DropMenu(props) {
   const { items } = props;
   const [anchor, setAnchor] = useState(undefined);
@@ -27,13 +30,10 @@ function DropMenu(props) {
 
   return (
     <Fragment>
-      <Tooltip title='More'>
-        <IconButton
-          color='inherit'
-          onClick={ open }>
-          <MoreVertIcon />
-        </IconButton>
-      </Tooltip>
+      <IconButton
+        icon={ <MoreVert /> }
+        size='medium'
+        onClick={ open } />
       <Menu
         anchorEl={ anchor }
         getContentAnchorEl={ undefined }
