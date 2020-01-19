@@ -1,55 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { CircularProgress, List, ListItem, ListItemText, ListItemSecondaryAction } from '@material-ui/core';
+import { ListItem, ListItemText, ListItemSecondaryAction } from '@material-ui/core';
 import {
   CallSplit as CallSplitIcon,
   Cancel as CancelIcon,
-  Delete as DeleteIcon,
-  Done as DoneIcon,
-  Edit as EditIcon
+  Delete as DeleteIcon
 } from '@material-ui/icons';
 import { DropMenu, IconButton } from 'library';
 import { setRenameDialog, selProject } from 'store-actions';
-import { getList, deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
-import { getProject, getProjectIds, getProjectServerStatus } from 'store-selectors';
-import { EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS } from 'store-consts';
+import { deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
+import { getProject, getProjectServerStatus } from 'store-selectors';
+import { PROCESS_STATUS } from 'store-consts';
 
-/** */
-function ProjectList() {
-  const projectIds = useSelector(getProjectIds);
-  const dispatch = useDispatch();
-  const timeout = useRef(undefined);
-
-  // mount/unmount
-  useEffect(() => {
-    update();
-    return () => {
-      clearTimeout(timeout.current);
-    };
-  }, []);
-
-  async function update() {
-    const refresh = await dispatch(getList());
-    if (refresh) timeout.current = setTimeout(update, 1000);
-  }
-  
-  const projectList = projectIds.map(
-    projectId => <ProjectListItem
-      key={ projectId }
-      projectId={ projectId } />
-  );
-  
-  return (
-    <List style={{ overflowY: 'auto' }}>
-      { projectList }
-    </List>);
-}
+import Status from './Status';
 
 /**
  * @param {Object} props 
  * @param {String} props.projectId project id
  */
-function ProjectListItem(props) {
+function Item(props) {
   const { projectId } = props;
   const { analysis, name = 'unnamed', status } = useSelector(state => getProject(state, projectId));
   const dispatch = useDispatch();
@@ -84,7 +53,7 @@ function ProjectListItem(props) {
           textOverflow: 'ellipsis'
         }}/>
       <ItemAttribute content={ projectId } />
-      <ProjectStatus status={ status } />
+      <Status status={ status } />
       { actionsElem }
     </ListItem>);
 }
@@ -105,30 +74,6 @@ function ItemAttribute(props) {
     <ListItemText style={ style }>
       { content }
     </ListItemText>);
-}
-
-function ProjectStatus(props) {
-  const { status } = props;
-
-  let elem;
-  switch (status) {
-    case EDIT_STATUS:
-      elem = <EditIcon />;
-      break;
-    case PROCESS_STATUS:
-      elem = <CircularProgress size={ 16 } />;
-      break;
-    case COMPLETE_STATUS:
-      elem = <DoneIcon />;
-      break;
-    default:
-      break;
-  }
-  return (
-      <ListItemText style={{ flex: '0 0 10em' }}>
-        { elem }
-        { status }
-      </ListItemText>);
 }
 
 /**
@@ -163,4 +108,4 @@ function RemoveAction(props) {
   return elem;
 }
 
-export default ProjectList;
+export default Item;
