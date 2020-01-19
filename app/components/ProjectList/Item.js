@@ -6,6 +6,7 @@ import {
   Cancel as CancelIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons';
+import { makeStyles } from '@material-ui/styles';
 import { DropMenu, IconButton } from 'library';
 import { setRenameDialog, selProject } from 'store-actions';
 import { deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
@@ -14,13 +15,17 @@ import { PROCESS_STATUS } from 'store-consts';
 
 import Status from './Status';
 
+const useStyles = makeStyles(theme => ({
+  disabled: { color: theme.palette.text.disabled }
+}));
+
 /**
  * @param {Object} props 
  * @param {String} props.projectId project id
  */
 function Item(props) {
   const { projectId } = props;
-  const { analysis, name = 'unnamed', status } = useSelector(state => getProject(state, projectId));
+  const { analysis, name, status } = useSelector(state => getProject(state, projectId));
   const dispatch = useDispatch();
 
   const actionsElem = (
@@ -45,14 +50,17 @@ function Item(props) {
       onClick={ () => dispatch(selProject(projectId)) }
       align='flex-start'
       style={{ paddingRight: 144+16 }}>
-      <ItemAttribute content={ analysis } />
       <ItemAttribute
-        content={ name }
+        value={ analysis }
+        defaultValue='n/a' />
+      <ItemAttribute
+        value={ name }
+        defaultValue='unnamed'
         style={{
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }}/>
-      <ItemAttribute content={ projectId } />
+      <ItemAttribute value={ projectId } />
       <Status status={ status } />
       { actionsElem }
     </ListItem>);
@@ -61,18 +69,26 @@ function Item(props) {
 /**
  * Project attribute item
  * @param {Object} props 
- * @param {String} props.content attribute text
+ * @param {String} props.value attribute value
+ * @param {String} [props.defaultValue] default attribute value
  * @param {Object} [props.style = { flex: '0 0 10em' }] styling
  */
 function ItemAttribute(props) {
   const {
-    content,
+    value,
+    defaultValue,
     style = { flex: '0 0 10em' }
   } = props;
+  const classes = useStyles();
+
+  const text = value || defaultValue;
+  const rootClass = value ? undefined : classes.disabled;
 
   return (
-    <ListItemText style={ style }>
-      { content }
+    <ListItemText
+      classes={{ root: rootClass }}
+      style={ style }>
+      { text }
     </ListItemText>);
 }
 
