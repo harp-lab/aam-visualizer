@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { Fragment, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { List } from '@material-ui/core';
+import { importFiles } from 'store-actions';
 import { getList } from 'store-apis';
 import { getProjectIds } from 'store-selectors';
 
@@ -32,9 +33,18 @@ function ProjectList() {
   );
   
   return (
-    <List style={{ overflowY: 'auto' }}>
-      { projectList }
-    </List>);
+    <Fragment>
+      <List
+        onDragEnter={ evt => evt.preventDefault() }
+        onDragOver={ evt => evt.preventDefault() }
+        onDrop={ evt => {
+          evt.preventDefault();
+          dispatch(importFiles(evt.dataTransfer.files));
+        }}
+        style={{ overflowY: 'auto' }}>
+        { projectList }
+      </List>
+    </Fragment>);
 }
 
 export default ProjectList;

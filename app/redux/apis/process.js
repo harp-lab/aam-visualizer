@@ -1,10 +1,13 @@
 // TODO change graphData.start to array of entrypoints instead of one entrypoint
 
 export function process(data) {
-  const { items } = data;
-  legacy(items);
-  wrapStates(items);
-  bubblePaths(items);
+  const { processed, items } = data;
+  if (!processed) {
+    legacy(items);
+    wrapStates(items);
+    bubblePaths(items);
+    data.processed = true;
+  }
 }
 
 /**

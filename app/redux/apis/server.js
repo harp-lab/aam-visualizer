@@ -5,7 +5,7 @@ import {
   queueSnackbar
 } from 'store-actions';
 import { process } from 'store-apis';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS } from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_WAITING_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
 import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
 function apiReq(url, method) {
@@ -102,28 +102,33 @@ export function downloadProject(projectId) {
     const serverStatus = getProjectServerStatus(state, projectId);
     const clientStatus = getProjectClientStatus(state, projectId);
     let refresh = false;
-    switch (serverStatus) {
-      case EDIT_STATUS:
-        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) dispatch(getCode(projectId));
+    switch (clientStatus) {
+      case CLIENT_DOWNLOADED_STATUS:
+      case CLIENT_LOCAL_STATUS:
         break;
-      case PROCESS_STATUS: {
-        await dispatch(getData(projectId));
-        const state = store.getState();
-        const serverStatus = getProjectServerStatus(state, projectId);
-        refresh = serverStatus === PROCESS_STATUS;
-        break;
-      }
-      case COMPLETE_STATUS:
-        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) {
-          await dispatch(getData(projectId));
-          dispatch(generatePanels(projectId));
+      case CLIENT_WAITING_STATUS:
+      default:
+        switch (serverStatus) {
+          case EDIT_STATUS:
+            dispatch(getCode(projectId));
+            break;
+          case PROCESS_STATUS: {
+            await dispatch(getData(projectId));
+            const state = store.getState();
+            const serverStatus = getProjectServerStatus(state, projectId);
+            refresh = serverStatus === PROCESS_STATUS;
+            break;
+          }
+          case COMPLETE_STATUS:
+            await dispatch(getData(projectId));
+            dispatch(generatePanels(projectId));
+            break;
+          case ERROR_STATUS:
+            await dispatch(getData(projectId));
+            break;
         }
         break;
-      case ERROR_STATUS:
-        if (clientStatus !== CLIENT_DOWNLOADED_STATUS) {
-          await dispatch(getData(projectId));
-        }
-        break;
+
     }
     return refresh;
   };
@@ -229,6 +234,9 @@ export function getData(projectId) {
 export function importData(projectId, data) {
   return dispatch => {
     data.status = COMPLETE_STATUS;
+    data.metadata = {
+      status: { client: CLIENT_LOCAL_STATUS }
+    };
     dispatch(addProject(projectId));
     process(data) // TODO separate out secondary processing
     dispatch(setProjectData(projectId, data));
@@ -253,7 +261,7 @@ export function exportData(projectId) {
         const data = getProject(state, projectId);
         const filteredData = {};
         for (const [key, value] of Object.entries(data)) {
-          if (['analysis', 'code', 'items'].includes(key))
+          if (['analysis', 'status', 'code', 'items', 'processed'].includes(key))
             filteredData[key] = value;
         }
         const json = JSON.stringify(filteredData, null, 2);

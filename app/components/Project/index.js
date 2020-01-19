@@ -4,7 +4,7 @@ import { CodeViewer, ConfigViewer, EnvViewer, StackViewer } from 'component-view
 import { Loading, Pane, SplitPane } from 'library';
 import { downloadProject } from 'store-apis';
 import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS } from 'store-consts';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
 
 import Editor from './Editor';
 import FunctionGraph from './FunctionGraph';
@@ -12,7 +12,7 @@ import Toolbar from './Toolbar';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
-  const status = useSelector(getProjectServerStatus);
+  const serverStatus = useSelector(getProjectServerStatus);
   const dispatch = useDispatch();
   const timeout = useRef(undefined);
 
@@ -24,12 +24,13 @@ function Project() {
     };
   }, []);
   useEffect(() => {
-    switch (status) {
+    switch (serverStatus) {
       case PROCESS_STATUS:
+      case COMPLETE_STATUS:
         download();
         break;
     }
-  }, [status]);
+  }, [serverStatus]);
 
   async function download() {
     const refresh = await dispatch(downloadProject(projectId));
@@ -37,7 +38,7 @@ function Project() {
   }
 
   let viewElement;
-  switch (status) {
+  switch (serverStatus) {
     case EMPTY_STATUS:
     case EDIT_STATUS:
       viewElement = <Editor edit />;
@@ -66,6 +67,7 @@ function VisualView() {
   let view;
   switch (clientStatus) {
     case CLIENT_DOWNLOADED_STATUS:
+    case CLIENT_LOCAL_STATUS:
       view = (
         <Fragment>
           <SplitPane

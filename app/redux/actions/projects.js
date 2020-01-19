@@ -1,5 +1,6 @@
 import store from '../store';
-import { setTitle } from 'store-actions';
+import { setTitle, queueSnackbar } from 'store-actions';
+import { importData } from 'store-apis';
 import { getProject } from 'store-selectors';
 import {
   ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
@@ -33,7 +34,41 @@ export function selProject(projectId) {
       payload: { projectId }
     });
   }
-} 
+};
+
+export function importFiles(files) {
+  return dispatch => {
+    const file = files[0];
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const json = JSON.parse(fr.result);
+        const re = /(?:(.*)(?=\.))?\.?(.*)/;
+        const filename = file.name;
+        const reGroups = filename.match(re);
+        if (reGroups) {
+          const [_, name, ext] = reGroups;
+          let projectId;
+          if (name) projectId = name;
+          else projectId = ext;
+          dispatch(importData(projectId, json));
+        }
+      } catch(err) {
+        console.log(err);
+        const { name, message } = err;
+        switch (err.constructor) {
+          case SyntaxError:
+            dispatch(queueSnackbar(`Import failed: ${file.name} is not valid JSON`));
+            break;
+          default:
+            dispatch(queueSnackbar(`${name}: ${message}`));
+            break;
+        }
+      }
+    };
+    fr.readAsText(file);
+  };
+};
 
 export const setMetadata = (projectId, data) => ({
   type: SET_METADATA,
