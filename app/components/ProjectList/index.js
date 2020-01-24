@@ -41,7 +41,6 @@ function ProjectList() {
         }}>
         { projectList }
       </List>
-      test
     </DropImport>);
 }
 

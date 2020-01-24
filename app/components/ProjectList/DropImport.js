@@ -1,12 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { Typography } from '@material-ui/core';
+import { Backdrop, Typography } from '@material-ui/core';
+import { LibraryAdd as LibraryAddIcon } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { importFiles } from 'store-actions';
 
 const useStyles = makeStyles(theme => ({
-  overlay: {
-    backgroundColor: theme.palette.background.overlay
+  backdrop: {
+    position: 'absolute',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.palette.background.overlay,
+    color: theme.palette.secondary.main,
+    zIndex: theme.zIndex.tooltip
   }
 }));
 
@@ -17,12 +25,12 @@ const useStyles = makeStyles(theme => ({
  */
 function DropImport(props) {
   const { children } = props;
-  const [showDropOverlay, setShowDropOverlay] = useState(false);
+  const [overlay, setOverlay] = useState(false);
   const dropElemCounter = useRef(0);
   const dispatch = useDispatch();
   
   function updateDropOverlay() {
-    setShowDropOverlay(dropElemCounter.current !== 0);
+    setOverlay(dropElemCounter.current !== 0);
   }
 
   return (
@@ -43,8 +51,12 @@ function DropImport(props) {
         updateDropOverlay();
         dispatch(importFiles(evt.dataTransfer.files));
       }}
-      style={{ overflow: 'hidden' }}>
-      <DropOverlay show={ showDropOverlay } />
+      style={{
+        position: 'relative',
+        flex: '1 1 auto',
+        overflow: 'hidden'
+      }}>
+      <DropOverlay open={ overlay } />
       { children }
     </div>);
 }
@@ -52,29 +64,19 @@ function DropImport(props) {
 /**
  * File drop import tooltip overlay
  * @param {Object} props 
- * @param {Boolean} props.show whether to show component
+ * @param {Boolean} props.open display overlay
  */
 function DropOverlay(props) {
-  const { show } = props;
+  const { open } = props;
   const classes = useStyles();
 
-  if (!show) return null;
-
-  return ( 
-    <div
-      className={ classes.overlay }
-      style={{
-        display: 'flex',
-        height: '100%',
-        width: '100%',
-        position: 'fixed',
-        justifyContent: 'center',
-        alignItems: 'center',
-        pointerEvents: 'none',
-        zIndex: 1
-      }}>
+  return (
+    <Backdrop
+      open={ open }
+      classes={{ root: classes.backdrop }}>
+      <LibraryAddIcon />
       <Typography>Drop files here to import</Typography>
-    </div>);
+    </Backdrop>);
 }
 
 export default DropImport;
