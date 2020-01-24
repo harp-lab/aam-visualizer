@@ -1,16 +1,37 @@
-import React, { Fragment, useEffect, useRef } from 'react';
+import React, { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { List } from '@material-ui/core';
+import { List, Typography } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
 import { importFiles } from 'store-actions';
 import { getList } from 'store-apis';
 import { getProjectIds } from 'store-selectors';
 
 import Item from './Item';
 
+const useStyles = makeStyles(theme => ({
+  overlay: {
+    backgroundColor: theme.palette.background.overlay
+  }
+}));
+
 /** */
 function ProjectList() {
+  const [showDropOverlay, setShowDropOverlay] = useState(false);
   const projectIds = useSelector(getProjectIds);
   const dispatch = useDispatch();
+  const counter = useRef(0);
+  const decrement = useCallback(() => {
+    counter.current -= 1;
+    setShowDropOverlay(counter.current !== 0);
+  })
+  const iterate = useCallback(() => {
+    counter.current += 1;
+    setShowDropOverlay(counter.current !== 0);
+  });
+  const reset = useCallback(() => {
+    counter.current = 0;
+    setShowDropOverlay(counter.current !== 0);
+  });
   const timeout = useRef(undefined);
 
   // mount/unmount
@@ -31,20 +52,60 @@ function ProjectList() {
       key={ projectId }
       projectId={ projectId } />
   );
+
+  console.log('rendering', counter, showDropOverlay);
   
   return (
-    <Fragment>
-      <List
-        onDragEnter={ evt => evt.preventDefault() }
-        onDragOver={ evt => evt.preventDefault() }
-        onDrop={ evt => {
-          evt.preventDefault();
-          dispatch(importFiles(evt.dataTransfer.files));
-        }}
-        style={{ overflowY: 'auto' }}>
+    <div
+      onDragEnter={ evt => {
+        console.log('fired enter');
+        evt.preventDefault();
+        iterate();
+      }}
+      onDragOver={ evt => evt.preventDefault() }
+      onDragLeave={ evt => {
+        console.log('fired leave');
+        evt.preventDefault();
+        decrement();
+      }}
+      onDrop={ evt => {
+        evt.preventDefault();
+        dispatch(importFiles(evt.dataTransfer.files));
+        reset();
+      }}
+      style={{
+        height: '100%',
+        overflowY: 'auto'
+      }}>
+      <DropOverlay show={ showDropOverlay } />
+      <List style={{ pointerEvents: showDropOverlay ? 'none' : 'auto' }}>
         { projectList }
       </List>
-    </Fragment>);
+    </div>);
+}
+
+function DropOverlay(props) {
+  const { show } = props;
+  const classes = useStyles();
+
+  if (!show) return null;
+
+  return ( 
+    <div
+      className={ classes.overlay }
+      style={{
+        display: 'flex',
+        height: '100%',
+        width: '100%',
+        position: 'fixed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        pointerEvents: 'none',
+        zIndex: 1
+      }}>
+      <Typography>Drop files here to import</Typography>
+    </div>
+  );
 }
 
 export default ProjectList;

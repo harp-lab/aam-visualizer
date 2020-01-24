@@ -31,6 +31,9 @@ const theme = createMuiTheme({
     warn: {
       main: amber.A700,
       contrastText: '#fff'
+    },
+    background: {
+      overlay: 'rgba(255, 255, 255, 0.5)'
     }
   },
 });

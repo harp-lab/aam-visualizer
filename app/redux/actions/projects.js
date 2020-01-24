@@ -39,6 +39,11 @@ export function selProject(projectId) {
 export function importFiles(files) {
   return dispatch => {
     const file = files[0];
+    dispatch(importFile(file));
+  };
+};
+export function importFile(file) {
+  return dispatch => {
     const fr = new FileReader();
     fr.onload = () => {
       try {
@@ -54,7 +59,6 @@ export function importFiles(files) {
           dispatch(importData(projectId, json));
         }
       } catch(err) {
-        console.log(err);
         const { name, message } = err;
         switch (err.constructor) {
           case SyntaxError:
@@ -68,7 +72,7 @@ export function importFiles(files) {
     };
     fr.readAsText(file);
   };
-};
+}
 
 export const setMetadata = (projectId, data) => ({
   type: SET_METADATA,

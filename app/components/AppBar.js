@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { AppBar as MUIAppBar, Button, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles, withTheme } from '@material-ui/styles';
 import { createProject, forkProject, importData, exportData } from 'store-apis';
-import { logout, selProject, queueSnackbar } from 'store-actions';
+import { logout, selProject, queueSnackbar, importFiles } from 'store-actions';
 import { LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 
@@ -89,37 +89,6 @@ function ImportButton() {
   const input = useRef(undefined);
   const dispatch = useDispatch();
 
-  function save(file) {
-    const fr = new FileReader();
-    fr.onload = () => {
-      try {
-        const json = JSON.parse(fr.result);
-        const re = /(?:(.*)(?=\.))?\.?(.*)/;
-        const filename = file.name;
-        const reGroups = filename.match(re);
-        if (reGroups) {
-          const [_, name, ext] = reGroups;
-          let projectId;
-          if (name) projectId = name;
-          else projectId = ext;
-          dispatch(importData(projectId, json));
-        }
-      } catch(err) {
-        const { name, message } = err;
-        switch (err.constructor) {
-          case SyntaxError:
-            dispatch(queueSnackbar(`Import failed: ${file.name} is not valid JSON`));
-            break;
-          default:
-            dispatch(queueSnackbar(`${name}: ${message}`));
-            break;
-        }
-      }
-    };
-    fr.readAsText(file);
-    input.current.value = '';
-  }
-
   return (
     <Fragment>
       <AppBarButton
@@ -127,7 +96,7 @@ function ImportButton() {
         onClick={ () => input.current.click() } />
       <input
         ref={ input }
-        onInput={ () => save(input.current.files[0]) }
+        onInput={ () => dispatch(importFiles(input.current.files)) }
         type='file'
         hidden />
     </Fragment>);
