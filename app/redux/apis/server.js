@@ -231,18 +231,6 @@ export function getData(projectId) {
   };
 }
 
-export function importData(projectId, data) {
-  return dispatch => {
-    data.status = COMPLETE_STATUS;
-    data.metadata = {
-      status: { client: CLIENT_LOCAL_STATUS }
-    };
-    dispatch(addProject(projectId));
-    process(data) // TODO separate out secondary processing
-    dispatch(setProjectData(projectId, data));
-    dispatch(generatePanels(projectId));
-  }
-}
 
 
 export function exportData(projectId) {

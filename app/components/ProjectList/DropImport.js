@@ -40,7 +40,10 @@ function DropImport(props) {
         dropElemCounter.current += 1;
         updateDropOverlay();
       }}
-      onDragOver={ evt => evt.preventDefault() }
+      onDragOver={ evt => {
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy';
+      }}
       onDragLeave={ evt => {
         dropElemCounter.current -= 1;
         updateDropOverlay();
