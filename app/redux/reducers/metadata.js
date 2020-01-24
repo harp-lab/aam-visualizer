@@ -3,7 +3,10 @@ import {
   SET_METADATA, SET_STATUS, SET_GRAPH_METADATA,
   ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS
 } from '../actionTypes';
-import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL } from 'store-consts';
+import {
+  CLIENT_WAITING_STATUS,
+  CONFIG_PANEL, ENV_PANEL, STACK_PANEL
+} from 'store-consts';
 
 function metadataReducer(state = {}, action) {
   switch (action.type) {
@@ -94,7 +97,15 @@ const panelsReducer = combineReducers({
   stacks: createFilteredReducer(panelReducer, action => action.payload ? action.payload.type === STACK_PANEL : false)
 });
 
-function statusReducer(state = {}, action) {
+/**
+ * State reducer for project status metadata
+ * @param {Object} state 
+ * @param {Object} action 
+ * @param {String} action.type
+ */
+function statusReducer(state = {
+  client: CLIENT_WAITING_STATUS
+}, action) {
   switch (action.type) {
     case SET_STATUS: {
       const { data } = action.payload;

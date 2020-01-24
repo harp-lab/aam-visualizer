@@ -13,7 +13,8 @@ import { deleteProject, cancelProcess, exportData, forkProject } from 'store-api
 import { getProject, getProjectServerStatus } from 'store-selectors';
 import { PROCESS_STATUS } from 'store-consts';
 
-import Status from './Status';
+import ClientStatus from './ClientStatus';
+import ServerStatus from './ServerStatus';
 
 const useStyles = makeStyles(theme => ({
   disabled: { color: theme.palette.text.disabled }
@@ -57,11 +58,11 @@ function Item(props) {
         value={ name }
         defaultValue='unnamed'
         style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
+          flex: '1 0 auto'
         }}/>
       <ItemAttribute value={ projectId } />
-      <Status status={ status } />
+      <ServerStatus projectId={ projectId } />
+      <ClientStatus projectId={ projectId } />
       { actionsElem }
     </ListItem>);
 }
@@ -87,7 +88,11 @@ function ItemAttribute(props) {
   return (
     <ListItemText
       classes={{ root: rootClass }}
-      style={ style }>
+      style={{
+        ...style,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
       { text }
     </ListItemText>);
 }
