@@ -1,6 +1,6 @@
 import store from '../store';
 import {
-  setProjectData, addProject, delProject, selProject, setClientStatus,
+  setProjectData, addProject, deleteProjectLocal, selProject, setClientStatus,
   generatePanels,
   queueSnackbar
 } from 'store-actions';
@@ -56,6 +56,7 @@ export function createProject() {
     return projectId;
   };
 }
+
 export function deleteProject(projectId) {
   return async function(dispatch) {
     const state = store.getState();
@@ -63,7 +64,7 @@ export function deleteProject(projectId) {
     const res = await apiReq(`projects/${projectId}/delete`, 'POST');
     switch (res.status) {
       case 205:
-        dispatch(delProject(projectId));
+        dispatch(deleteProjectLocal(projectId));
         if (selectedProjectId == projectId)
           dispatch(selProject(undefined));
         break;
@@ -73,14 +74,30 @@ export function deleteProject(projectId) {
     }
   };
 }
+
+/**
+ * @param {String} projectId project id
+ * @returns {Function} async dispatch
+ */
 export function forkProject(projectId) {
   return async function(dispatch) {
     let state = store.getState();
-    let project = getProject(state, projectId);
-    if (project.status !== EMPTY_STATUS) {
-      await dispatch(getCode(projectId));
-      state = store.getState();
-      project = getProject(state, projectId);
+    let { status: serverStatus, ...project } = getProject(state, projectId);
+    const clientStatus = getProjectClientStatus(state, projectId);
+    switch (clientStatus) {
+      case CLIENT_WAITING_STATUS:
+        switch (serverStatus) {
+          case EMPTY_STATUS:
+            break;
+          default:
+            await dispatch(getCode(projectId));
+            state = store.getState();
+            project = getProject(state, projectId);
+            break;
+        }
+        break;
+      default:
+        break;
     }
     
     const forkProjectId = await dispatch(createProject());
@@ -92,7 +109,6 @@ export function forkProject(projectId) {
 }
 
 /**
- * Download project
  * @param {String} projectId project id
  * @returns {Function} async dispatch
  */
@@ -128,8 +144,8 @@ export function downloadProject(projectId) {
             break;
         }
         break;
-
     }
+
     return refresh;
   };
 }
@@ -140,8 +156,17 @@ export function downloadProject(projectId) {
  */
 export function rename(projectId, name) {
   return async function(dispatch) {
+    const state = store.getState();
+    const clientStatus = getProjectClientStatus(state, projectId);
+    switch (clientStatus) {
+      case CLIENT_LOCAL_STATUS:
+        break;
+      default:
+        apiPost(`projects/${projectId}/save`, { name });
+        break;
+    }
+
     dispatch(setProjectData(projectId, { name }));
-    apiPost(`projects/${projectId}/save`, { name });
   };
 }
 export function getCode(projectId) {

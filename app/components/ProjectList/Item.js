@@ -8,10 +8,12 @@ import {
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { DropMenu, IconButton } from 'library';
-import { setRenameDialog, selProject } from 'store-actions';
-import { deleteProject, cancelProcess, exportData, forkProject } from 'store-apis';
-import { getProject, getProjectServerStatus } from 'store-selectors';
-import { PROCESS_STATUS } from 'store-consts';
+import { setRenameDialog, deleteProjectLocal, selProject } from 'store-actions';
+import {
+  deleteProject, cancelProcess, exportData, forkProject
+} from 'store-apis';
+import { getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
+import { PROCESS_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
 
 import ClientStatus from './ClientStatus';
 import ServerStatus from './ServerStatus';
@@ -26,7 +28,7 @@ const useStyles = makeStyles(theme => ({
  */
 function Item(props) {
   const { projectId } = props;
-  const { analysis, name, status } = useSelector(state => getProject(state, projectId));
+  const { analysis, name } = useSelector(state => getProject(state, projectId));
   const dispatch = useDispatch();
 
   const actionsElem = (
@@ -98,17 +100,55 @@ function ItemAttribute(props) {
 }
 
 /**
- * Stateful project remove action
+ * Project fork action
+ * @param {Object} props 
+ */
+function ForkAction(props) {
+  const { projectId } = props;
+  const dispatch = useDispatch();
+
+  
+}
+
+/**
+ * Project remove action
  * @param {Object} props 
  * @param {String} props.projectId project id
  */
 function RemoveAction(props) {
   const { projectId } = props;
-  const status = useSelector(store => getProjectServerStatus(store, projectId));
+  const clientStatus = useSelector(state => getProjectClientStatus(state, projectId));
   const dispatch = useDispatch();
 
   let elem;
-  switch (status) {
+  switch (clientStatus) {
+    case CLIENT_LOCAL_STATUS:
+      elem = (
+        <IconButton
+          icon={ <DeleteIcon /> }
+          size='medium'
+          tooltip='Remove'
+          onClick={ () => dispatch(deleteProjectLocal(projectId)) } />);
+      break;
+    default:
+      elem = <ServerRemoveAction projectId={ projectId } />;
+      break;
+  }
+  return elem;
+}
+
+/**
+ * Project server remove action
+ * @param {Object} props 
+ * @param {String} props.projectId project id
+ */
+function ServerRemoveAction(props) {
+  const { projectId } = props;
+  const serverStatus = useSelector(state => getProjectServerStatus(state, projectId));
+  const dispatch = useDispatch();
+
+  let elem;
+  switch (serverStatus) {
     case PROCESS_STATUS:
       elem = (
         <IconButton
@@ -126,6 +166,7 @@ function RemoveAction(props) {
           onClick={ () => dispatch(deleteProject(projectId)) } />);
       break;
   }
+
   return elem;
 }
 

@@ -16,10 +16,17 @@ export const setProjectData = (projectId, data) => ({
   type: SET_PROJECT_DATA,
   payload: { projectId, data }
 });
-export const delProject = projectId => ({
+
+/**
+ * Delete project
+ * @param {String} projectId project id
+ * @returns {Object} action
+ */
+export const deleteProjectLocal = projectId => ({
   type: DEL_PROJECT,
   payload: { projectId }
 });
+
 export const delProjects = () => ({
   type: DEL_PROJECTS
 });
