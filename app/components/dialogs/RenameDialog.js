@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { rename } from 'store-apis';
+import { renameProject } from 'store-apis';
 import { setRenameDialog } from 'store-actions';
 import { getRenameDialog, getProject } from 'store-selectors';
 
@@ -38,7 +38,7 @@ function RenameDialog() {
         <Button
           onClick={ () => {
             close();
-            dispatch(rename(projectId, currName));
+            dispatch(renameProject(projectId, currName));
           }}>
           rename
         </Button>
