@@ -32,14 +32,16 @@ function apiPost(url, obj) {
 async function projectRequest(projectId, localCallback, serverCallback) {
   const state = store.getState();
   const clientStatus = getProjectClientStatus(state, projectId);
+  let result;
   switch (clientStatus) {
     case CLIENT_LOCAL_STATUS:
-      localCallback();
+      result = await localCallback();
       break;
     default:
-      await serverCallback(localCallback);
+      result = await serverCallback(localCallback);
       break;
   }
+  return result;
 }
 
 export function getList() {
@@ -66,14 +68,28 @@ export function getList() {
   };
 }
 
+/**
+ * @returns {Function(dispatch): String} async dispatch
+ */
 export function createProject() {
+  /**
+   * @param {Function} dispatch
+   * @returns {String} projectId
+   */
   return async function(dispatch) {
-    // TODO refactor
-    const res = await apiReq('create', 'GET');
-    const data = await res.json();
-    const projectId = data.id;
-    dispatch(addProject(projectId));
-    dispatch(selProject(undefined));
+    const res = await apiReq('create', 'POST');
+    let projectId;
+    switch (res.status) {
+      case 200:
+        const data = await res.json();
+        projectId = data.id;
+        dispatch(addProject(projectId));
+        dispatch(selProject(undefined));
+        break;
+      default:
+        dispatch(queueSnackbar(`Project create request failed`));
+        break;
+    }
     return projectId;
   };
 }
@@ -84,12 +100,14 @@ export function createProject() {
  */
 export function deleteProject(projectId) {
   return async function(dispatch) {
-    const localCallback = () => dispatch(deleteProjectLocal(projectId));
-    const serverCallback = async function(localCallback) {
+    async function localCallback() {
+      dispatch(deleteProjectLocal(projectId));
+    }
+    async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/delete`, 'POST');
       switch (res.status) {
         case 205:
-          localCallback();
+          await localCallback();
           break;
         default:
           dispatch(queueSnackbar(`Project ${projectId} delete request failed`));
@@ -106,31 +124,27 @@ export function deleteProject(projectId) {
  */
 export function forkProject(projectId) {
   return async function(dispatch) {
-    // TODO refactor
-    let state = store.getState();
-    let { status: serverStatus, ...project } = getProject(state, projectId);
-    const clientStatus = getProjectClientStatus(state, projectId);
-    switch (clientStatus) {
-      case CLIENT_WAITING_STATUS:
-        switch (serverStatus) {
-          case EMPTY_STATUS:
-            break;
-          default:
-            await dispatch(getCode(projectId));
-            state = store.getState();
-            project = getProject(state, projectId);
-            break;
-        }
-        break;
-      default:
-        break;
-    }
-    
-    const forkProjectId = await dispatch(createProject());
-    const { code, analysis } = project;
-    const forkData = { code, analysis };
-    dispatch(setProjectData(forkProjectId, forkData));
-    dispatch(selProject(forkProjectId));
+    async function localCallback() {
+      const state = store.getState();
+      const { code, analysis } = getProject(state, projectId);
+      const forkProjectId = await dispatch(createProject());
+      const forkData = { code, analysis };
+      dispatch(setProjectData(forkProjectId, forkData));
+      dispatch(selProject(forkProjectId));
+    };
+    async function serverCallback(localCallback) {
+      const state = store.getState();
+      const serverStatus = getProjectServerStatus(state, projectId);
+      switch (serverStatus) {
+        case EMPTY_STATUS:
+          break;
+        default:
+          await dispatch(getCode(projectId));
+          break;
+      }
+      await localCallback();
+    };
+    await projectRequest(projectId, localCallback, serverCallback);
   };
 }
 
@@ -139,41 +153,55 @@ export function forkProject(projectId) {
  * @returns {Function} async dispatch
  */
 export function downloadProject(projectId) {
+  /**
+   * @param {Function} dispatch
+   * @returns {Boolean} refresh status
+   */
   return async function(dispatch) {
-    // TODO refactor
-    const state = store.getState();
-    const serverStatus = getProjectServerStatus(state, projectId);
-    const clientStatus = getProjectClientStatus(state, projectId);
-    let refresh = false;
-    switch (clientStatus) {
-      case CLIENT_DOWNLOADED_STATUS:
-      case CLIENT_LOCAL_STATUS:
-        break;
-      case CLIENT_WAITING_STATUS:
-      default:
-        switch (serverStatus) {
-          case EDIT_STATUS:
-            dispatch(getCode(projectId));
-            break;
-          case PROCESS_STATUS: {
-            await dispatch(getData(projectId));
-            const state = store.getState();
-            const serverStatus = getProjectServerStatus(state, projectId);
-            refresh = serverStatus === PROCESS_STATUS;
-            break;
-          }
-          case COMPLETE_STATUS:
-            await dispatch(getData(projectId));
-            dispatch(generatePanels(projectId));
-            break;
-          case ERROR_STATUS:
-            await dispatch(getData(projectId));
-            break;
-        }
-        break;
+    async function localCallback() {}
+    async function serverCallback(localCallback) {
+      const state = store.getState();
+      const clientStatus = getProjectClientStatus(state, projectId);
+      let refresh = false;
+      switch (clientStatus) {
+        case CLIENT_DOWNLOADED_STATUS:
+          break;
+        default:
+          refresh = await downloadCallback();
+          break;
+      }
+      return refresh;
+    };
+    async function downloadCallback() {
+      const state = store.getState();
+      const serverStatus = getProjectServerStatus(state, projectId);
+      let refresh = false;
+      switch (serverStatus) {
+        case EMPTY_STATUS:
+          break;
+        case EDIT_STATUS:
+          dispatch(getCode(projectId));
+          break;
+        case PROCESS_STATUS:{
+          await dispatch(getData(projectId));
+          const state = store.getState();
+          const serverStatus = getProjectServerStatus(state, projectId);
+          refresh = serverStatus === PROCESS_STATUS;
+          break;}
+        case COMPLETE_STATUS:
+          await dispatch(getData(projectId));
+          dispatch(generatePanels(projectId));
+          break;
+        case ERROR_STATUS:
+          await dispatch(getData(projectId));
+          break;
+        default:
+          console.error(`server api downloadProject() request: unhandled ${projectId} '${serverStatus}' status`);
+          break;
+      }
+      return refresh;
     }
-
-    return refresh;
+    return await projectRequest(projectId, localCallback, serverCallback);
   };
 }
 
@@ -184,11 +212,13 @@ export function downloadProject(projectId) {
  */
 export function renameProject(projectId, name) {
   return async function(dispatch) {
-    const localCallback = () => dispatch(setProjectData(projectId, { name }));
-    const serverCallback = async function(localCallback) {
+    async function localCallback() {
+      dispatch(setProjectData(projectId, { name }));
+    }
+    async function serverCallback(localCallback) {
       await apiPost(`projects/${projectId}/save`, { name });
       // TODO examine post response
-      localCallback();
+      await localCallback();
     }
     await projectRequest(projectId, localCallback, serverCallback);
   };
@@ -200,10 +230,10 @@ export function renameProject(projectId, name) {
  */
 export function getCode(projectId) {
   return async function(dispatch) {
-    const localCallback = () => {
+    async function localCallback() {
       console.error(`server api getCode() request: local project ${projectId}`);
-    };
-    const serverCallback = async function(localCallback) {
+    }
+    async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/code`, 'GET');
       const { code } = await res.json();
       const data = { code };
@@ -220,7 +250,7 @@ export function getCode(projectId) {
  */
 export function saveCode(projectId, code) {
   return async function(dispatch) {
-    const localCallback = () => {
+    async function localCallback() {
       const state = store.getState();
       const { status: serverStatus } = getProject(state, projectId);
       switch (serverStatus) {
@@ -238,10 +268,10 @@ export function saveCode(projectId, code) {
           break;
       }
     };
-    const serverCallback = async function(localCallback) {
+    async function serverCallback(localCallback) {
       await apiPost(`projects/${projectId}/save`, { code });
       // TODO examine post response
-      localCallback();
+      await localCallback();
     };
     await projectRequest(projectId, localCallback, serverCallback);
   }

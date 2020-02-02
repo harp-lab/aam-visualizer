@@ -1,3 +1,8 @@
+## 0.3.15 TBA
+* new drag-drop project import functionality
+* projects are listed with client status
+* improved local project import support
+
 ## 0.3.14
 * graph `start` property is now an array instead of a string id to support multiple entry points
 * env data structure changed from array to dictionary with array moved to `entries` property

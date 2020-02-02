@@ -121,10 +121,10 @@ class Server {
       res.json(this.getProjectList(req.params.userId))
         .status(200).end();
     });
-    userRouter.get('/create', async (req, res) => {
+    userRouter.post('/create', async (req, res) => {
       const projectId = await this.createProject(req.params.userId);
       res.json({ id: projectId })
-        .status(201).end();
+        .status(200).end();
     });
     userRouter.use('/projects/:projectId', projectRouter);
     
