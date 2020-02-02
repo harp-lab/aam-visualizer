@@ -8,9 +8,9 @@ import {
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { DropMenu, IconButton } from 'library';
-import { setRenameDialog, deleteProjectLocal, selProject } from 'store-actions';
+import { setRenameDialog, deleteProjectLocal, selProject, exportData } from 'store-actions';
 import {
-  deleteProject, cancelProcess, exportData, forkProject
+  deleteProject, cancelProcess, forkProject
 } from 'store-apis';
 import { getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 import { PROCESS_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';

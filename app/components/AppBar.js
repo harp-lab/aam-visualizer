@@ -2,8 +2,8 @@ import React, { Fragment, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppBar as MUIAppBar, Button, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles, withTheme } from '@material-ui/styles';
-import { createProject, forkProject, importData, exportData } from 'store-apis';
-import { logout, selProject, queueSnackbar, importFiles } from 'store-actions';
+import { createProject, forkProject } from 'store-apis';
+import { logout, selProject, importFiles, exportData } from 'store-actions';
 import { LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 import { getView, getTitle, getSelectedProjectId } from 'store-selectors';
 

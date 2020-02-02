@@ -5,8 +5,8 @@ import {
   queueSnackbar
 } from 'store-actions';
 import { process } from 'store-apis';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_WAITING_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
-import { getUser, getSelectedProjectId, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
+import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
 function apiReq(url, method) {
   const state = store.getState();
@@ -22,6 +22,23 @@ function apiPost(url, obj) {
     body: JSON.stringify(obj)
   });
 }
+/**
+ * @param {String} projectId project id
+ * @param {Object} data save data
+ * @param {Function} callback 
+ */
+async function saveReq(projectId, data, callback) {
+  const res = await apiPost(`projects/${projectId}/save`, data);
+  switch (res.status) {
+    case 202:
+      await callback();
+      break;
+    default:
+      dispatch(queueSnackbar(`Project ${projectId} save request failed`));
+      break;
+  }
+}
+
 
 /**
  * Call either local callback and/or server callback depending on project client status
@@ -44,13 +61,15 @@ async function projectRequest(projectId, localCallback, serverCallback) {
   return result;
 }
 
+/**
+ * @returns {Function} async dispatch
+ */
 export function getList() {
   return async function(dispatch) {
-    // TODO refactor
     const res = await apiReq('all', 'GET');
     let refresh = false;
     switch (res.status) {
-      case 200: {
+      case 200:
         const data = await res.json();
         for (const [projectId, projectData] of Object.entries(data)) {
           const { status, name, analysis } = projectData;
@@ -59,7 +78,6 @@ export function getList() {
             refresh = true;
         }
         break;
-      }
       default:
         refresh = true;
         break;
@@ -69,7 +87,7 @@ export function getList() {
 }
 
 /**
- * @returns {Function(dispatch): String} async dispatch
+ * @returns {Function} async dispatch
  */
 export function createProject() {
   /**
@@ -216,9 +234,7 @@ export function renameProject(projectId, name) {
       dispatch(setProjectData(projectId, { name }));
     }
     async function serverCallback(localCallback) {
-      await apiPost(`projects/${projectId}/save`, { name });
-      // TODO examine post response
-      await localCallback();
+      await saveReq(projectId, { name }, localCallback);
     }
     await projectRequest(projectId, localCallback, serverCallback);
   };
@@ -269,120 +285,90 @@ export function saveCode(projectId, code) {
       }
     };
     async function serverCallback(localCallback) {
-      await apiPost(`projects/${projectId}/save`, { code });
-      // TODO examine post response
-      await localCallback();
+      await saveReq(projectId, { code }, localCallback);
     };
     await projectRequest(projectId, localCallback, serverCallback);
   }
 }
 
+/**
+ * @param {String} projectId project id
+ * @param {String} code project code
+ * @param {Object} options analysis options
+ * @returns {Function} async dispatch
+ */
 export function processCode(projectId, code, options) {
   return async function(dispatch) {
-    // TODO refactor
-    await dispatch(saveCode(projectId, code));
-    const res = await apiPost(`projects/${projectId}/process`, options);
-    switch (res.status) {
-      case 200: {
-        dispatch(setProjectData(projectId, { status: 'process' }));
-        break;
-      }
-      case 412: {
-        dispatch(queueSnackbar('Project process request rejected'));
-        break;
+    async function localCallback() {
+      console.error(`server api processCode() request: local project ${projectId}`);
+    }
+    async function serverCallback(localCallback) {
+      await dispatch(saveCode(projectId, code));
+      const res = await apiPost(`projects/${projectId}/process`, options);
+      switch (res.status) {
+        case 200:
+          dispatch(setProjectData(projectId, { status: 'process' }));
+          break;
+        case 412:
+          dispatch(queueSnackbar('Project process request rejected'));
+          break;
       }
     }
+    await projectRequest(projectId, localCallback, serverCallback);
   }
 }
+
+/**
+ * @param {String} projectId project id
+ * @returns {Function} async dispatch
+ */
 export function cancelProcess(projectId) {
   return async function(dispatch) {
-    // TODO refactor
-    const res = await apiReq(`projects/${projectId}/cancel`, 'POST');
-    switch (res.status) {
-      case 200: {
-        dispatch(setProjectData(projectId, { status: EDIT_STATUS }));
-        break;
-      }
-      case 409: {
-        const msg = `Project ${projectId} cancel request denied - already finished`;
-        dispatch(queueSnackbar(msg));
-        break;
-      }
-      default: {
-        const msg = `Project ${projectId} cancel request failed`;
-        dispatch(queueSnackbar(msg));
-        break;
+    async function localCallback() {
+      console.error(`server api cancelProcess() request: local project ${projectId}`);
+    }
+    async function serverCallback(localCallback) {
+      const res = await apiReq(`projects/${projectId}/cancel`, 'POST');
+      switch (res.status) {
+        case 200:
+          dispatch(setProjectData(projectId, { status: EDIT_STATUS }));
+          break;
+        case 409:
+          const msg = `Project ${projectId} cancel request denied - already finished`;
+          dispatch(queueSnackbar(msg));
+          break;
       }
     }
+    await projectRequest(projectId, localCallback, serverCallback);
   };
 }
 
 /**
  * Get project data
  * @param {String} projectId project id
+ * @returns {Function} async dispatch
  */
 export function getData(projectId) {
   return async function(dispatch) {
-    // TODO refactor
-    const res = await apiReq(`projects/${projectId}/data`, 'GET');
-    switch (res.status) {
-      case 200: {
-        const data = await res.json();
-        process(data) // TODO separate out secondary processing
-        dispatch(setProjectData(projectId, data));
-        dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS))
-        break;
-      }
-      case 204: break;
-      case 412: {
-        dispatch(queueSnackbar('Project data request rejected'));
-        break;
+    async function localCallback() {
+      console.error(`server api getData() request: local project ${projectId}`);
+    }
+    async function serverCallback(localCallback) {
+      const res = await apiReq(`projects/${projectId}/data`, 'GET');
+      switch (res.status) {
+        case 200:
+          const data = await res.json();
+          process(data) // TODO separate out secondary processing
+          dispatch(setProjectData(projectId, data));
+          dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS))
+          break;
+        case 204:
+          break;
+        case 412:
+          dispatch(queueSnackbar('Project data request rejected'));
+          break;
       }
     }
-  };
-}
-
-
-
-export function exportData(projectId) {
-  return async function(dispatch) {
-    // TODO refactor
-    await dispatch(downloadProject(projectId));
-    const state = store.getState();
-    const serverStatus = getProjectServerStatus(state, projectId);
-    switch (serverStatus) {
-      case PROCESS_STATUS: {
-        dispatch(queueSnackbar('Project still processing'));
-        break;
-      }
-      default: {
-        // create blob
-        const state = store.getState();
-        const data = getProject(state, projectId);
-        const filteredData = {};
-        for (const [key, value] of Object.entries(data)) {
-          if (['analysis', 'status', 'code', 'items', 'processed'].includes(key))
-            filteredData[key] = value;
-        }
-        const json = JSON.stringify(filteredData, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-
-        // create elem
-        const href = URL.createObjectURL(blob);
-        const file = `aam-vis-${projectId}.json`;
-        const elem = document.createElement('a');
-        Object.assign(elem, {
-          href,
-          download: file
-        });
-        document.body.appendChild(elem);
-        elem.click();
-
-        // cleanup
-        elem.remove();
-        URL.revokeObjectURL(href);
-        break;
-      }
-    }
+    await projectRequest(projectId, localCallback, serverCallback);
   };
 }
