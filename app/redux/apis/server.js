@@ -2,17 +2,27 @@ import store from '../store';
 import {
   setProjectData, addProject, deleteProjectLocal, selProject, setClientStatus,
   generatePanels,
-  queueSnackbar
+  queueSnackbar,
+  consoleError
 } from 'store-actions';
 import { process } from 'store-apis';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
 import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
+/**
+ * @param {String} url user req url
+ * @param {String} method req method
+ */
 function apiReq(url, method) {
   const state = store.getState();
   const userId = getUser(state);
   return fetch(`/api/${userId}/${url}`, { method });
 }
+
+/**
+ * @param {String} url user post url
+ * @param {Object} obj data to post
+ */
 function apiPost(url, obj) {
   const state = store.getState();
   const userId = getUser(state);
@@ -22,6 +32,7 @@ function apiPost(url, obj) {
     body: JSON.stringify(obj)
   });
 }
+
 /**
  * @param {String} projectId project id
  * @param {Object} data save data
@@ -38,7 +49,6 @@ async function saveReq(projectId, data, callback) {
       break;
   }
 }
-
 
 /**
  * Call either local callback and/or server callback depending on project client status
@@ -59,6 +69,13 @@ async function projectRequest(projectId, localCallback, serverCallback) {
       break;
   }
   return result;
+}
+
+
+function localProjectError(caller, projectId) {
+  return function(dispatch) {
+    dispatch(consoleError(`server api ${caller}: local project ${projectId}`));
+  }
 }
 
 /**
@@ -214,7 +231,7 @@ export function downloadProject(projectId) {
           await dispatch(getData(projectId));
           break;
         default:
-          console.error(`server api downloadProject() request: unhandled ${projectId} '${serverStatus}' status`);
+          dispatch(consoleError(`server api downloadProject() request: unhandled ${projectId} '${serverStatus}' status`));
           break;
       }
       return refresh;
@@ -247,7 +264,7 @@ export function renameProject(projectId, name) {
 export function getCode(projectId) {
   return async function(dispatch) {
     async function localCallback() {
-      console.error(`server api getCode() request: local project ${projectId}`);
+      dispatch(localProjectError('getCode()', projectId));
     }
     async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/code`, 'GET');
@@ -280,7 +297,7 @@ export function saveCode(projectId, code) {
           break;
         }
         default:
-          console.error(`server api saveCode() request: '${serverStatus}' status project ${projectId}`);
+          dispatch(consoleError(`server api saveCode() request: '${serverStatus}' status project ${projectId}`));
           break;
       }
     };
@@ -300,7 +317,7 @@ export function saveCode(projectId, code) {
 export function processCode(projectId, code, options) {
   return async function(dispatch) {
     async function localCallback() {
-      console.error(`server api processCode() request: local project ${projectId}`);
+      dispatch(localProjectError('processCode()', projectId));
     }
     async function serverCallback(localCallback) {
       await dispatch(saveCode(projectId, code));
@@ -325,7 +342,7 @@ export function processCode(projectId, code, options) {
 export function cancelProcess(projectId) {
   return async function(dispatch) {
     async function localCallback() {
-      console.error(`server api cancelProcess() request: local project ${projectId}`);
+      dispatch(localProjectError('cancelProcess()', projectId));
     }
     async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/cancel`, 'POST');
@@ -351,7 +368,7 @@ export function cancelProcess(projectId) {
 export function getData(projectId) {
   return async function(dispatch) {
     async function localCallback() {
-      console.error(`server api getData() request: local project ${projectId}`);
+      dispatch(localProjectError('getData()', projectId));
     }
     async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/data`, 'GET');

@@ -12,6 +12,14 @@ export const dequeueSnackbar = () => ({
   type: DEQUEUE_SNACKBAR
 });
 
+/**
+ * @param {String} message 
+ * @returns {Function} dispatch
+ */
+export function consoleError(message) {
+  return dispatch => console.error(`[error] ${message}`);
+}
+
 export const showLoading = () => ({
   type: SET_LOADING,
   payload: { loading: true }
@@ -23,13 +31,14 @@ export const hideLoading = () => ({
 
 /**
  * @param {String} projectId project id
+ * @returns {Object} action
  */
 export function setRenameDialog(projectId) {
-  return ({
+  return {
     type: SET_DIALOG,
     payload: {
       dialogId: 'rename',
       data: projectId
     }
-  })
+  }
 };
