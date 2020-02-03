@@ -1,4 +1,4 @@
-## 0.3.15 TBA
+## 0.3.15
 * new drag-drop project import functionality
 * projects are listed with client status
 * improved local project import support
