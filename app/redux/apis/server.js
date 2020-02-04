@@ -71,7 +71,10 @@ async function projectRequest(projectId, localCallback, serverCallback) {
   return result;
 }
 
-
+/**
+ * @param {String} caller caller function
+ * @param {String} projectId project id
+ */
 function localProjectError(caller, projectId) {
   return function(dispatch) {
     dispatch(consoleError(`server api ${caller}: local project ${projectId}`));
@@ -377,7 +380,7 @@ export function getData(projectId) {
           const data = await res.json();
           process(data) // TODO separate out secondary processing
           dispatch(setProjectData(projectId, data));
-          dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS))
+          dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS));
           break;
         case 204:
           break;

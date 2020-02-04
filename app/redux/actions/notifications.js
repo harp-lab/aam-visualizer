@@ -30,15 +30,33 @@ export const hideLoading = () => ({
 });
 
 /**
+ * @param {String} dialogId dialog type id
+ * @returns {Function} dialog set action generator
+ */
+function setDialogFactory(dialogId) {
+  /**
+   * @param {String} projectId project id
+   * @returns {Object} action
+   */
+  return function(projectId) {
+    return {
+      type: SET_DIALOG,
+      payload: {
+        dialogId,
+        data: projectId
+      }
+    };
+  };
+}
+
+/**
  * @param {String} projectId project id
  * @returns {Object} action
  */
-export function setRenameDialog(projectId) {
-  return {
-    type: SET_DIALOG,
-    payload: {
-      dialogId: 'rename',
-      data: projectId
-    }
-  }
-};
+export const setRenameDialog = setDialogFactory('rename');
+
+/**
+ * @param {String} projectId project id
+ * @returns {Object} action
+ */
+export const setDeleteDialog = setDialogFactory('delete');

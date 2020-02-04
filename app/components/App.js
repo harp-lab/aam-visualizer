@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Typography } from '@material-ui/core';
 import { ThemeProvider, withTheme, makeStyles } from '@material-ui/styles';
-import { RenameDialog } from 'component-dialogs';
+import { DeleteDialog, RenameDialog } from 'component-dialogs';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
 import { getView } from 'store-selectors';
 
@@ -39,24 +39,25 @@ function App() {
     <ThemeProvider theme={ Theme }>
       <VersionOverlay />
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'hidden'
-        }}
-
         // remove default drag/drop behavior
         onDragEnter={ evt => evt.preventDefault() }
         onDragOver={ evt => {
           evt.preventDefault();
           evt.dataTransfer.dropEffect = 'none';
         }}
-        onDrop={ evt => evt.preventDefault() }>
+        onDrop={ evt => evt.preventDefault() }
+
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden'
+        }}>
         { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
         <AppBar />
         { viewElem }
         <Snackbar />
+        <DeleteDialog />
         <RenameDialog />
       </div>
     </ThemeProvider>);

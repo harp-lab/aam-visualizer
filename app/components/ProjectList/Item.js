@@ -8,7 +8,7 @@ import {
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { DropMenu, IconButton } from 'library';
-import { setRenameDialog, deleteProjectLocal, selProject, exportData } from 'store-actions';
+import { setRenameDialog, setDeleteDialog, deleteProjectLocal, selProject, exportData } from 'store-actions';
 import {
   deleteProject, cancelProcess, forkProject
 } from 'store-apis';
@@ -100,17 +100,6 @@ function ItemAttribute(props) {
 }
 
 /**
- * Project fork action
- * @param {Object} props 
- */
-function ForkAction(props) {
-  const { projectId } = props;
-  const dispatch = useDispatch();
-
-  
-}
-
-/**
  * Project remove action
  * @param {Object} props 
  * @param {String} props.projectId project id
@@ -128,7 +117,7 @@ function RemoveAction(props) {
           icon={ <DeleteIcon /> }
           size='medium'
           tooltip='Remove'
-          onClick={ () => dispatch(deleteProjectLocal(projectId)) } />);
+          onClick={ () => dispatch(setDeleteDialog(projectId)) } />);
       break;
     default:
       elem = <ServerRemoveAction projectId={ projectId } />;
@@ -163,7 +152,7 @@ function ServerRemoveAction(props) {
           icon={ <DeleteIcon /> }
           size='medium'
           tooltip='Delete'
-          onClick={ () => dispatch(deleteProject(projectId)) } />);
+          onClick={ () => dispatch(setDeleteDialog(projectId)) } />);
       break;
   }
 
