@@ -44,7 +44,15 @@ function App() {
           flexDirection: 'column',
           height: '100%',
           overflow: 'hidden'
-        }}>
+        }}
+
+        // remove default drag/drop behavior
+        onDragEnter={ evt => evt.preventDefault() }
+        onDragOver={ evt => {
+          evt.preventDefault();
+          evt.dataTransfer.dropEffect = 'none';
+        }}
+        onDrop={ evt => evt.preventDefault() }>
         { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
         <AppBar />
         { viewElem }

@@ -42,6 +42,7 @@ function DropImport(props) {
       }}
       onDragOver={ evt => {
         evt.preventDefault();
+        evt.stopPropagation();
         evt.dataTransfer.dropEffect = 'copy';
       }}
       onDragLeave={ evt => {
