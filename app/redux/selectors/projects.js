@@ -8,10 +8,25 @@ export const getProjectIds = createSelector(
   getProjects,
   projects => Object.keys(projects)
 );
-export function getProject(store, projectId) {
-  if (!projectId) projectId = getSelectedProjectId(store);
-  return getProjects(store)[projectId];
-};
+
+/**
+ * @param {Object} state 
+ * @param {String} [projectId] project id
+ * @returns {Object} project
+ */
+export const getProject = createSelector(
+  (state, projectId) => projectId,
+  getSelectedProjectId,
+  getProjects,
+  (projectId, selectedProjectId, projects) => {
+    let project;
+    if (projectId)
+      project = projects[projectId];
+    else
+      project = projects[selectedProjectId];
+    return project;
+  }
+);
 
 /**
  * @param {Object} state

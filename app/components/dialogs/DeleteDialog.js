@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  Button, Typography,
-  Dialog, DialogActions, DialogContent
+  Button,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  TextField
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { deleteProject } from 'store-apis';
 import { setDeleteDialog } from 'store-actions';
+import { PROJECT_UNDEFINED_NAME } from 'store-consts';
 import { getDeleteDialog, getProjectName } from 'store-selectors';
 
 const useStyles = makeStyles(theme => ({
@@ -16,21 +18,43 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function DeleteDialog() {
+  const [input, setInput] = useState('');
   const projectId = useSelector(getDeleteDialog);
   const projectName = useSelector(state => getProjectName(state, projectId));
   const dispatch = useDispatch();
   const classes = useStyles();
-  
-  function close() { dispatch(setDeleteDialog(undefined)) }
+
+  function close() {
+    setInput('');
+    dispatch(setDeleteDialog(undefined));
+  }
+
+  let expectedInput, inputLabel;
+  if (projectName === PROJECT_UNDEFINED_NAME) {
+    inputLabel = 'last four digits of project id';
+    expectedInput = projectId.slice(-4);
+  } else {
+    inputLabel = 'project name';
+    expectedInput = projectName;
+  }
+
+  const validInput = input === expectedInput;
 
   return (
     <Dialog
       open={ Boolean(projectId) }
       onClose={ close }>
+      <DialogTitle>Delete project?</DialogTitle>
       <DialogContent>
-        <Typography>
-          Are you sure you want to permanently delete project {projectName} ({projectId})?
-        </Typography>
+        <DialogContentText>
+          Are you sure you want to permanently delete the project '{projectName}' ({projectId})?
+        </DialogContentText>
+        <TextField
+          label={ inputLabel }
+          value={ input }
+          onChange={ evt => setInput(evt.target.value) }
+          error={ !validInput && input !== '' }
+          fullWidth />
       </DialogContent>
       <DialogActions>
         <Button onClick={ close }>cancel</Button>
@@ -39,7 +63,8 @@ function DeleteDialog() {
           onClick={ () => {
             close();
             dispatch(deleteProject(projectId));
-          }}>
+          }}
+          disabled={ !validInput }>
           delete
         </Button>
       </DialogActions>
