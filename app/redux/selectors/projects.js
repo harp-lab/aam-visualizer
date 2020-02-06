@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 import store from '../store';
-import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
+import { CSTACK_STACK, FRAME_STACK, PROJECT_UNDEFINED_NAME } from 'store-consts';
 import { getSelectedProjectId } from 'store-selectors';
 
 export const getProjects = state => state.projects;
@@ -12,6 +12,17 @@ export function getProject(store, projectId) {
   if (!projectId) projectId = getSelectedProjectId(store);
   return getProjects(store)[projectId];
 };
+
+/**
+ * @param {Object} state
+ * @param {String} [projectId] project id
+ * @returns {String} project name
+ */
+export const getProjectName = createSelector(
+  getProject,
+  project => project ? project.name || PROJECT_UNDEFINED_NAME : undefined
+);
+
 export function getProjectItems(store, projectId) {
   const { items } = getProject(store, projectId);
   return items;
