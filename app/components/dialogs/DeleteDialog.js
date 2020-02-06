@@ -29,6 +29,8 @@ function DeleteDialog() {
     dispatch(setDeleteDialog(undefined));
   }
 
+  if (!projectId) return null;
+
   let expectedInput, inputLabel;
   if (projectName === PROJECT_UNDEFINED_NAME) {
     inputLabel = 'last four digits of project id';
