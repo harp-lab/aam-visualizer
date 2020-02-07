@@ -20,7 +20,12 @@ const useStyles = makeStyles(theme => ({
 function DeleteDialog() {
   const [input, setInput] = useState('');
   const projectId = useSelector(getDeleteDialog);
-  const projectName = useSelector(state => getProjectName(state, projectId));
+  const projectName = useSelector(state => {
+    let name;
+    if (projectId)
+      name = getProjectName(state, projectId);
+    return name;
+  });
   const dispatch = useDispatch();
   const classes = useStyles();
 
@@ -28,8 +33,6 @@ function DeleteDialog() {
     setInput('');
     dispatch(setDeleteDialog(undefined));
   }
-
-  if (!projectId) return null;
 
   let expectedInput, inputLabel;
   if (projectName === PROJECT_UNDEFINED_NAME) {
