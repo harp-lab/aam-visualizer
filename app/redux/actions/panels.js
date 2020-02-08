@@ -1,11 +1,12 @@
 import store from '../store';
 import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes';
-import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
+import { ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
 import {
   getSelectedProjectId, getProjectItems,
-  getSubGraphId, getSelectedNodes,
   getPanels, getLabel
 } from 'store-selectors';
+
+import { generateConfigs, refreshConfigs } from 'component-viewers/ConfigViewer';
 
 function addPanel(projectId, type, panelId, label) {
   const state = store.getState();
@@ -21,9 +22,6 @@ function addPanel(projectId, type, panelId, label) {
     }
   };
 }
-export const addConfig = (projectId, panelId, label) => addPanel(projectId, CONFIG_PANEL, panelId, label);
-export const addEnv = (projectId, panelId, label) => addPanel(projectId, ENV_PANEL, panelId, label);
-export const addStack = (projectId, panelId, label) => addPanel(projectId, STACK_PANEL, panelId, label);
 
 function setPanel(type, panelId, data) {
   const state = store.getState();
@@ -38,7 +36,7 @@ function setPanel(type, panelId, data) {
     }
   }
 }
-function setPanels(projectId, type, data) {
+export function setPanels(projectId, type, data) {
   return {
     type: SET_PANELS,
     payload: {
@@ -54,13 +52,6 @@ export const savePanel = (type, panelId) => setPanel(type, panelId, { saved: tru
 export const unsavePanel = (type, panelId) => setPanel(type, panelId, { saved: false });
 export const selectPanel = (type, panelId) => setPanel(type, panelId, { selected: true });
 export const unselectPanel = (type, panelId) => setPanel(type, panelId, { selected: false });
-
-export const hideConfig = panelId => hidePanel(CONFIG_PANEL, panelId);
-export const showConfig = panelId => showPanel(CONFIG_PANEL, panelId);
-export const saveConfig = panelId => savePanel(CONFIG_PANEL, panelId);
-export const unsaveConfig = panelId => unsavePanel(CONFIG_PANEL, panelId);
-export const selectConfig = panelId => selectPanel(CONFIG_PANEL, panelId);
-export const unselectConfig = panelId => unselectPanel(CONFIG_PANEL, panelId);
 
 export function hideStack(stackId, stackType) {
   const panelId = getStackId(stackId, stackType);
@@ -97,7 +88,7 @@ export const unsaveEnv = panelId => unsavePanel(ENV_PANEL, panelId);
 export const selectEnv = panelId => selectPanel(ENV_PANEL, panelId);
 export const unselectEnv = panelId => unselectPanel(ENV_PANEL, panelId);
 
-function refreshPanels(type, func) {
+export function refreshPanels(type, func) {
   const state = store.getState();
   const projectId = getSelectedProjectId(state);
   return {
@@ -115,18 +106,6 @@ export function refresh() {
     dispatch(refreshEnvs());
     dispatch(refreshStacks());
   };
-}
-export function refreshConfigs() {
-  const state = store.getState();
-  const subGraphId = getSubGraphId(state);
-  const selectedConfigs = getSelectedNodes(state, subGraphId);
-  return refreshPanels(CONFIG_PANEL, (panelId, data) => {
-    if (selectedConfigs.includes(panelId)) {
-      return { selected: true, hidden: false };
-    } else {
-      return { hidden: true };
-    }
-  });
 }
 export function refreshEnvs() {
   const state = store.getState();
@@ -189,7 +168,7 @@ export function generatePanels(projectId) {
     if (items.frames || items.cstacks) dispatch(generateStacks(projectId));
   };
 }
-function defaultPanelState(label) {
+export function defaultPanelState(label) {
   return {
     label,
     saved: false,
@@ -197,53 +176,6 @@ function defaultPanelState(label) {
     selected: false
   };
 };
-export function generateConfigs(projectId) {
-  return (dispatch, getState) => {
-    const state = getState();
-    const items = getProjectItems(state, projectId);
-
-    const panels = {};
-    for (const [configId, data] of Object.entries(items.configs)) {
-      const { form, states } = data;
-      let syntax;
-      if (states) {
-        const stateId = states[0];
-        const state = items.states[stateId];
-        switch (state.form) {
-          case 'halt':
-            if (state.results) {
-              const results = state.results
-                .map(resultId => {
-                  const { type, name, valString } = items.vals[resultId];
-    
-                  let string;
-                  switch (type) {
-                    case 'closure':
-                      string = name;
-                      break;
-                    case 'bool':
-                      string = valString;
-                      break;
-                  }
-                  return string;
-                })
-                .join(', ');
-              syntax = `[ ${results} ]`
-            }
-            break;
-          default:
-            syntax = state.exprString;
-            break;
-        }
-      }
-      const name = getLabel(data) || configId;
-      const label = `${name}: ${form} - ${syntax}`;
-  
-      panels[configId] = defaultPanelState(label);
-    }
-    dispatch(setPanels(projectId, CONFIG_PANEL, panels));
-  };
-}
 export function generateEnvs(projectId) {
   return (dispatch, getState) => {
     const state = getState();
