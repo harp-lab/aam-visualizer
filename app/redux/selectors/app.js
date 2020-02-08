@@ -6,9 +6,12 @@ export const getSelectedProjectId = state => state.selectedProjectId;
 export const getView = createSelector(
   getUser, getSelectedProjectId,
   (userId, projectId) => {
-  if (!userId) return LOGIN_VIEW;
-  if (!projectId) return LIST_VIEW;
-  else return PROJECT_VIEW;
+    if (!userId)
+      return LOGIN_VIEW;
+    if (!projectId)
+      return LIST_VIEW;
+    else
+      return PROJECT_VIEW;
   }
 );
 export const getTitle = state => state.title;

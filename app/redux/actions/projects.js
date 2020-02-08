@@ -30,13 +30,21 @@ export const deleteProjectLocal = projectId => ({
 export const delProjects = () => ({
   type: DEL_PROJECTS
 });
+
+/**
+ * @param {String} projectId project id
+ * @returns {Object} dispatch
+ */
 export function selProject(projectId) {
   return dispatch => {
     if (projectId) {
       const state = store.getState();
       const { name } = getProject(state, projectId);
       dispatch(setTitle(name || projectId));
+    } else {
+      dispatch(setTitle(undefined));
     }
+    
     dispatch({
       type: SEL_PROJECT,
       payload: { projectId }
