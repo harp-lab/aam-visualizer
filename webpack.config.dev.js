@@ -22,6 +22,7 @@ module.exports = {
       'component-viewers': path.resolve(__dirname, 'app/components/viewers'),
       'library': path.resolve(__dirname, 'app/library'),
       'store': path.resolve(__dirname, 'app/redux/store.js'),
+      'store-action-types': path.resolve(__dirname, 'app/redux/actionTypes.js'),
       'store-actions': path.resolve(__dirname, 'app/redux/actions'),
       'store-apis': path.resolve(__dirname, 'app/redux/apis'),
       'store-consts': path.resolve(__dirname, 'app/redux/consts.js'),

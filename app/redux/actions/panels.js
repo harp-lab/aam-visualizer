@@ -1,10 +1,7 @@
 import store from '../store';
 import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes';
-import { ENV_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
-import {
-  getSelectedProjectId, getProjectItems,
-  getPanels, getLabel
-} from 'store-selectors';
+import { ENV_PANEL, STACK_PANEL } from 'store-consts';
+import { getSelectedProjectId, getProjectItems } from 'store-selectors';
 
 import { generateConfigs, refreshConfigs } from 'component-viewers/ConfigViewer';
 import { generateEnvs, refreshEnvs } from 'component-viewers/EnvViewer';
