@@ -1,4 +1,4 @@
-import store from '../store';
+import store from 'store';
 import {
   setProjectData, addProject, deleteProjectLocal, selProject, setClientStatus,
   generatePanels,

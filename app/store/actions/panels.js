@@ -1,5 +1,5 @@
-import store from '../store';
-import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from '../actionTypes';
+import store from 'store';
+import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store-action-types';
 import { ENV_PANEL, STACK_PANEL } from 'store-consts';
 import { getSelectedProjectId, getProjectItems } from 'store-selectors';
 

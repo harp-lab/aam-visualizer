@@ -5,7 +5,7 @@ const { EnvironmentPlugin } = require('webpack');
 const rootDir = process.cwd();
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
-  template: rootDir + '/app/index.html',
+  template: path.resolve(rootDir, 'app/index.html'),
   filename: 'index.html',
   inject: 'body'
 });
@@ -14,7 +14,7 @@ const EnvironmentPluginConfig = new EnvironmentPlugin({
 });
 
 module.exports = {
-  entry: rootDir + '/app/index.js',
+  entry: path.resolve(rootDir, 'app/index.js'),
   resolve: {
     alias: {
       'component-data': path.resolve(rootDir, 'app/components/data'),
@@ -23,12 +23,12 @@ module.exports = {
       'component-links': path.resolve(rootDir, 'app/components/links'),
       'component-viewers': path.resolve(rootDir, 'app/components/viewers'),
       'library': path.resolve(rootDir, 'app/library'),
-      'store': path.resolve(rootDir, 'app/redux/store.js'),
-      'store-action-types': path.resolve(rootDir, 'app/redux/actionTypes.js'),
-      'store-actions': path.resolve(rootDir, 'app/redux/actions'),
-      'store-apis': path.resolve(rootDir, 'app/redux/apis'),
-      'store-consts': path.resolve(rootDir, 'app/redux/consts.js'),
-      'store-selectors': path.resolve(rootDir, 'app/redux/selectors')
+      'store': path.resolve(rootDir, 'app/store'),
+      'store-action-types': path.resolve(rootDir, 'app/store/actionTypes.js'),
+      'store-actions': path.resolve(rootDir, 'app/store/actions'),
+      'store-apis': path.resolve(rootDir, 'app/store/apis'),
+      'store-consts': path.resolve(rootDir, 'app/store/consts.js'),
+      'store-selectors': path.resolve(rootDir, 'app/store/selectors')
     }
   },
   module: {

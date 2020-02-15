@@ -1,7 +1,7 @@
-import store from '../store';
+import store from 'store';
+import { SET_GRAPH_METADATA } from 'store-action-types';
 import { setMetadata, refresh } from 'store-actions';
 import { getSelectedProjectId, getGraph, getMainGraphId, getSelectedNodes, getBubbling } from 'store-selectors';
-import { SET_GRAPH_METADATA } from '../actionTypes';
 
 export function setMainGraphId(graphId) {
   const state = store.getState();
