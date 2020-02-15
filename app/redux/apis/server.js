@@ -6,7 +6,10 @@ import {
   consoleError
 } from 'store-actions';
 import { process } from 'store-apis';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
+import {
+  EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS,
+  CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
+} from 'store-consts';
 import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 
 /**
@@ -86,6 +89,7 @@ function localProjectError(caller, projectId) {
  */
 export function getList() {
   return async function(dispatch) {
+    // TODO implement local vs server pattern
     const res = await apiReq('all', 'GET');
     let refresh = false;
     switch (res.status) {
@@ -115,6 +119,7 @@ export function createProject() {
    * @returns {String} projectId
    */
   return async function(dispatch) {
+    // TODO implement local vs server pattern
     const res = await apiReq('create', 'POST');
     let projectId;
     switch (res.status) {

@@ -1,9 +1,14 @@
+const merge = require('webpack-merge');
+
 const target = process.env.npm_lifecycle_event;
+let config;
 switch (target) {
   case 'dev-client':
-    module.exports = require('./webpack.config.dev.js')
+    config = require('./webpack/config.dev.js')
     break;
   case 'build':
-    module.exports = require('./webpack.config.prod.js')
+    config = require('./webpack/config.prod.js')
     break;
 }
+
+module.exports = merge(require('./webpack/config.base.js'), config);
