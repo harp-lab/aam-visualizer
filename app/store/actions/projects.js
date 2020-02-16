@@ -113,13 +113,11 @@ export function importFile(file) {
  */
 export function importData(projectId, data) {
   return dispatch => {
-    data.status = COMPLETE_STATUS;
-    data.metadata = {
-      status: { client: CLIENT_LOCAL_STATUS }
-    };
     dispatch(addProject(projectId));
-    process(data) // TODO separate out secondary processing
+    //process(data) // TODO separate out secondary processing
     dispatch(setProjectData(projectId, data));
+    dispatch(setStatus(projectId, COMPLETE_STATUS));
+    dispatch(setClientStatus(projectId, CLIENT_LOCAL_STATUS));
     dispatch(generatePanels(projectId));
   };
 }
