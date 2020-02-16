@@ -41,16 +41,18 @@ function apiPost(url, obj) {
  * @param {Object} data save data
  * @param {Function} callback 
  */
-async function saveReq(projectId, data, callback) {
-  const res = await apiPost(`projects/${projectId}/save`, data);
-  switch (res.status) {
-    case 202:
-      await callback();
-      break;
-    default:
-      dispatch(queueSnackbar(`Project ${projectId} save request failed`));
-      break;
-  }
+function saveReq(projectId, data, callback) {
+  return async function(dispatch) {
+    const res = await apiPost(`projects/${projectId}/save`, data);
+    switch (res.status) {
+      case 202:
+        await callback();
+        break;
+      default:
+        dispatch(queueSnackbar(`Project ${projectId} save request failed`));
+        break;
+    }
+  };
 }
 
 /**
@@ -259,7 +261,7 @@ export function renameProject(projectId, name) {
       dispatch(setProjectData(projectId, { name }));
     }
     async function serverCallback(localCallback) {
-      await saveReq(projectId, { name }, localCallback);
+      await dispatch(saveReq(projectId, { name }, localCallback));
     }
     await projectRequest(projectId, localCallback, serverCallback);
   };
@@ -310,7 +312,7 @@ export function saveCode(projectId, code) {
       }
     };
     async function serverCallback(localCallback) {
-      await saveReq(projectId, { code }, localCallback);
+      await dispatch(saveReq(projectId, { code }, localCallback));
     };
     await projectRequest(projectId, localCallback, serverCallback);
   }
