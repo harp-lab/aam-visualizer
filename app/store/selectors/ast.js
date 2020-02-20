@@ -1,16 +1,25 @@
 import { createSelector } from 'reselect';
-import { getSelectedNodes, getHoveredNodes, getMainGraphId, getSubGraphId, getGraphRefData } from 'store-selectors';
+import { getSelectedNodes, getHoveredNodes, getGraphRefData } from 'store-selectors';
+import { getViewedGraphIds } from './graphs.js';
 
 const getSelectedAstsFactory = graphId => createSelector(
   state => getSelectedNodes(state, graphId),
   state => getGraphRefData(state, graphId),
   getNodeAsts
 );
+
+/**
+ * @param {Object} state
+ * @returns {Array} ast ids
+ */
 export const getSelectedAsts = createSelector(
-  state => getSelectedAstsFactory(getMainGraphId(state))(state),
-  state => getSelectedAstsFactory(getSubGraphId(state))(state),
-  (mainGraphAsts, subGraphAsts) => {
-    return [mainGraphAsts, subGraphAsts].flat();
+  state => state,
+  getViewedGraphIds,
+  (state, graphIds) => {
+    return Object
+      .keys(graphIds)
+      .map(graphId => getSelectedAstsFactory(graphId)(state))
+      .flat();
   }
 );
 
@@ -19,10 +28,20 @@ const getHoveredAstsFactory = graphId => createSelector(
   state => getGraphRefData(state, graphId),
   getNodeAsts
 );
+
+/**
+ * @param {Object} state
+ * @returns {Array} ast ids
+ */
 export const getHoveredAsts = createSelector(
-  state => getHoveredAstsFactory(getMainGraphId(state))(state),
-  state => getHoveredAstsFactory(getSubGraphId(state))(state),
-  (mainGraphAsts, subGraphAsts) => [mainGraphAsts, subGraphAsts].flat()
+  state => state,
+  getViewedGraphIds,
+  (state, graphIds) => {
+    return Object
+      .keys(graphIds)
+      .map(graphId => getHoveredAstsFactory(graphId)(state))
+      .flat();
+  }
 );
 
 export function getNodeAsts(nodeIds, refData) {

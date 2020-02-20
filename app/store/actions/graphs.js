@@ -1,7 +1,38 @@
 import store from 'store';
 import { SET_GRAPH_METADATA } from 'store-action-types';
 import { setMetadata, refresh } from 'store-actions';
-import { getSelectedProjectId, getGraph, getMainGraphId, getSelectedNodes, getBubbling } from 'store-selectors';
+import { getSelectedProjectId, getGraph, getGraphViewers, getMainGraphId, getSelectedNodes, getBubbling } from 'store-selectors';
+
+/**
+ * @param {String} graphId graph id
+ * @param {Number} viewers active graph viewers
+ * @param {String} [projectId = <current project id>] project id
+ * @returns {Object} action
+ */
+export function setGraphViewers(graphId, viewers, projectId) {
+  return setGraphMetadata(graphId, { viewers }, projectId);
+}
+
+/**
+ * @param {String} graphId graph id
+ * @returns {Object} action
+ */
+export function addGraphViewer(graphId) {
+  const state = store.getState();
+  const viewers = getGraphViewers(state, graphId);
+  return setGraphViewers(graphId, viewers + 1);
+}
+
+/**
+ * @param {String} graphId graph id
+ * @param {String} projectId project id
+ * @returns {Object} action
+ */
+export function removeGraphViewer(graphId, projectId) {
+  const state = store.getState();
+  const viewers = getGraphViewers(state, graphId);
+  return setGraphViewers(graphId, viewers - 1, projectId);
+}
 
 export function setMainGraphId(graphId) {
   const state = store.getState();
@@ -17,14 +48,23 @@ export function setFocusedGraph(graphId) {
     focusedGraph: graphId
   });
 }
-export function setGraphMetadata(graphId, data) {
+
+/**
+ * @param {String} graphId graph id
+ * @param {Object} data 
+ * @param {String} [projectId = <current project id>]
+ * @returns {Object} action
+ */
+export function setGraphMetadata(graphId, data, projectId) {
   const state = store.getState();
-  const projectId = getSelectedProjectId(state);
+  if (!projectId)
+    projectId = getSelectedProjectId(state);
   return {
     type: SET_GRAPH_METADATA,
     payload: { projectId, graphId, data }
   };
 }
+
 export function selectNodes(graphId, nodeIds) {
   return (dispatch, getState) => {
     const state = getState();

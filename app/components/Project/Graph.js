@@ -4,6 +4,7 @@ import withTheme from '@material-ui/styles/withTheme';
 import { GraphData } from 'component-data';
 import { PaneMessage } from 'library';
 import {
+  addGraphViewer, removeGraphViewer,
   setFocusedGraph,
   selectNodes, unselectNodes, hoverNodes, selectEdges,
   setPositions
@@ -12,8 +13,23 @@ import { getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocuse
 
 import cytoscape from 'cytoscape';
 
+/**
+ * Graph 
+ * @param {Object} props 
+ * @param {String} props.graphId graph id
+ * @param {Function} props.edgePredicate edge => predicate, boolean result determines edge selectability
+ * @param {Function} props.onNodeSelect node select callback
+ * @param {Function} props.onNodeUnselect node unselect callback
+ * @param {Boolean} props.external disable graph id active registration
+ * @param {Object} theme
+ * @param {Object} style
+ */
 function Graph(props) {
-  const { graphId, edgePredicate = edge => false, onNodeSelect, onNodeUnselect, theme, style } = props;
+  const {
+    graphId, edgePredicate = edge => false,
+    onNodeSelect, onNodeUnselect,
+    external,
+    theme, style } = props;
   const items = useSelector(getProjectItems);
   if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
   const graphData = useSelector(state => getGraph(state, graphId));
@@ -198,7 +214,18 @@ function Graph(props) {
       // remove nodes
       cy.nodes().remove();
     };
-  }, [graphData]);
+  }, [graphId]);
+
+  // register active graph id
+  useEffect(() => {
+    if (!external) {
+      dispatch(addGraphViewer(graphId));
+
+      return () => {
+        dispatch(removeGraphViewer(graphId));
+      };
+    }
+  }, [graphId]);
   
   // marking nodes
   useEffect(() => {

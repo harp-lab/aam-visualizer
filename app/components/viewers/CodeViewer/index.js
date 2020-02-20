@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { batch, useSelector, useDispatch } from 'react-redux';
+import { createSelector } from 'reselect';
 import { selectNodes, hoverNodes } from 'store-actions';
 import {
   getNodeAsts,
-  getMainGraphId, getSubGraphId, getGraphNodes, getGraphRefData,
-  getProject, getProjectItems
+  getViewedGraphIds, getGraphNodes, getGraphRefData,
+  getProject
 } from 'store-selectors';
 
 import Context from './Context';
@@ -12,20 +13,8 @@ import Line from './Line';
 
 function CodeViewer() {
   const { code } = useSelector(getProject);
-
-  const mainGraphId = useSelector(getMainGraphId);
-  const mainGraphNodes = useSelector(store => getGraphNodes(store, mainGraphId));
-  const mainGraphRef = useSelector(store => getGraphRefData(store, mainGraphId));
-
-  const subGraphId = useSelector(getSubGraphId);
-  const subGraphNodes = useSelector(store => getGraphNodes(store, subGraphId));
-  const subGraphRef = useSelector(store => getGraphRefData(store, subGraphId));
-
-  const { graphs } = useSelector(getProjectItems);
+  const graphData = useSelector(getData);
   const dispatch = useDispatch();
-  const graphData = {};
-  if (graphs[mainGraphId]) graphData[mainGraphId] = { nodeIds: mainGraphNodes, refData: mainGraphRef };
-  if (graphs[subGraphId]) graphData[subGraphId] = { nodeIds: subGraphNodes, refData: subGraphRef };
 
   const [astNodes, setAstNodes] = useState({});
   const [parsedCode, setParsedCode] = useState({});
@@ -48,7 +37,7 @@ function CodeViewer() {
       }
     }
     setAstNodes(astNodes);
-  }, [mainGraphId, subGraphId]);
+  }, [graphData]);
 
   useEffect(() => {
     const parsedCode = {};
@@ -112,5 +101,19 @@ function CodeViewer() {
       <div style={{ whiteSpace: 'pre' }}>{ codeElem }</div>
     </Context.Provider>);
 }
+
+const getData = createSelector(
+  state => state,
+  getViewedGraphIds,
+  (state, graphIds) => {
+    const graphData = {};
+    for (const graphId of Object.keys(graphIds)) {
+      const nodeIds = getGraphNodes(state, graphId);
+      const refData = getGraphRefData(state, graphId);
+      graphData[graphId] = { nodeIds, refData };
+    }
+    return graphData;
+  }
+);
 
 export default CodeViewer;

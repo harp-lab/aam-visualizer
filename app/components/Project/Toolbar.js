@@ -94,7 +94,7 @@ function GraphDrawer(props) {
         onChange={ evt => setGraph(evt.target.value) }>
         { graphItems }
       </Select>
-      <Graph graphId={ graph } style={{ height: '100%' }}/>
+      <Graph graphId={ graph } external style={{ height: '100%' }}/>
     </Drawer>);
 }
 

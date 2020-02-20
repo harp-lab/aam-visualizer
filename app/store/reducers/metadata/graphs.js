@@ -12,11 +12,11 @@ function graphsReducer(state = {}, action) {
   switch (action.type) {
     case SET_GRAPH_METADATA: {
       const { graphId, data } = action.payload;
-      const graph = state[graphId];
+      const metadata = state[graphId];
       return {
         ...state,
         [graphId]: {
-          ...graph,
+          ...metadata,
           ...data
         }
       };

@@ -20,6 +20,33 @@ export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graph
 export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
 
 /**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Number} active graph viewers
+ */
+export const getGraphViewers = createSelector(
+  getGraphMetadata,
+  metadata => metadata.viewers || 0
+);
+
+/**
+ * @param {Object} state
+ * @returns {Object} <{String} graphId, {Boolean} viewed> hashmap
+ */
+export const getViewedGraphIds = createSelector(
+  getGraphsMetadata,
+  graphs => {
+    const viewedGraphs = {};
+    for (const [graphId, metadata] of Object.entries(graphs)) {
+      const { viewers } = metadata;
+      if (viewers > 0)
+        viewedGraphs[graphId] = true;
+    }
+    return viewedGraphs;
+  }
+);
+
+/**
  * Get bubbled graph
  * @param {Object} state
  * @param {String} graphId graph id
