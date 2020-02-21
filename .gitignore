@@ -1,8 +1,6 @@
 docs
 node_modules
-server/data
-server/engine/*-out
-server/engine/compiled
+framework/server/data
 *.DS_Store
 *.*~
 *.*#
