@@ -8,14 +8,20 @@
     "url": "git://github.com/harp-lab/aam-visualizer"
   },
   "main": "index.js",
+  "config": {
+    "frameworkDir": "framework"
+  },
+  "nodemonConfig": {
+    "watch": ["framework/server"]
+  },
   "scripts": {
-    "build": "webpack -p --mode=production",
+    "build": "webpack --config $npm_package_config_frameworkDir/webpack.config.js",
     "release": "npm version patch --no-git-tag-version && npm run build",
-    "start": "node server/main.js",
+    "start": "node $npm_package_config_frameworkDir/server/main.js",
     "dev": "npm run dev-client & nodemon -x \"npm run dev-server\"",
-    "dev-client": "webpack-dev-server",
+    "dev-client": "webpack-dev-server --config $npm_package_config_frameworkDir/webpack.config.js",
     "dev-server": "NODE_ENV=development npm run start",
-    "docs": "jsdoc -c jsdoc.config.js"
+    "docs": "jsdoc -c $npm_package_config_frameworkDir/jsdoc.config.js"
   },
   "author": "",
   "license": "ISC",

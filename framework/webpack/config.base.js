@@ -3,9 +3,13 @@ const path = require('path');
 const { EnvironmentPlugin } = require('webpack');
 
 const rootDir = process.cwd();
+const frameworkDir = path.resolve(rootDir, 'framework');
+const appDir = path.resolve(frameworkDir, 'app');
+const componentsDir = path.resolve(appDir, 'components');
+const storeDir = path.resolve(appDir, 'store');
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
-  template: path.resolve(rootDir, 'app/index.html'),
+  template: path.resolve(appDir, 'index.html'),
   filename: 'index.html',
   inject: 'body'
 });
@@ -14,21 +18,21 @@ const EnvironmentPluginConfig = new EnvironmentPlugin({
 });
 
 module.exports = {
-  entry: path.resolve(rootDir, 'app/index.js'),
+  entry: path.resolve(appDir, 'index.js'),
   resolve: {
     alias: {
-      'component-data': path.resolve(rootDir, 'app/components/data'),
-      'component-dialogs': path.resolve(rootDir, 'app/components/dialogs'),
-      'component-items': path.resolve(rootDir, 'app/components/items'),
-      'component-links': path.resolve(rootDir, 'app/components/links'),
-      'component-viewers': path.resolve(rootDir, 'app/components/viewers'),
-      'library': path.resolve(rootDir, 'app/library'),
-      'store': path.resolve(rootDir, 'app/store'),
-      'store-action-types': path.resolve(rootDir, 'app/store/actionTypes.js'),
-      'store-actions': path.resolve(rootDir, 'app/store/actions'),
-      'store-apis': path.resolve(rootDir, 'app/store/apis'),
-      'store-consts': path.resolve(rootDir, 'app/store/consts.js'),
-      'store-selectors': path.resolve(rootDir, 'app/store/selectors')
+      'component-data': path.resolve(componentsDir, 'data'),
+      'component-dialogs': path.resolve(componentsDir, 'dialogs'),
+      'component-items': path.resolve(rootDir, 'items'),
+      'component-links': path.resolve(rootDir, 'links'),
+      'component-viewers': path.resolve(rootDir, 'viewers'),
+      'library': path.resolve(appDir, 'library'),
+      'store': storeDir,
+      'store-action-types': path.resolve(storeDir, 'actionTypes.js'),
+      'store-actions': path.resolve(storeDir, 'actions'),
+      'store-apis': path.resolve(storeDir, 'apis'),
+      'store-consts': path.resolve(storeDir, 'consts.js'),
+      'store-selectors': path.resolve(storeDir, 'selectors')
     }
   },
   module: {
@@ -36,7 +40,12 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: 'babel-loader'
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react']
+          }
+        },
       },
       {
         test: /\.scss$/,

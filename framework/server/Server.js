@@ -8,6 +8,8 @@ const Consts = require('./Consts.js');
 const G = require('./Global.js');
 const Project = require('./Project.js');
 
+const rootDir = process.cwd();
+
 class Server {
   constructor() {
     this.projects = {};
@@ -21,7 +23,7 @@ class Server {
   initServer() {
     const app = express();
     app.use(express.json());
-    app.use(express.static(path.join(__dirname, '../build')));
+    app.use(express.static(path.resolve(rootDir, 'build')));
     
     // logging
     app.all('*', (req, res, next) => {
