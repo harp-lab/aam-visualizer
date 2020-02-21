@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { ValItem } from 'component-items';
-import { PanelTable } from 'library';
+import { PanelTable } from 'library/base';
 import { getProjectItems } from 'store-selectors';
 
 /**

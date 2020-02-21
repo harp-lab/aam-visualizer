@@ -7,7 +7,7 @@ import {
   Delete as DeleteIcon
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { DropMenu, IconButton } from 'library';
+import { DropMenu, IconButton } from 'library/base';
 import { setRenameDialog, setDeleteDialog, deleteProjectLocal, selProject, exportData } from 'store-actions';
 import {
   deleteProject, cancelProcess, forkProject

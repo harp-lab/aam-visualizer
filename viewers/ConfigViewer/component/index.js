@@ -2,8 +2,8 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { refreshEnvs } from 'component-viewers/EnvViewer';
 import { refreshStacks } from 'component-viewers/StackViewer';
-import Panel from 'component-viewers/Panel';
-import { PanelViewer } from 'library';
+import { PanelViewer } from 'library/base';
+import { Panel } from 'library/connected';
 import { hoverNodes } from 'store-actions';
 import { getPanels, getProjectItems, getSubGraphId } from 'store-selectors';
 

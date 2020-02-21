@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from 'react';
 import { Menu, MenuItem } from '@material-ui/core';
 import { MoreVert } from '@material-ui/icons';
-import { IconButton } from 'library';
+import { IconButton } from 'library/base';
 
 /**
  * Icon button with dropdown menu

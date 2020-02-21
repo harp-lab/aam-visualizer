@@ -1,13 +1,13 @@
 import React, { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { CodeViewer, ConfigViewer, EnvViewer, StackViewer } from 'component-viewers';
-import { Loading, Pane, SplitPane } from 'library';
+import { CodeViewer, ConfigViewer, EnvViewer, FunctionGraph, StackViewer } from 'component-viewers';
+import { ProjectLayout } from 'layouts';
+import { Loading, Pane, SplitPane } from 'library/base';
 import { downloadProject } from 'store-apis';
 import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
 import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
 
 import Editor from './Editor';
-import FunctionGraph from './FunctionGraph';
 import Toolbar from './Toolbar';
 
 function Project() {
@@ -70,27 +70,9 @@ function VisualView() {
     case CLIENT_LOCAL_STATUS:
       view = (
         <Fragment>
-          <SplitPane
-            vertical
-            style={{ width: `calc(100% - ${toolbarWidth}px)` }}>
-            <Pane width='40%'><FunctionGraph /></Pane>
-            <Pane>
-              <SplitPane horizontal>
-                <Pane height='48%'>
-                  <SplitPane vertical>
-                    <Pane width='48%' overflow='auto'><CodeViewer /></Pane>
-                    <Pane><StackViewer /></Pane>
-                  </SplitPane>
-                </Pane>
-                <Pane overflow='auto'>
-                  <SplitPane>
-                    <Pane width="50%" overflow='auto'><ConfigViewer /></Pane>
-                    <Pane overflow='auto'><EnvViewer /></Pane>
-                  </SplitPane>
-                </Pane>
-              </SplitPane>
-            </Pane>
-          </SplitPane>
+          <Pane style={{width: `calc(100% - ${toolbarWidth}px)`}} >
+            <ProjectLayout />
+          </Pane>
           <Toolbar ref={ test } />
         </Fragment>);
       break;

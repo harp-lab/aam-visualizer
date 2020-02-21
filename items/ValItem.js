@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { useSelector } from 'react-redux';
 import { EnvLink } from 'component-links';
-import { Spacer } from 'library';
+import { Spacer } from 'library/base';
 import { getProjectItems } from 'store-selectors';
 
 import { Typography } from '@material-ui/core';

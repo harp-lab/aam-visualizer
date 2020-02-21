@@ -6,7 +6,7 @@ import withStyles from '@material-ui/styles/withStyles';
 import { LayerData } from 'component-data';
 import { ValArrayItem } from 'component-items';
 import { EnvLink, StackLink } from 'component-links';
-import { IconPopover, DebugPopover } from 'library';
+import { IconPopover, DebugPopover } from 'library/base';
 import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getProjectItems } from 'store-selectors';
 

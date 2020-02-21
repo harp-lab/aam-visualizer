@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Toolbar, Typography } from '@material-ui/core';
 import { BubbleChart } from '@material-ui/icons';
 import { useTheme } from '@material-ui/styles';
-import { IconToggle, Spacer } from 'library';
+import { IconToggle, Spacer } from 'library/base';
 import { toggleBubbling } from 'store-actions';
 import { getBubbling } from 'store-selectors';
 

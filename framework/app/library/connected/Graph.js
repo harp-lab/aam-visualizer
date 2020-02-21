@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import withTheme from '@material-ui/styles/withTheme';
+import { withTheme } from '@material-ui/styles';
 import { GraphData } from 'component-data';
-import { PaneMessage } from 'library';
+import { PaneMessage } from 'library/base';
 import {
   addGraphViewer, removeGraphViewer,
   setFocusedGraph,

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { ErrorBoundary, SplitPaneContext } from 'library';
+import { ErrorBoundary, SplitPaneContext } from 'library/base';
 
 function Pane(props) {
   const { overflow, children, style } = props;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconButton } from 'library';
+import { IconButton } from 'library/base';
 
 /**
  * Stateful icon button toggle

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Card, CardContent, Typography } from '@material-ui/core';
 import { EnvLink, StackLink } from 'component-links';
 import { ValArrayItem } from 'component-items';
-import { Spacer } from 'library';
+import { Spacer } from 'library/base';
 import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
 import { getProjectItems } from 'store-selectors';
 

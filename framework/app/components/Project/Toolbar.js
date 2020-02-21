@@ -3,10 +3,9 @@ import { useSelector } from 'react-redux';
 import { Drawer as MUIDrawer, MenuItem, Select } from '@material-ui/core';
 import { BugReport, Share } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { DebugItem, ErrorBoundary, IconButton } from 'library';
+import { DebugItem, ErrorBoundary, IconButton } from 'library/base';
+import { Graph } from 'library/connected';
 import { getGraphIds, getProjectItems } from 'store-selectors';
-
-import Graph from './Graph';
 
 const useStyles = makeStyles(theme => ({
   appbar: theme.mixins.toolbar,

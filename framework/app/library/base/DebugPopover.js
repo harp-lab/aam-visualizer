@@ -1,6 +1,6 @@
 import React from 'react';
 import { BugReport } from '@material-ui/icons';
-import { DebugItem, IconPopover } from 'library';
+import { DebugItem, IconPopover } from 'library/base';
 
 function DebugPopover(props) {
   const { item } = props;

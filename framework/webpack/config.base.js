@@ -26,6 +26,7 @@ module.exports = {
       'component-items': path.resolve(rootDir, 'items'),
       'component-links': path.resolve(rootDir, 'links'),
       'component-viewers': path.resolve(rootDir, 'viewers'),
+      'layouts': path.resolve(rootDir, 'layouts'),
       'library': path.resolve(appDir, 'library'),
       'store': storeDir,
       'store-action-types': path.resolve(storeDir, 'actionTypes.js'),

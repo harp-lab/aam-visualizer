@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import Panel from 'component-viewers/Panel';
-import { PanelViewer } from 'library';
+import { PanelViewer } from 'library/base';
+import { Panel } from 'library/connected';
 import { getPanels } from 'store-selectors';
 
 import EnvItem from './EnvItem';

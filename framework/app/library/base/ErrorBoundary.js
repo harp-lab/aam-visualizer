@@ -1,7 +1,7 @@
 import React, { Component, useState } from 'react';
 import { IconButton, Tooltip } from '@material-ui/core';
 import { Refresh } from '@material-ui/icons';
-import { PaneMessage } from 'library';
+import { PaneMessage } from 'library/base';
 
 function ErrorWrapper(props) {
   const { children } = props;

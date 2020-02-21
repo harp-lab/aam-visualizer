@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Pane, SplitPane } from 'library';
+import { Pane, SplitPane } from 'library/base';
+import { Graph } from 'library/connected';
 import { getMainGraphId, getSubGraphId } from 'store-selectors';
 
-import Graph from '../Graph';
 import GraphLabel from './GraphLabel';
 
 /** FunctionGraph component */
