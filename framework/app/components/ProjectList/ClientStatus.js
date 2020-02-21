@@ -7,8 +7,8 @@ import {
   CloudOff as CloudOffIcon
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { CLIENT_WAITING_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
-import { getProjectClientStatus } from 'store-selectors';
+import { CLIENT_WAITING_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store/consts';
+import { getProjectClientStatus } from 'store/selectors';
 
 const useStyles = makeStyles(theme => ({
   icon: { color: theme.palette.text.secondary },

@@ -2,7 +2,7 @@ import {
   QUEUE_SNACKBAR, DEQUEUE_SNACKBAR,
   SET_LOADING,
   SET_DIALOG
-} from 'store-action-types';
+} from 'store/actionTypes';
 
 export const queueSnackbar = text => ({
   type: QUEUE_SNACKBAR,

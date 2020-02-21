@@ -1,11 +1,10 @@
 import React, { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { CodeViewer, ConfigViewer, EnvViewer, FunctionGraph, StackViewer } from 'component-viewers';
 import { ProjectLayout } from 'layouts';
-import { Loading, Pane, SplitPane } from 'library/base';
-import { downloadProject } from 'store-apis';
-import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
+import { Loading, Pane } from 'library/base';
+import { downloadProject } from 'store/apis';
+import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store/selectors';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS, CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS } from 'store/consts';
 
 import Editor from './Editor';
 import Toolbar from './Toolbar';

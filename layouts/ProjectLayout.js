@@ -1,5 +1,5 @@
 import React from 'react';
-import { CodeViewer, ConfigViewer, EnvViewer, FunctionGraph, StackViewer } from 'component-viewers';
+import { CodeViewer, ConfigViewer, EnvViewer, FunctionGraph, StackViewer } from 'viewers';
 import { Pane, SplitPane } from 'library/base';
 
 function ProjectLayout() {

@@ -5,7 +5,7 @@ import { BugReport, Share } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { DebugItem, ErrorBoundary, IconButton } from 'library/base';
 import { Graph } from 'library/connected';
-import { getGraphIds, getProjectItems } from 'store-selectors';
+import { getGraphIds, getProjectItems } from 'store/selectors';
 
 const useStyles = makeStyles(theme => ({
   appbar: theme.mixins.toolbar,

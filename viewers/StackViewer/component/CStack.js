@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { getProjectItems } from 'store-selectors';
+import { getProjectItems } from 'store/selectors';
 
 import FrameStack from './FrameStack';
 

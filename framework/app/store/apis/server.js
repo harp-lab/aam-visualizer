@@ -4,13 +4,13 @@ import {
   generatePanels,
   queueSnackbar,
   consoleError
-} from 'store-actions';
-import { process } from 'store-apis';
+} from 'store/actions';
+import { process } from 'store/apis';
 import {
   EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS,
   CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
-} from 'store-consts';
-import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store-selectors';
+} from 'store/consts';
+import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store/selectors';
 
 /**
  * @param {String} url user req url

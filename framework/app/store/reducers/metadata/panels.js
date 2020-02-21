@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store-action-types';
-import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL } from 'store-consts';
+import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store/actionTypes';
+import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL } from 'store/consts';
 
 /**
  * project panel metadata state reducer

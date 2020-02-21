@@ -1,20 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { withTheme } from '@material-ui/styles';
-import { GraphData } from 'component-data';
+import { GraphData } from 'components/data';
 import { PaneMessage } from 'library/base';
 import {
   addGraphViewer, removeGraphViewer,
   setFocusedGraph,
   selectNodes, unselectNodes, hoverNodes, selectEdges,
   setPositions
-} from 'store-actions'
-import { getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store-selectors';
+} from 'store/actions'
+import { getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
 
 /**
- * Graph 
  * @param {Object} props 
  * @param {String} props.graphId graph id
  * @param {Function} props.edgePredicate edge => predicate, boolean result determines edge selectability

@@ -1,7 +1,7 @@
 import store from 'store';
-import { SET_GRAPH_METADATA } from 'store-action-types';
-import { setMetadata, refresh } from 'store-actions';
-import { getSelectedProjectId, getGraph, getGraphViewers, getMainGraphId, getSelectedNodes, getBubbling } from 'store-selectors';
+import { SET_GRAPH_METADATA } from 'store/actionTypes';
+import { setMetadata, refresh } from 'store/actions';
+import { getSelectedProjectId, getGraph, getGraphViewers, getMainGraphId, getSelectedNodes, getBubbling } from 'store/selectors';
 
 /**
  * @param {String} graphId graph id

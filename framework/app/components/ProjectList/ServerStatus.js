@@ -8,8 +8,8 @@ import {
   PauseCircleFilled as PauseCircleFilledIcon
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store-consts';
-import { getProjectServerStatus } from 'store-selectors';
+import { EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS } from 'store/consts';
+import { getProjectServerStatus } from 'store/selectors';
 
 const useStyles = makeStyles(theme => ({
   success: { color: theme.palette.success.main },

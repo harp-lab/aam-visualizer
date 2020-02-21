@@ -5,8 +5,6 @@ const { EnvironmentPlugin } = require('webpack');
 const rootDir = process.cwd();
 const frameworkDir = path.resolve(rootDir, 'framework');
 const appDir = path.resolve(frameworkDir, 'app');
-const componentsDir = path.resolve(appDir, 'components');
-const storeDir = path.resolve(appDir, 'store');
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   template: path.resolve(appDir, 'index.html'),
@@ -21,19 +19,11 @@ module.exports = {
   entry: path.resolve(appDir, 'index.js'),
   resolve: {
     alias: {
-      'component-data': path.resolve(componentsDir, 'data'),
-      'component-dialogs': path.resolve(componentsDir, 'dialogs'),
-      'component-items': path.resolve(rootDir, 'items'),
-      'component-links': path.resolve(rootDir, 'links'),
-      'component-viewers': path.resolve(rootDir, 'viewers'),
+      'components': path.resolve(appDir, 'components'),
       'layouts': path.resolve(rootDir, 'layouts'),
       'library': path.resolve(appDir, 'library'),
-      'store': storeDir,
-      'store-action-types': path.resolve(storeDir, 'actionTypes.js'),
-      'store-actions': path.resolve(storeDir, 'actions'),
-      'store-apis': path.resolve(storeDir, 'apis'),
-      'store-consts': path.resolve(storeDir, 'consts.js'),
-      'store-selectors': path.resolve(storeDir, 'selectors')
+      'store': path.resolve(appDir, 'store'),
+      'viewers': path.resolve(rootDir, 'viewers')
     }
   },
   module: {

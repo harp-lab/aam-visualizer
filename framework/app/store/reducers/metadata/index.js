@@ -1,4 +1,4 @@
-import { SET_METADATA } from 'store-action-types';
+import { SET_METADATA } from 'store/actionTypes';
 
 import graphsReducer from './graphs';
 import panelsReducer from './panels';

@@ -3,12 +3,12 @@ import { useSelector } from 'react-redux';
 import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import withStyles from '@material-ui/styles/withStyles';
-import { LayerData } from 'component-data';
-import { ValArrayItem } from 'component-items';
-import { EnvLink, StackLink } from 'component-links';
+import { LayerData } from 'components/data';
+import { ValArrayItem } from 'items';
+import { EnvLink, StackLink } from 'links';
 import { IconPopover, DebugPopover } from 'library/base';
-import { CSTACK_STACK, FRAME_STACK } from 'store-consts';
-import { getProjectItems } from 'store-selectors';
+import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
+import { getProjectItems } from 'store/selectors';
 
 function FrameCard(props) {
   const { frameId, selected, theme, classes, onSet, onUnset } = props;

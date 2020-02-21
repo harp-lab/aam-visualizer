@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { getSelectedAsts, getHoveredAsts, getProjectItems } from 'store-selectors';
+import { getSelectedAsts, getHoveredAsts, getProjectItems } from 'store/selectors';
 import { withTheme } from '@material-ui/styles';
 import { indigo } from '@material-ui/core/colors';
 

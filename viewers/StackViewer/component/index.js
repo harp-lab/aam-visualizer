@@ -2,8 +2,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
-import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
-import { getPanels } from 'store-selectors';
+import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store/consts';
+import { getPanels } from 'store/selectors';
 
 import CStack from './CStack';
 import FrameStack from './FrameStack';

@@ -1,10 +1,10 @@
 import store from 'store';
-import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store-consts';
-import { getStackId, defaultPanelState, setPanels, refreshPanels } from 'store-actions';
+import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store/consts';
+import { getStackId, defaultPanelState, setPanels, refreshPanels } from 'store/actions';
 import {
   getProjectItems,
   getPanels, getLabel
-} from 'store-selectors';
+} from 'store/selectors';
 
 export function refreshStacks() {
   const state = store.getState();

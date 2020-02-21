@@ -1,5 +1,5 @@
-import { SET_STATUS } from 'store-action-types';
-import { CLIENT_WAITING_STATUS } from 'store-consts';
+import { SET_STATUS } from 'store/actionTypes';
+import { CLIENT_WAITING_STATUS } from 'store/consts';
 
 /**
  * project status metadata state reducer

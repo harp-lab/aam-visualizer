@@ -6,10 +6,10 @@ import {
   TextField
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { deleteProject } from 'store-apis';
-import { setDeleteDialog } from 'store-actions';
-import { PROJECT_UNDEFINED_NAME } from 'store-consts';
-import { getDeleteDialog, getProjectName } from 'store-selectors';
+import { deleteProject } from 'store/apis';
+import { setDeleteDialog } from 'store/actions';
+import { PROJECT_UNDEFINED_NAME } from 'store/consts';
+import { getDeleteDialog, getProjectName } from 'store/selectors';
 
 const useStyles = makeStyles(theme => ({
   deleteButton: {

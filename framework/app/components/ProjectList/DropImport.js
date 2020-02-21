@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { Backdrop, Typography } from '@material-ui/core';
 import { LibraryAdd as LibraryAddIcon } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
-import { importFiles } from 'store-actions';
+import { importFiles } from 'store/actions';
 
 const useStyles = makeStyles(theme => ({
   backdrop: {

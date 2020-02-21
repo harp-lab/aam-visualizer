@@ -1,10 +1,10 @@
 import store from 'store';
-import { setPanels, defaultPanelState, refreshPanels } from 'store-actions';
-import { ENV_PANEL } from 'store-consts';
+import { setPanels, defaultPanelState, refreshPanels } from 'store/actions';
+import { ENV_PANEL } from 'store/consts';
 import {
   getProjectItems,
   getPanels, getLabel
-} from 'store-selectors';
+} from 'store/selectors';
 
 export function refreshEnvs() {
   const state = store.getState();

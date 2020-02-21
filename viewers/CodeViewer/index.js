@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { batch, useSelector, useDispatch } from 'react-redux';
 import { createSelector } from 'reselect';
-import { selectNodes, hoverNodes } from 'store-actions';
+import { selectNodes, hoverNodes } from 'store/actions';
 import {
   getNodeAsts,
   getViewedGraphIds, getGraphNodes, getGraphRefData,
   getProject
-} from 'store-selectors';
+} from 'store/selectors';
 
 import Context from './Context';
 import Line from './Line';

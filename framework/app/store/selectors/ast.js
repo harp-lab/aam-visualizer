@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { getSelectedNodes, getHoveredNodes, getGraphRefData } from 'store-selectors';
+import { getSelectedNodes, getHoveredNodes, getGraphRefData } from 'store/selectors';
 import { getViewedGraphIds } from './graphs.js';
 
 const getSelectedAstsFactory = graphId => createSelector(

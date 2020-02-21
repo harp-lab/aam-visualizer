@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { useSelector } from 'react-redux';
-import { getProjectItems } from 'store-selectors';
+import { getProjectItems } from 'store/selectors';
 
 import CStack from './CStack';
 import FrameCard from './FrameCard';

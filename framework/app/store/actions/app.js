@@ -1,5 +1,5 @@
-import { SET_USER, SET_TITLE } from 'store-action-types';
-import { selProject, delProjects } from 'store-actions';
+import { SET_USER, SET_TITLE } from 'store/actionTypes';
+import { selProject, delProjects } from 'store/actions';
 
 const setUser = userId => ({
   type: SET_USER,

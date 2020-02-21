@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
+import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store/consts';
 
 export const getUser = state => state.userId;
 export const getSelectedProjectId = state => state.selectedProjectId;

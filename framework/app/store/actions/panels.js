@@ -1,11 +1,11 @@
 import store from 'store';
-import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store-action-types';
-import { ENV_PANEL, STACK_PANEL } from 'store-consts';
-import { getSelectedProjectId, getProjectItems } from 'store-selectors';
+import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store/actionTypes';
+import { ENV_PANEL, STACK_PANEL } from 'store/consts';
+import { getSelectedProjectId, getProjectItems } from 'store/selectors';
 
-import { generateConfigs, refreshConfigs } from 'component-viewers/ConfigViewer';
-import { generateEnvs, refreshEnvs } from 'component-viewers/EnvViewer';
-import { generateStacks, refreshStacks } from 'component-viewers/StackViewer';
+import { generateConfigs, refreshConfigs } from 'viewers/ConfigViewer';
+import { generateEnvs, refreshEnvs } from 'viewers/EnvViewer';
+import { generateStacks, refreshStacks } from 'viewers/StackViewer';
 
 function addPanel(projectId, type, panelId, label) {
   const state = store.getState();

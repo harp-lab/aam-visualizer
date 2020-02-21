@@ -2,9 +2,9 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Typography } from '@material-ui/core';
 import { ThemeProvider, withTheme, makeStyles } from '@material-ui/styles';
-import { DeleteDialog, RenameDialog } from 'component-dialogs';
-import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store-consts';
-import { getView } from 'store-selectors';
+import { DeleteDialog, RenameDialog } from 'components/dialogs';
+import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store/consts';
+import { getView } from 'store/selectors';
 
 import AppBar from './AppBar';
 import Login from './Login';

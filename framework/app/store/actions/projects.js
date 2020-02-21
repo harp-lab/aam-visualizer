@@ -1,12 +1,12 @@
 import store from 'store';
-import { setTitle, queueSnackbar, generatePanels } from 'store-actions';
-import { process, downloadProject } from 'store-apis';
-import { PROCESS_STATUS, COMPLETE_STATUS, CLIENT_LOCAL_STATUS } from 'store-consts';
-import { getProject, getProjectServerStatus } from 'store-selectors';
+import { setTitle, queueSnackbar, generatePanels } from 'store/actions';
+import { process, downloadProject } from 'store/apis';
+import { PROCESS_STATUS, COMPLETE_STATUS, CLIENT_LOCAL_STATUS } from 'store/consts';
+import { getProject, getProjectServerStatus } from 'store/selectors';
 import {
   ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
   SET_METADATA, SET_STATUS
-} from 'store-action-types';
+} from 'store/actionTypes';
 
 export const addProject = projectId => ({
   type: ADD_PROJECT,

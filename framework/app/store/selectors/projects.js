@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 import store from 'store';
-import { CSTACK_STACK, FRAME_STACK, PROJECT_UNDEFINED_NAME } from 'store-consts';
-import { getSelectedProjectId } from 'store-selectors';
+import { CSTACK_STACK, FRAME_STACK, PROJECT_UNDEFINED_NAME } from 'store/consts';
+import { getSelectedProjectId } from 'store/selectors';
 
 export const getProjects = state => state.projects;
 export const getProjectIds = createSelector(

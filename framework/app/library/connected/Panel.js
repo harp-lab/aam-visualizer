@@ -9,13 +9,26 @@ import {
   Delete, ExpandMore, Star, StarBorder
 } from '@material-ui/icons';
 import { withStyles } from '@material-ui/styles';
-import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store-actions';
-import { getPanels } from 'store-selectors';
+import { selectPanel, unselectPanel, savePanel, unsavePanel, hidePanel } from 'store/actions';
+import { getPanels } from 'store/selectors';
 
+/**
+ * @param {Object} props 
+ * @param {String} props.panelId panel id
+ * @param {String} props.panelType panel type
+ * @param {Function} props.onSelect panel select callback
+ * @param {Function} props.onUnselect panel unselect callback
+ * @param {Function} props.onMouseOver panel mouseover callback
+ * @param {Function} props.onMouseOut panel mouseout callback
+ * @param {ReactElement} props.children
+ * @param {Object} props.theme
+ * @param {Object} props.classes
+ */
 function Panel(props) {
   const {
-    panelId, panelType, children, theme, classes,
-    onSelect, onUnselect, onMouseOver, onMouseOut
+    panelId, panelType,
+    onSelect, onUnselect, onMouseOver, onMouseOut,
+    children, theme, classes
   } = props; 
   const panelData = useSelector(getPanels)[panelType][panelId];
   const dispatch = useDispatch();

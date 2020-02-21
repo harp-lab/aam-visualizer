@@ -1,5 +1,5 @@
 import React from 'react';
-import { ValItem } from 'component-items';
+import { ValItem } from 'items';
 
 function ValArrayItem(props) {
   const { item } = props;

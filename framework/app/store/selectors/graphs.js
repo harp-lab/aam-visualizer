@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { getProjectItems, getProjectMetadata } from 'store-selectors';
+import { getProjectItems, getProjectMetadata } from 'store/selectors';
 
 export const getGraphs = createSelector(
   state => getProjectItems(state),

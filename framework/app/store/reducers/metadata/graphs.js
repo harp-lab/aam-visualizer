@@ -1,4 +1,4 @@
-import { SET_GRAPH_METADATA } from 'store-action-types';
+import { SET_GRAPH_METADATA } from 'store/actionTypes';
 
 /**
  * project graph metadata state reducer
