@@ -30,7 +30,7 @@ export function addGraphViewer(graphId) {
  */
 export function removeGraphViewer(graphId, projectId) {
   const state = store.getState();
-  const viewers = getGraphViewers(state, graphId);
+  const viewers = getGraphViewers(state, graphId, projectId);
   return setGraphViewers(graphId, viewers - 1, projectId);
 }
 

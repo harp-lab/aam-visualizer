@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
-import { getProjectItems, getProjectMetadata } from 'store/selectors';
+import { getProjectItems } from 'store/selectors';
+import { getProjectMetadata } from './projects';
 
 export const getGraphs = createSelector(
   state => getProjectItems(state),
@@ -9,12 +10,31 @@ export const getGraphIds = createSelector(
   state => getGraphs(state),
   graphs => Object.keys(graphs)
 );
+
+/**
+ * @param {Object} state
+ * @param {String} [projectId = <current project id>] project id
+ * @returns {Object} graph metadata
+ */
 export const getGraphsMetadata = createSelector(
-  state => getProjectMetadata(state),
+  getProjectMetadata,
   metadata => metadata.graphs
 );
 
-export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[graphId] || {};
+//export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[graphId] || {};
+
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @param {String} [projectId = <current project id>] project id
+ * @returns {Object} metadata
+ */
+export const getGraphMetadata = createSelector(
+  (state, graphId, projectId) => graphId,
+  (state, graphId, projectId) => getGraphsMetadata(state, projectId),
+  (graphId, metadata) => metadata[graphId] || {}
+);
+
 export const getSelectedNodes = (store, graphId) => getGraphMetadata(store, graphId).selectedNodes || [];
 export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graphId).hoveredNodes || [];
 export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
@@ -22,6 +42,7 @@ export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, grap
 /**
  * @param {Object} state
  * @param {String} graphId graph id
+ * @param {String} [projectId = <current project id>] project id
  * @returns {Number} active graph viewers
  */
 export const getGraphViewers = createSelector(

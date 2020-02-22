@@ -9,7 +9,7 @@ import {
   selectNodes, unselectNodes, hoverNodes, selectEdges,
   setPositions
 } from 'store/actions'
-import { getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store/selectors';
+import { getSelectedProjectId, getProjectItems, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
 
@@ -29,6 +29,7 @@ function Graph(props) {
     onNodeSelect, onNodeUnselect,
     external,
     theme, style } = props;
+  const projectId = useSelector(getSelectedProjectId);
   const items = useSelector(getProjectItems);
   if (!items.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
   const graphData = useSelector(state => getGraph(state, graphId));
@@ -221,7 +222,7 @@ function Graph(props) {
       dispatch(addGraphViewer(graphId));
 
       return () => {
-        dispatch(removeGraphViewer(graphId));
+        dispatch(removeGraphViewer(graphId, projectId));
       };
     }
   }, [graphId]);
