@@ -2,12 +2,13 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
+import { ENV_PANEL } from 'store/consts';
 import { getPanels } from 'store/selectors';
 
 import EnvItem from './EnvItem';
 
 function EnvViewer() {
-  const { envs } = useSelector(getPanels);
+  const envs = useSelector(state => getPanels(state, ENV_PANEL));
 
   function onGenerate([envId, env]) {
     return (

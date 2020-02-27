@@ -30,7 +30,7 @@ function Panel(props) {
     onSelect, onUnselect, onMouseOver, onMouseOut,
     children, theme, classes
   } = props; 
-  const panelData = useSelector(getPanels)[panelType][panelId];
+  const panelData = useSelector(state => getPanels(state, panelType))[panelId];
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 

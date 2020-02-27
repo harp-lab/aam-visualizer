@@ -1,6 +1,6 @@
 import store from 'store';
 import { setPanels, defaultPanelState, refreshPanels } from 'store/actions';
-import { ENV_PANEL } from 'store/consts';
+import { CONFIG_PANEL, ENV_PANEL } from 'store/consts';
 import {
   getProjectItems,
   getPanels, getLabel
@@ -9,7 +9,7 @@ import {
 export function refreshEnvs() {
   const state = store.getState();
   const items = getProjectItems(state);
-  const { configs } = getPanels(state);
+  const configs = getPanels(state, CONFIG_PANEL);
   const visibleEnvs = [];
   for (const [configId, configPanel] of Object.entries(configs)) {
     if (!configPanel.hidden && configPanel.selected) {

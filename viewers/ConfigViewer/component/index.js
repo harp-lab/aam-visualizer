@@ -5,12 +5,13 @@ import { refreshStacks } from 'viewers/StackViewer';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
 import { hoverNodes } from 'store/actions';
+import { CONFIG_PANEL } from 'store/consts';
 import { getPanels, getProjectItems, getSubGraphId } from 'store/selectors';
 
 import Config from './Config';
 
 function ConfigViewer() {
-  const { configs } = useSelector(getPanels);
+  const configs = useSelector(state => getPanels(state, CONFIG_PANEL));
   const items = useSelector(getProjectItems);
   const subGraphId = useSelector(getSubGraphId);
   const dispatch = useDispatch();

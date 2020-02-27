@@ -1,12 +1,12 @@
 import React, { Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { MoreVert } from '@material-ui/icons';
-import { LayerData } from 'components/data';
 import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
 
 import CStackLayer from './CStackLayer';
 import FrameStackLayer from './FrameStackLayer';
+import LayerData from './LayerData';
 import StackLayer from './StackLayer';
 
 function FrameStack(props) {

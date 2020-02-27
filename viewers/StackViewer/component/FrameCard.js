@@ -2,13 +2,14 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
-import withStyles from '@material-ui/styles/withStyles';
-import { LayerData } from 'components/data';
-import { ValArrayItem } from 'items';
-import { EnvLink, StackLink } from 'links';
+import { withStyles } from '@material-ui/styles';
 import { IconPopover, DebugPopover } from 'library/base';
 import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
+
+import { ValArrayItem } from 'items';
+import { EnvLink, StackLink } from 'links';
+import LayerData from './LayerData';
 
 function FrameCard(props) {
   const { frameId, selected, theme, classes, onSet, onUnset } = props;

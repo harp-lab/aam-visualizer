@@ -1,5 +1,5 @@
 import store from 'store';
-import { STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store/consts';
+import { CONFIG_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store/consts';
 import { getStackId, defaultPanelState, setPanels, refreshPanels } from 'store/actions';
 import {
   getProjectItems,
@@ -9,7 +9,7 @@ import {
 export function refreshStacks() {
   const state = store.getState();
   const items = getProjectItems(state);
-  const { configs } = getPanels(state);
+  const configs = getPanels(state, CONFIG_PANEL);
 
   const visibleStacks = [];
   for (const [configId, configPanel] of Object.entries(configs)) {

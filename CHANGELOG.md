@@ -1,3 +1,7 @@
+## 0.4.0
+* redesigned to framework - module paradigm
+* aam vis is now a framework module
+
 ## 0.3.15
 * new drag-drop project import functionality
 * projects are listed with client status

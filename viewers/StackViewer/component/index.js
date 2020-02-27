@@ -9,7 +9,7 @@ import CStack from './CStack';
 import FrameStack from './FrameStack';
 
 function StackViewer() {
-  const { stacks } = useSelector(getPanels);
+  const stacks = useSelector(state => getPanels(state, STACK_PANEL));
   
   function onGenerate([stackId, stack]) {
     const { [FRAME_STACK]: frameId, [CSTACK_STACK]: cstackId } = stack;

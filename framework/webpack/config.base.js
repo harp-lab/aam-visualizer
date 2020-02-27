@@ -20,9 +20,11 @@ module.exports = {
   resolve: {
     alias: {
       'components': path.resolve(appDir, 'components'),
-      'layouts': path.resolve(rootDir, 'layouts'),
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),
+
+      'fext': path.resolve(rootDir, 'fext'),
+      'layouts': path.resolve(rootDir, 'layouts'),
       'viewers': path.resolve(rootDir, 'viewers')
     }
   },

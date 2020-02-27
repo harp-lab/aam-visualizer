@@ -1,6 +1,4 @@
-import { combineReducers } from 'redux';
 import { ADD_PANEL, SET_PANEL, SET_PANELS, REFRESH_PANELS } from 'store/actionTypes';
-import { CONFIG_PANEL, ENV_PANEL, STACK_PANEL } from 'store/consts';
 
 /**
  * project panel metadata state reducer
@@ -70,10 +68,22 @@ function filteredReducerFactory(reducer, predicate) {
   };
 }
 
-const panelsReducer = combineReducers({
-  configs: filteredReducerFactory(panelReducer, action => action.payload ? action.payload.type === CONFIG_PANEL : false),
-  envs: filteredReducerFactory(panelReducer, action => action.payload ? action.payload.type === ENV_PANEL : false),
-  stacks: filteredReducerFactory(panelReducer, action => action.payload ? action.payload.type === STACK_PANEL : false)
-});
+/**
+ * project panels metadata state reducer
+ * @param {Object} state 
+ * @param {Object} action 
+ * @param {Object} action.payload action payload
+ * @param {String} action.payload.type panel type
+ * @returns {Object} state
+ */
+function panelsReducer(state = {}, action) {
+  if (action.payload && action.payload.type) {
+    const reducerType = action.payload.type;
+    state[reducerType] = panelReducer(state[reducerType], action);
+    return state;
+  } else {
+    return state;
+  }
+}
 
 export default panelsReducer;
