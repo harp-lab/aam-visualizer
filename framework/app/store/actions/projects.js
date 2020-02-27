@@ -1,5 +1,5 @@
 import store from 'store';
-import { setTitle, queueSnackbar, generatePanels } from 'store/actions';
+import { setTitle, queueSnackbar } from 'store/actions';
 import { process, downloadProject } from 'store/apis';
 import { PROCESS_STATUS, COMPLETE_STATUS, CLIENT_LOCAL_STATUS } from 'store/consts';
 import { getProject, getProjectServerStatus } from 'store/selectors';
@@ -7,6 +7,8 @@ import {
   ADD_PROJECT, SET_PROJECT_DATA, DEL_PROJECT, DEL_PROJECTS, SEL_PROJECT,
   SET_METADATA, SET_STATUS
 } from 'store/actionTypes';
+
+import { generateMetadataHook } from 'fext/store/hooks';
 
 export const addProject = projectId => ({
   type: ADD_PROJECT,
@@ -118,7 +120,7 @@ export function importData(projectId, data) {
     dispatch(setProjectData(projectId, data));
     dispatch(setStatus(projectId, COMPLETE_STATUS));
     dispatch(setClientStatus(projectId, CLIENT_LOCAL_STATUS));
-    dispatch(generatePanels(projectId));
+    dispatch(generateMetadata(projectId));
   };
 }
 
@@ -167,10 +169,21 @@ export function exportData(projectId) {
   };
 }
 
+/**
+ * @param {String} projectId project id
+ * @returns {Function} dispatch
+ */
+export function generateMetadata(projectId) {
+  return function(dispatch) {
+    dispatch(generateMetadataHook(projectId));
+  };
+}
+
 export const setMetadata = (projectId, data) => ({
   type: SET_METADATA,
   payload: { projectId, data }
 });
+
 export const setStatus = (projectId, data) => ({
   type: SET_STATUS,
   payload: { projectId, data }

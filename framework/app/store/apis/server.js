@@ -1,7 +1,7 @@
 import store from 'store';
 import {
   setProjectData, addProject, deleteProjectLocal, selProject, setClientStatus,
-  generatePanels,
+  generateMetadata,
   queueSnackbar,
   consoleError
 } from 'store/actions';
@@ -235,7 +235,7 @@ export function downloadProject(projectId) {
           break;}
         case COMPLETE_STATUS:
           await dispatch(getData(projectId));
-          dispatch(generatePanels(projectId));
+          dispatch(generateMetadata(projectId));
           break;
         case ERROR_STATUS:
           await dispatch(getData(projectId));

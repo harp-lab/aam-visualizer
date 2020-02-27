@@ -1,7 +1,9 @@
 import store from 'store';
 import { SET_GRAPH_METADATA } from 'store/actionTypes';
-import { setMetadata, refresh } from 'store/actions';
+import { setMetadata } from 'store/actions';
 import { getSelectedProjectId, getGraph, getGraphViewers, getMainGraphId, getSelectedNodes, getBubbling } from 'store/selectors';
+
+import { nodeSelectHook, nodeUnselectHook } from 'fext/store/hooks';
 
 /**
  * @param {String} graphId graph id
@@ -65,6 +67,12 @@ export function setGraphMetadata(graphId, data, projectId) {
   };
 }
 
+/**
+ * 
+ * @param {String} graphId graph id
+ * @param {Array} nodeIds node ids
+ * @returns {Function} dispatch
+ */
 export function selectNodes(graphId, nodeIds) {
   return (dispatch, getState) => {
     const state = getState();
@@ -73,9 +81,15 @@ export function selectNodes(graphId, nodeIds) {
     dispatch(setGraphMetadata(graphId, {
       selectedNodes: [...combinedNodes]
     }));
-    dispatch(refresh());
+    dispatch(nodeSelectHook());
   };
 }
+
+/**
+ * @param {String} graphId graph id
+ * @param {Array} nodeIds node ids
+ * @returns {Function} dispatch
+ */
 export function unselectNodes(graphId, nodeIds) {
   return (dispatch, getState) => {
     const state = getState();
@@ -85,9 +99,10 @@ export function unselectNodes(graphId, nodeIds) {
     dispatch(setGraphMetadata(graphId, {
       selectedNodes: [...combinedNodes]
     }));
-    dispatch(refresh());
+    dispatch(nodeUnselectHook());
   };
 }
+
 export function hoverNodes(graphId, nodeIds) {
   return setGraphMetadata(graphId, {
     hoveredNodes: nodeIds
