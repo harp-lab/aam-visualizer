@@ -8,7 +8,7 @@ import {
   CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
 } from 'store/consts';
 
-import { ProjectLayout } from 'fext/layouts';
+import { ProjectLayout } from 'extensions/layouts';
 
 import Editor from './Editor';
 import Toolbar from './Toolbar';

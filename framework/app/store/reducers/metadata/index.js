@@ -1,9 +1,10 @@
 import { SET_METADATA } from 'store/actionTypes';
 
+import { metadataReducer as fextReducer } from 'extensions/store/reducers';
+
 import graphsReducer from './graphs';
 import panelsReducer from './panels';
 import statusReducer from './status';
-import fextReducer from 'fext/store/reducers';
 
 /**
  * project metadata state reducer

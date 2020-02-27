@@ -5,11 +5,9 @@
  * @param {String} action.type action type
  * @returns {Object} state
  */
-function reducer(state = {}, action) {
+export function metadataReducer(state = {}, action) {
   switch (action.type) {
     default:
       return state;
   }
 }
-
-export default reducer;

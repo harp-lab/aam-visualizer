@@ -3,7 +3,7 @@ import { SET_GRAPH_METADATA } from 'store/actionTypes';
 import { setMetadata } from 'store/actions';
 import { getSelectedProjectId, getGraph, getGraphViewers, getMainGraphId, getSelectedNodes, getBubbling } from 'store/selectors';
 
-import { nodeSelectHook, nodeUnselectHook } from 'fext/store/hooks';
+import { nodeSelectHook, nodeUnselectHook } from 'extensions/store/hooks';
 
 /**
  * @param {String} graphId graph id

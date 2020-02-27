@@ -19,6 +19,8 @@ module.exports = {
   entry: path.resolve(appDir, 'index.js'),
   resolve: {
     alias: {
+      'extensions': path.resolve(frameworkDir, 'extensions'),
+
       'components': path.resolve(appDir, 'components'),
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),

@@ -8,7 +8,7 @@ import {
   SET_METADATA, SET_STATUS
 } from 'store/actionTypes';
 
-import { generateMetadataHook } from 'fext/store/hooks';
+import { generateMetadataHook } from 'extensions/store/hooks';
 
 export const addProject = projectId => ({
   type: ADD_PROJECT,
