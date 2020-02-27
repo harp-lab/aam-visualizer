@@ -7,6 +7,7 @@ module.exports = {
     alias: {
       'items': path.resolve(rootDir, 'items'),
       'links': path.resolve(rootDir, 'links'),
+      'viewers': path.resolve(rootDir, 'viewers')
     }
   }
 };

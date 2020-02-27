@@ -23,9 +23,7 @@ module.exports = {
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),
 
-      'fext': path.resolve(rootDir, 'fext'),
-      'layouts': path.resolve(rootDir, 'layouts'),
-      'viewers': path.resolve(rootDir, 'viewers')
+      'fext': path.resolve(rootDir, 'fext')
     }
   },
   module: {
