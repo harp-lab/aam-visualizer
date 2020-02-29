@@ -2,7 +2,8 @@ import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Button, InputLabel, MenuItem, Select, Toolbar, Typography } from '@material-ui/core';
 import { saveCode, processCode } from 'store/apis';
-import { getSelectedProjectId, getProject } from 'store/selectors';
+import { EMPTY_STATUS, EDIT_STATUS } from 'store/consts';
+import { getSelectedProjectId, getProject, getProjectServerStatus } from 'store/selectors';
 
 import codemirror from 'codemirror/lib/codemirror';
 import 'codemirror/mode/scheme/scheme';
@@ -24,9 +25,9 @@ function Editor(props) {
   const { code, error: errorContent } = useSelector(getProject);
   const dispatch = useDispatch();
 
+
   function setValue(data) { cmRef.current.getDoc().setValue(data); }
   function getValue() { return cmRef.current.getDoc().getValue(); }
-  function save() { dispatch(saveCode(projectId, getValue())); }
   function process() { dispatch(processCode(projectId, getValue(), options)); }
 
   useEffect(() => {
@@ -34,7 +35,8 @@ function Editor(props) {
 
     return () => {
       cmRef.current.toTextArea();
-      save();
+
+      dispatch(save(projectId, getValue()));
     };
   }, []);
   useEffect(() => {
@@ -104,6 +106,27 @@ function Editor(props) {
       { editMenu }
     </div>
   );
+}
+
+/**
+ * @param {String} projectId project id
+ * @param {String} code 
+ * @returns {Function} dispatch
+ */
+function save(projectId, code) {
+  return function(dispatch, getState) {
+    const state = getState();
+    const serverStatus = getProjectServerStatus(state, projectId);
+    
+    switch (serverStatus) {
+      case EMPTY_STATUS:
+      case EDIT_STATUS:
+        dispatch(saveCode(projectId, code));
+        break;
+      default:
+        break;
+    }
+  };
 }
 
 function ProcessButton(props) {
