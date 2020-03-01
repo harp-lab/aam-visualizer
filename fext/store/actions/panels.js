@@ -1,6 +1,7 @@
 import { showPanel } from 'store/actions';
-import { ENV_PANEL, STACK_PANEL } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
+
+import { ENV_PANEL, STACK_PANEL } from 'fext/store/consts';
 
 import { generateConfigs } from 'viewers/ConfigViewer';
 import { generateEnvs } from 'viewers/EnvViewer';

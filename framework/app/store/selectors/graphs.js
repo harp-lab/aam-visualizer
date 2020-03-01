@@ -21,8 +21,6 @@ export const getGraphsMetadata = createSelector(
   metadata => metadata.graphs
 );
 
-//export const getGraphMetadata = (store, graphId) => getGraphsMetadata(store)[graphId] || {};
-
 /**
  * @param {Object} state
  * @param {String} graphId graph id

@@ -4,8 +4,9 @@ import { Card, CardContent, Typography } from '@material-ui/core';
 import { EnvLink, StackLink } from 'links';
 import { ValArrayItem } from 'items';
 import { Spacer } from 'library/base';
-import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
+
+import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 
 function StateCard(props) {
   const { stateId } = props;

@@ -1,9 +1,10 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { Link } from 'library/base';
-import { getStackRefData, getLabel } from 'store/selectors';
+import { getLabel } from 'store/selectors';
 
 import { showStack } from 'fext/store/actions';
+import { getStackRefData } from 'fext/store/selectors';
 
 function StackLink(props) {
   const { stackId, stackType, style } = props;

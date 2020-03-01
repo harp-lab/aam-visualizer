@@ -14,10 +14,3 @@ export const ERROR_STATUS = 'error';
 export const CLIENT_WAITING_STATUS = 'waiting';
 export const CLIENT_DOWNLOADED_STATUS = 'downloaded';
 export const CLIENT_LOCAL_STATUS = 'local';
-
-export const CONFIG_PANEL = 'configs';
-export const ENV_PANEL = 'envs';
-export const KONT_PANEL = 'konts';
-export const STACK_PANEL = 'stacks';
-export const FRAME_STACK = 'frame';
-export const CSTACK_STACK = 'cstack';

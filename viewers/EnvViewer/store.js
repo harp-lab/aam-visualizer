@@ -1,10 +1,11 @@
 import store from 'store';
 import { setPanels, defaultPanelState, refreshPanels } from 'store/actions';
-import { CONFIG_PANEL, ENV_PANEL } from 'store/consts';
 import {
   getProjectItems,
   getPanels, getLabel
 } from 'store/selectors';
+
+import { CONFIG_PANEL, ENV_PANEL } from 'fext/store/consts';
 
 export function refreshEnvs() {
   const state = store.getState();

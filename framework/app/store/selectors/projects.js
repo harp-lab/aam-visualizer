@@ -1,6 +1,5 @@
 import { createSelector } from 'reselect';
-import store from 'store';
-import { CSTACK_STACK, FRAME_STACK, PROJECT_UNDEFINED_NAME } from 'store/consts';
+import { PROJECT_UNDEFINED_NAME } from 'store/consts';
 import { getSelectedProjectId } from 'store/selectors';
 
 export const getProjects = state => state.projects;
@@ -66,12 +65,3 @@ export const getProjectClientStatus = createSelector(
   getProjectMetadata,
   metadata => metadata.status.client
 );
-
-export function getStackRefData(stackType) {
-  const state = store.getState();
-  const items = getProjectItems(state);
-  switch (stackType) {
-    case CSTACK_STACK: return items.cstacks;
-    case FRAME_STACK: return items.frames;
-  }
-}

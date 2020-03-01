@@ -1,5 +1,4 @@
 import store from 'store';
-import { CONFIG_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'store/consts';
 import { defaultPanelState, setPanels, refreshPanels } from 'store/actions';
 import {
   getProjectItems,
@@ -7,6 +6,7 @@ import {
 } from 'store/selectors';
 
 import { getStackId } from 'fext/store/actions';
+import { CONFIG_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'fext/store/consts';
 
 export function refreshStacks() {
   const state = store.getState();

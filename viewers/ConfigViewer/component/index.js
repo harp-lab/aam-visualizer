@@ -5,8 +5,9 @@ import { refreshStacks } from 'viewers/StackViewer';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
 import { hoverNodes } from 'store/actions';
-import { CONFIG_PANEL } from 'store/consts';
 import { getPanels, getProjectItems, getSubGraphId } from 'store/selectors';
+
+import { CONFIG_PANEL } from 'fext/store/consts';
 
 import Config from './Config';
 

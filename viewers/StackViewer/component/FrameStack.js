@@ -1,8 +1,9 @@
 import React, { Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { MoreVert } from '@material-ui/icons';
-import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
+
+import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 
 import CStackLayer from './CStackLayer';
 import FrameStackLayer from './FrameStackLayer';

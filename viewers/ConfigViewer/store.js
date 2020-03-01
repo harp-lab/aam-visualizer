@@ -1,11 +1,12 @@
 import store from 'store';
 import { setPanels, defaultPanelState, refreshPanels } from 'store/actions';
-import { CONFIG_PANEL } from 'store/consts';
 import {
   getProjectItems,
   getSubGraphId, getSelectedNodes,
   getLabel
 } from 'store/selectors';
+
+import { CONFIG_PANEL } from 'fext/store/consts';
 
 export function generateConfigs(projectId) {
   return (dispatch, getState) => {

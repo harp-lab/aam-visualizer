@@ -4,11 +4,12 @@ import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import { withStyles } from '@material-ui/styles';
 import { IconPopover, DebugPopover } from 'library/base';
-import { CSTACK_STACK, FRAME_STACK } from 'store/consts';
 import { getProjectItems } from 'store/selectors';
 
+import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 import { ValArrayItem } from 'items';
 import { EnvLink, StackLink } from 'links';
+
 import LayerData from './LayerData';
 
 function FrameCard(props) {
