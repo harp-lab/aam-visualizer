@@ -1,10 +1,14 @@
 const path = require('path');
+const package = require(path.resolve(process.cwd(), 'package.json'));
 
 exports.ROOT_DIR = process.cwd();
-exports.FRAMEWORK_DIR = path.resolve(exports.ROOT_DIR, 'framework');
+exports.FRAMEWORK_DIR = path.resolve(exports.ROOT_DIR, package.config.frameworkDir);
 
-exports.FEXT_DIR = path.resolve(exports.ROOT_DIR, 'fext');
-exports.FEXT_CONFIG = path.resolve(exports.FEXT_DIR, 'fext.config.js');
+exports.FEXT_DIR = path.resolve(exports.ROOT_DIR, package.config.fextDir);
+exports.FEXT_CONFIG = path.resolve(exports.FEXT_DIR, package.config.fextConfig);
 exports.ENGINE_DIR = path.resolve(exports.FEXT_DIR, 'engine');
 
 exports.BUILD_DIR = path.resolve(exports.ROOT_DIR, 'build');
+
+exports.SERVER_HOSTNAME = '127.0.0.1';
+exports.SERVER_PORT = 8086;

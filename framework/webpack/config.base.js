@@ -1,7 +1,6 @@
 const HTMLWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const { EnvironmentPlugin } = require('webpack');
-
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 const package = require(path.resolve(process.cwd(), 'package.json'));
 
