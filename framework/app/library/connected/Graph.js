@@ -20,6 +20,7 @@ import cytoscape from 'cytoscape';
  * @param {Function} props.onNodeSelect node select callback
  * @param {Function} props.onNodeUnselect node unselect callback
  * @param {Boolean} props.external disable graph id active registration
+ * @param {Object} props.config cytoscape config override
  * @param {Object} theme
  * @param {Object} style
  */
@@ -27,7 +28,7 @@ function Graph(props) {
   const {
     graphId, edgePredicate = edge => false,
     onNodeSelect, onNodeUnselect,
-    external,
+    external, config,
     theme, style } = props;
   const projectId = useSelector(getSelectedProjectId);
   const items = useSelector(getProjectItems);
@@ -43,7 +44,7 @@ function Graph(props) {
   const events = useRef(false);
   const data = GraphData(graphData, refData);
 
-  const config = {
+  const defaultConfig = {
     style: [{
         selector: 'node',
         style: {
@@ -99,7 +100,7 @@ function Graph(props) {
         return defaultStyle;
     }
   }
-  const cyRef = useRef(cytoscape(config));
+  const cyRef = useRef(cytoscape(config || defaultConfig));
   const cy = cyRef.current;
 
   const {
