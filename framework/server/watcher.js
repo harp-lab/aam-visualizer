@@ -3,11 +3,8 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const Consts = require('./Consts');
+const { fextConfig } = Consts;
 const G = require('./Global');
-
-const rootDir = process.cwd();
-const package = require(path.resolve(rootDir, 'package.json'));
-const fext = require(path.resolve(rootDir, package.config.fextDir, package.config.fextConfig));
 
 const log = content => G.log(Consts.LOG_TYPE_WATCHER, content);
 
