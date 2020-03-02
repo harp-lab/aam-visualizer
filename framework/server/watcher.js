@@ -5,6 +5,10 @@ const path = require('path');
 const Consts = require('./Consts');
 const G = require('./Global');
 
+const rootDir = process.cwd();
+const package = require(path.resolve(rootDir, 'package.json'));
+const fext = require(path.resolve(rootDir, package.config.fextDir, package.config.fextConfig));
+
 const log = content => G.log(Consts.LOG_TYPE_WATCHER, content);
 
 class Watcher {
@@ -71,7 +75,7 @@ class Watcher {
     log('calling engine');
     const inputPath = path.resolve(Consts.INPUT_DIR, file)
     const outputPath = path.resolve(Consts.OUTPUT_DIR, file);
-    const args = [path.resolve(Consts.ENGINE_DIR, 'engine.rkt'), '-o', outputPath, inputPath];
+    const {command, args} = fext.engine(inputPath, outputPath);
     const options = {
       cwd: Consts.ENGINE_DIR,
       stdio: 'inherit'
@@ -79,7 +83,7 @@ class Watcher {
 
     // call engine promise
     const code = await new Promise((resolve, reject) => {
-      this.engineProcess = child_process.spawn('racket', args, options);
+      this.engineProcess = child_process.spawn(command, args, options);
       this.engineProcess.on('exit', code => {
         this.fileProcess = undefined;
         resolve(code);

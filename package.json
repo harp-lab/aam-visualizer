@@ -9,7 +9,9 @@
   },
   "main": "index.js",
   "config": {
-    "frameworkDir": "framework"
+    "frameworkDir": "framework",
+    "fextDir": "fext",
+    "fextConfig": "fext.config.js"
   },
   "nodemonConfig": {
     "watch": ["framework/server"]

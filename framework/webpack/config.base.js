@@ -3,7 +3,9 @@ const path = require('path');
 const { EnvironmentPlugin } = require('webpack');
 
 const rootDir = process.cwd();
-const frameworkDir = path.resolve(rootDir, 'framework');
+const package = require(path.resolve(rootDir, 'package.json'));
+
+const frameworkDir = path.resolve(rootDir, package.config.frameworkDir);
 const appDir = path.resolve(frameworkDir, 'app');
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
@@ -12,7 +14,7 @@ const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   inject: 'body'
 });
 const EnvironmentPluginConfig = new EnvironmentPlugin({
-  VERSION: require(path.resolve(rootDir, 'package.json')).version
+  VERSION: package.version
 });
 
 module.exports = {
@@ -25,7 +27,7 @@ module.exports = {
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),
 
-      'fext': path.resolve(rootDir, 'fext')
+      'fext': path.resolve(rootDir, package.config.fextDir)
     }
   },
   module: {
