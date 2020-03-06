@@ -60,7 +60,7 @@
 (define out-hash
   (hash-set* proj-hash
     'status "done"
-    'items (hash-union items (hash 'ast code-ast))))
+    'analysisOutput (hash-union items (hash 'ast code-ast))))
 
 (define out
   (if (non-empty-string? (output-file-path))

@@ -2,14 +2,14 @@ import React, { Fragment } from 'react';
 import { useSelector } from 'react-redux';
 import { EnvLink } from 'links';
 import { Spacer } from 'library/base';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { Typography } from '@material-ui/core';
 
 function ValItem(props) {
   const { valId, style } = props;
-  const items = useSelector(getProjectItems);
-  const { type, label, env: envId } = items.vals[valId];
+  const analOut = useSelector(getProjectAnalysisOutput);
+  const { type, label, env: envId } = analOut.vals[valId];
 
   let string = valId;
   switch (type) {

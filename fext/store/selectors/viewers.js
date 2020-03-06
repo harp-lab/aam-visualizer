@@ -1,5 +1,5 @@
 import store from 'store';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 
@@ -9,9 +9,9 @@ import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
  */
 export function getStackRefData(stackType) {
   const state = store.getState();
-  const items = getProjectItems(state);
+  const analOut = getProjectAnalysisOutput(state);
   switch (stackType) {
-    case CSTACK_STACK: return items.cstacks;
-    case FRAME_STACK: return items.frames;
+    case CSTACK_STACK: return analOut.cstacks;
+    case FRAME_STACK: return analOut.frames;
   }
 }

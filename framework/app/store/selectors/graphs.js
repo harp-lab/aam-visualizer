@@ -1,10 +1,10 @@
 import { createSelector } from 'reselect';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 import { getProjectMetadata } from './projects';
 
 export const getGraphs = createSelector(
-  state => getProjectItems(state),
-  items => items.graphs
+  state => getProjectAnalysisOutput(state),
+  analysisOutput => analysisOutput.graphs
 );
 export const getGraphIds = createSelector(
   state => getGraphs(state),
@@ -118,12 +118,12 @@ export const getMainGraphId = createSelector(
  */
 export const getSubGraphId = createSelector(
   state => getSelectedNodes(state, getMainGraphId(state)),
-  state => getProjectItems(state),
-  (selectedNodes, items) => {
+  state => getProjectAnalysisOutput(state),
+  (selectedNodes, analysisOutput) => {
     let subGraphId = 'states';
     if (selectedNodes.length > 0) {
       const nodeId = selectedNodes[0];
-      const { form } = items.funcs[nodeId];
+      const { form } = analysisOutput.funcs[nodeId];
       const finalForms = ['halt', 'not found', 'non-func', 'unknown'];
       if (!finalForms.includes(form))
         subGraphId = nodeId;
@@ -173,15 +173,15 @@ export const getGraph = createSelector(
  * @returns {Object} graph reference data
  */
 export const getGraphRefData = createSelector(
-  (state, graphId) => getProjectItems(state),
+  (state, graphId) => getProjectAnalysisOutput(state),
   (state, graphId) => graphId,
-  (items, graphId) => {
+  (analysisOutput, graphId) => {
     switch (graphId) {
       case 'funcs':
-        return items.funcs;
+        return analysisOutput.funcs;
       case 'states':
       default:
-        return items.configs;
+        return analysisOutput.configs;
     }
   }
 );

@@ -5,7 +5,7 @@ import { refreshStacks } from 'viewers/StackViewer';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
 import { hoverNodes } from 'store/actions';
-import { getPanels, getProjectItems, getSubGraphId } from 'store/selectors';
+import { getPanels, getProjectAnalysisOutput, getSubGraphId } from 'store/selectors';
 
 import { CONFIG_PANEL } from 'fext/store/consts';
 
@@ -13,7 +13,7 @@ import Config from './Config';
 
 function ConfigViewer() {
   const configs = useSelector(state => getPanels(state, CONFIG_PANEL));
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
   const subGraphId = useSelector(getSubGraphId);
   const dispatch = useDispatch();
 
@@ -35,10 +35,10 @@ function ConfigViewer() {
       </Panel>);
   }
   function onFilterSaved([configId, config]) {
-    return !['not found', 'non-func'].includes(items.configs[configId].form);
+    return !['not found', 'non-func'].includes(analOut.configs[configId].form);
   }
   function onFilterUnsaved([configId, config]) {
-    return !['not found', 'non-func'].includes(items.configs[configId].form);
+    return !['not found', 'non-func'].includes(analOut.configs[configId].form);
   }
   const funcProps = { onFilterSaved, onFilterUnsaved };
   return <PanelViewer

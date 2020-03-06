@@ -1,5 +1,5 @@
 import { showPanel } from 'store/actions';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { ENV_PANEL, STACK_PANEL } from 'fext/store/consts';
 
@@ -41,9 +41,9 @@ export function showEnv(panelId) {
 export function generatePanels(projectId) {
   return function(dispatch, getState) {
     const state = getState();
-    const items = getProjectItems(state, projectId);
-    if (items.configs) dispatch(generateConfigs(projectId));
-    if (items.envs) dispatch(generateEnvs(projectId));
-    if (items.frames || items.cstacks) dispatch(generateStacks(projectId));
+    const analOut = getProjectAnalysisOutput(state, projectId);
+    if (analOut.configs) dispatch(generateConfigs(projectId));
+    if (analOut.envs) dispatch(generateEnvs(projectId));
+    if (analOut.frames || analOut.cstacks) dispatch(generateStacks(projectId));
   };
 }

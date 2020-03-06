@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { ValItem } from 'items';
 import { PanelTable } from 'library/base';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 /**
  * Renders env item
@@ -11,10 +11,10 @@ import { getProjectItems } from 'store/selectors';
  */
 function EnvItem(props) {
   const { envId } = props
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
 
   const labels = ['var', 'instr', 'store'];
-  const { envs, instr, store, vals } = items;
+  const { envs, instr, store, vals } = analOut;
   const env = envs[envId];
   const entries = env.entries
     .map(entry => {

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { getSelectedAsts, getHoveredAsts, getProjectItems } from 'store/selectors';
+import { getSelectedAsts, getHoveredAsts, getProjectAnalysisOutput } from 'store/selectors';
 import { withTheme } from '@material-ui/styles';
 import { indigo } from '@material-ui/core/colors';
 
@@ -8,7 +8,7 @@ import Context from './Context';
 
 function Token(props) {
   const { lineId, chId, theme } = props;
-  const { ast } = useSelector(getProjectItems);
+  const { ast } = useSelector(getProjectAnalysisOutput);
   const selectedAstIds = useSelector(getSelectedAsts);
   const hoveredAstIds = useSelector(getHoveredAsts);
   const { astNodes, code, onHover, onClick } = useContext(Context);

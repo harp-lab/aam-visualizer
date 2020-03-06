@@ -1,7 +1,7 @@
 import store from 'store';
 import { defaultPanelState, setPanels, refreshPanels } from 'store/actions';
 import {
-  getProjectItems,
+  getProjectAnalysisOutput,
   getPanels, getLabel
 } from 'store/selectors';
 
@@ -10,16 +10,16 @@ import { CONFIG_PANEL, STACK_PANEL, FRAME_STACK, CSTACK_STACK } from 'fext/store
 
 export function refreshStacks() {
   const state = store.getState();
-  const items = getProjectItems(state);
+  const analOut = getProjectAnalysisOutput(state);
   const configs = getPanels(state, CONFIG_PANEL);
 
   const visibleStacks = [];
   for (const [configId, configPanel] of Object.entries(configs)) {
     if (!configPanel.hidden && configPanel.selected) {
-      const stateIds = items.configs[configId].states;
+      const stateIds = analOut.configs[configId].states;
       if (stateIds)
         for (const stateId of stateIds) {
-          const state = items.states[stateId];
+          const state = analOut.states[stateId];
           const { [FRAME_STACK]: frameId, [CSTACK_STACK]: cstackId } = state;
           const stackType = frameId ? FRAME_STACK : CSTACK_STACK;
           const stackId = frameId ? frameId : cstackId;
@@ -39,12 +39,12 @@ export function refreshStacks() {
 export function generateStacks(projectId) {
   return (dispatch, getState) => {
     const state = getState();
-    const items = getProjectItems(state, projectId);
+    const analOut = getProjectAnalysisOutput(state, projectId);
 
     const panels = {};
 
-    if (items.frames)
-      for (const [frameId, frame] of Object.entries(items.frames)) {
+    if (analOut.frames)
+      for (const [frameId, frame] of Object.entries(analOut.frames)) {
         const { descs } = frame;
         const name = getLabel(frame) || frameId;
         let label = `${name}: `;
@@ -59,8 +59,8 @@ export function generateStacks(projectId) {
         };
       }
 
-    if (items.cstacks)
-      for (const [cstackId, cstack] of Object.entries(items.cstacks)) {
+    if (analOut.cstacks)
+      for (const [cstackId, cstack] of Object.entries(analOut.cstacks)) {
         const name = getLabel(cstack) || cstackId;
         let label = `${name}`;
         const panelId = getStackId(cstackId, CSTACK_STACK);

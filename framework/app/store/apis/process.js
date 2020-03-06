@@ -1,22 +1,22 @@
 // TODO change graphData.start to array of entrypoints instead of one entrypoint
 
 export function process(data) {
-  const { processed, items } = data;
+  const { processed, analysisOutput } = data;
   if (!processed) {
-    legacy(items);
-    wrapStates(items);
-    bubblePaths(items);
+    legacy(analysisOutput);
+    wrapStates(analysisOutput);
+    bubblePaths(analysisOutput);
     data.processed = true;
   }
 }
 
 /**
  * Handle legacy data format conversion
- * @param {Object} items project items
- * @param {Object} items.graphs
+ * @param {Object} analysisOutput project analysis output
+ * @param {Object} analysisOutput.graphs
  */
-function legacy(items) {
-  const { graphs } = items;
+function legacy(analysisOutput) {
+  const { graphs } = analysisOutput;
   for (const [graphId, graphData] of Object.entries(graphs)) {
     const { start } = graphData;
     if (!(start instanceof Array)) {
@@ -27,12 +27,12 @@ function legacy(items) {
 
 /**
  * Generate configs wrapping individual states
- * @param {Object} items project items
- * @param {Object} items.states states
- * @param {Object} items.configs configs
+ * @param {Object} analysisOutput project analysis output
+ * @param {Object} analysisOutput.states states
+ * @param {Object} analysisOutput.configs configs
  */
-function wrapStates(items) {
-  const { states, configs } = items;
+function wrapStates(analysisOutput) {
+  const { states, configs } = analysisOutput;
 
   for (const [stateId, state] of Object.entries(states)) {
     const { form, expr } = state;
@@ -46,12 +46,12 @@ function wrapStates(items) {
 
 /**
  * Bubble 'straight-line' graph edges
- * @param {Object} items 
- * @param {Object} items.graphs 
- * @param {Object} items.configs 
+ * @param {Object} analysisOutput project analysis output
+ * @param {Object} analysisOutput.graphs 
+ * @param {Object} analysisOutput.configs 
  */
-function bubblePaths(items) {
-  const { graphs, configs } = items;
+function bubblePaths(analysisOutput) {
+  const { graphs, configs } = analysisOutput;
   const bubbled = {};
   const counter = new BubbleCounter();
 
@@ -67,7 +67,7 @@ function bubblePaths(items) {
       default: {
         const pathStarts = getPathStarts(graphData);
         const bubbles = getBubbles(counter, pathStarts, graphData);
-        spreadBubbles(counter, bubbles, graphData, items);
+        spreadBubbles(counter, bubbles, graphData, analysisOutput);
         bubbled[graphId] = getGraph(bubbles);
         break;
       }
@@ -191,11 +191,11 @@ function getBubbles(counter, pathStarts, graphData) {
  * @param {BubbleCounter} counter bubble counter object, used for generating new unique bubble ids
  * @param {Object} bubbles 
  * @param {Object} graphData
- * @param {Object} items 
+ * @param {Object} analysisOutput 
  */
-function spreadBubbles(counter, bubbles, graphData, items) {
+function spreadBubbles(counter, bubbles, graphData, analysisOutput) {
   const { graph, start } = graphData;
-  const { configs, states } = items;
+  const { configs, states } = analysisOutput;
 
   const spreadIds = {};
   for (const [bubbleId, bubble] of Object.entries(bubbles)) {

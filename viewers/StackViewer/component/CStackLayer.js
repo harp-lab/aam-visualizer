@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { useSelector } from 'react-redux';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import CStack from './CStack';
 import FrameCard from './FrameCard';
@@ -26,7 +26,7 @@ function CStackLayer(props) {
 }
 function CStackCard(props) {
   const { cstackId, selected, onSet, onUnset } = props;
-  const { cstacks } = useSelector(getProjectItems);
+  const { cstacks } = useSelector(getProjectAnalysisOutput);
 
   const cstack = cstacks[cstackId];
   const frameId = cstack[0];

@@ -2,9 +2,9 @@ import NodeData from './NodeData';
 import EdgeData from './EdgeData';
 
 /**
- * Converts an items graph adjacency list to cytoscape data format.
+ * Converts an analysis output graph adjacency list to cytoscape data format.
  * @param {Object} graphData graph data
- * @param {Object} items project items object
+ * @param {Object} refData node reference data
  * @returns {Array} cytoscape data
  */
 function GraphData(graphData, refData) {

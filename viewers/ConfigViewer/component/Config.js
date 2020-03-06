@@ -1,18 +1,18 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import StateCard from './StateCard';
 
 function Config(props) {
   const { configId } = props;
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
 
-  const { states } = items.configs[configId];
+  const { states } = analOut.configs[configId];
   let cards;
   if (states)
     cards = states.map(stateId => {
-      const { form } = items.states[stateId];
+      const { form } = analOut.states[stateId];
       switch (form) {
         case 'halt':
           return undefined;

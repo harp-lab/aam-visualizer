@@ -5,7 +5,7 @@ import { BugReport, Share } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { DebugItem, ErrorBoundary, IconButton } from 'library/base';
 import { Graph } from 'library/connected';
-import { getGraphIds, getProjectItems } from 'store/selectors';
+import { getGraphIds, getProjectAnalysisOutput } from 'store/selectors';
 
 const useStyles = makeStyles(theme => ({
   appbar: theme.mixins.toolbar,
@@ -19,7 +19,7 @@ const GRAPH_DRAWER = 'graph';
 const DEBUG_DRAWER = 'debug';
 
 function Toolbar(props, ref) {
-  const { debug } = useSelector(getProjectItems);
+  const { debug } = useSelector(getProjectAnalysisOutput);
   const [open, setOpen] = useState(undefined);
 
   function toggle(drawer) {
@@ -56,7 +56,7 @@ export default forwardRef(Toolbar);
 
 function DebugDrawer(props) {
   const { open } = props;
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
   
   return (
     <Drawer open={ open }>
@@ -68,7 +68,7 @@ function DebugDrawer(props) {
           height: '100%',
           margin: '1em'
         }}>
-        <DebugItem item={ items } />
+        <DebugItem item={ analOut } />
       </div>
     </Drawer>);
 }

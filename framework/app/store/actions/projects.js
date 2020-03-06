@@ -143,7 +143,7 @@ export function exportData(projectId) {
         const data = getProject(state, projectId);
         const filteredData = {};
         for (const [key, value] of Object.entries(data)) {
-          if (['analysis', 'status', 'code', 'items', 'processed'].includes(key))
+          if (['analysis', 'status', 'code', 'analysisOutput', 'processed'].includes(key))
             filteredData[key] = value;
         }
         const json = JSON.stringify(filteredData, null, 2);

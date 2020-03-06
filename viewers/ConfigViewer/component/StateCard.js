@@ -4,14 +4,14 @@ import { Card, CardContent, Typography } from '@material-ui/core';
 import { EnvLink, StackLink } from 'links';
 import { ValArrayItem } from 'items';
 import { Spacer } from 'library/base';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 
 function StateCard(props) {
   const { stateId } = props;
-  const items = useSelector(getProjectItems);
-  const state = items.states[stateId];
+  const analOut = useSelector(getProjectAnalysisOutput);
+  const state = analOut.states[stateId];
   const {
     instr: instrId,
     frame: frameId,
@@ -19,7 +19,7 @@ function StateCard(props) {
     env: envId
   } = state;
 
-  const instr = items.instr[instrId]
+  const instr = analOut.instr[instrId]
    .exprStrings.join(', ');
   const instrElem = <Typography display='inline'>{ `[ ${ instr } ]` }</Typography>;
 

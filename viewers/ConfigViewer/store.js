@@ -1,7 +1,7 @@
 import store from 'store';
 import { setPanels, defaultPanelState, refreshPanels } from 'store/actions';
 import {
-  getProjectItems,
+  getProjectAnalysisOutput,
   getSubGraphId, getSelectedNodes,
   getLabel
 } from 'store/selectors';
@@ -11,21 +11,21 @@ import { CONFIG_PANEL } from 'fext/store/consts';
 export function generateConfigs(projectId) {
   return (dispatch, getState) => {
     const state = getState();
-    const items = getProjectItems(state, projectId);
+    const analOut = getProjectAnalysisOutput(state, projectId);
 
     const panels = {};
-    for (const [configId, data] of Object.entries(items.configs)) {
+    for (const [configId, data] of Object.entries(analOut.configs)) {
       const { form, states } = data;
       let syntax;
       if (states) {
         const stateId = states[0];
-        const state = items.states[stateId];
+        const state = analOut.states[stateId];
         switch (state.form) {
           case 'halt':
             if (state.results) {
               const results = state.results
                 .map(resultId => {
-                  const { type, name, valString } = items.vals[resultId];
+                  const { type, name, valString } = analOut.vals[resultId];
     
                   let string;
                   switch (type) {

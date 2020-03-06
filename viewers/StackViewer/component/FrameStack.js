@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { MoreVert } from '@material-ui/icons';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 
@@ -12,7 +12,7 @@ import StackLayer from './StackLayer';
 
 function FrameStack(props) {
   const { frameId } = props;
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
   const [layerList, setLayerList] = useState([new LayerData([frameId], FRAME_STACK)]);
 
   function selectCard(index, cardId) {
@@ -37,7 +37,7 @@ function FrameStack(props) {
     switch (layer.type) {
       case FRAME_STACK: {
         for (const cardId of layer.cards) {
-          const { frames, cstacks, next } = items.frames[cardId];
+          const { frames, cstacks, next } = analOut.frames[cardId];
           if (frames || cstacks || next) return true;
         }
         return false;

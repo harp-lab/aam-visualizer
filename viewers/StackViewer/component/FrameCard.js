@@ -4,7 +4,7 @@ import { Card, CardContent, Tooltip, Typography } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import { withStyles } from '@material-ui/styles';
 import { IconPopover, DebugPopover } from 'library/base';
-import { getProjectItems } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 
 import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
 import { ValArrayItem } from 'items';
@@ -15,9 +15,9 @@ import LayerData from './LayerData';
 function FrameCard(props) {
   const { frameId, selected, theme, classes, onSet, onUnset } = props;
   let { onClick } = props;
-  const items = useSelector(getProjectItems);
+  const analOut = useSelector(getProjectAnalysisOutput);
 
-  const frame = items.frames[frameId];
+  const frame = analOut.frames[frameId];
   const {
     form, type,
     frames: nextFrameIds, cstacks: nextCStackIds, next
@@ -34,14 +34,14 @@ function FrameCard(props) {
             stackId={ frameId }
             stackType={ FRAME_STACK } />
           <FrameLabelItem label='Form'>{ form }</FrameLabelItem>
-          <FrameLabelItem label='Function'>{ items.funcs[funcId].form }</FrameLabelItem>
+          <FrameLabelItem label='Function'>{ analOut.funcs[funcId].form }</FrameLabelItem>
           <EnvLink envId={ env } />
         </FrameLabel>);
       break;
     }
     case 'frame': {
       const { env, instr, exprString } = frame;
-      const instrEntries = items.instr[instr]
+      const instrEntries = analOut.instr[instr]
         .exprStrings.join(', ');
       label = (
         <FrameLabel>

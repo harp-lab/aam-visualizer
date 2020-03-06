@@ -37,10 +37,16 @@ export const getProjectName = createSelector(
   project => project ? project.name || PROJECT_UNDEFINED_NAME : undefined
 );
 
-export function getProjectItems(store, projectId) {
-  const { items } = getProject(store, projectId);
-  return items;
-}
+/**
+ * @param {Object} state
+ * @param {String} [projectId] project id
+ * @returns {Object} analysis output
+ */
+export const getProjectAnalysisOutput = createSelector(
+  getProject,
+  project => project.analysisOutput
+);
+
 export function getProjectServerStatus(store, projectId) {
   const { status } = getProject(store, projectId);
   return status;
