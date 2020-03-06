@@ -34,7 +34,7 @@
 
 ; ENGINE
 (log LOG_TYPE_ENGINE (format "processing \"~a\"" (file-name-from-path input-file-path)))
-(define code-string (hash-ref proj-hash 'code))
+(define code-string (hash-ref proj-hash 'analysisInput))
 (define analysis (hash-ref proj-hash 'analysis))
 
 

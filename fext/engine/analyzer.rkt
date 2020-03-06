@@ -31,7 +31,7 @@
   (match data
     [(? string? s)
      (define json (get-json s))
-     (pretty-print (hash-ref json 'code))]
+     (pretty-print (hash-ref json 'analysisInput))]
     [else (pretty-print data)]))
 
 (define (build-ast in)

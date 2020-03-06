@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Button, InputLabel, MenuItem, Select, Toolbar, Typography } from '@material-ui/core';
-import { saveCode, processCode } from 'store/apis';
+import { saveAnalysisInput, processAnalysisInput } from 'store/apis';
 import { EMPTY_STATUS, EDIT_STATUS } from 'store/consts';
 import { getSelectedProjectId, getProject, getProjectServerStatus } from 'store/selectors';
 
@@ -22,13 +22,13 @@ function Editor(props) {
 
   const [options, setOptions] = useState({ analysis: analysis[0] });
   const projectId = useSelector(getSelectedProjectId);
-  const { code, error: errorContent } = useSelector(getProject);
+  const { analysisInput: code, error: errorContent } = useSelector(getProject);
   const dispatch = useDispatch();
 
 
   function setValue(data) { cmRef.current.getDoc().setValue(data); }
   function getValue() { return cmRef.current.getDoc().getValue(); }
-  function process() { dispatch(processCode(projectId, getValue(), options)); }
+  function process() { dispatch(processAnalysisInput(projectId, getValue(), options)); }
 
   useEffect(() => {
     cmRef.current = codemirror.fromTextArea(cmElem.current, cmConfig);
@@ -121,7 +121,7 @@ function save(projectId, code) {
     switch (serverStatus) {
       case EMPTY_STATUS:
       case EDIT_STATUS:
-        dispatch(saveCode(projectId, code));
+        dispatch(saveAnalysisInput(projectId, code));
         break;
       default:
         break;

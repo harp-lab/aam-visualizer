@@ -12,7 +12,7 @@ import Context from './Context';
 import Line from './Line';
 
 function CodeViewer() {
-  const { code } = useSelector(getProject);
+  const { analysisInput: code } = useSelector(getProject);
   const graphData = useSelector(getData);
   const dispatch = useDispatch();
 

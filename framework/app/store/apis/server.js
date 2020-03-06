@@ -171,9 +171,9 @@ export function forkProject(projectId) {
   return async function(dispatch) {
     async function localCallback() {
       const state = store.getState();
-      const { code, analysis } = getProject(state, projectId);
+      const { analysisInput, analysis } = getProject(state, projectId);
       const forkProjectId = await dispatch(createProject());
-      const forkData = { code, analysis };
+      const forkData = { analysisInput, analysis };
       dispatch(setProjectData(forkProjectId, forkData));
       dispatch(selProject(forkProjectId));
     };
@@ -184,7 +184,7 @@ export function forkProject(projectId) {
         case EMPTY_STATUS:
           break;
         default:
-          await dispatch(getCode(projectId));
+          await dispatch(getAnalysisInput(projectId));
           break;
       }
       await localCallback();
@@ -225,7 +225,7 @@ export function downloadProject(projectId) {
         case EMPTY_STATUS:
           break;
         case EDIT_STATUS:
-          dispatch(getCode(projectId));
+          dispatch(getAnalysisInput(projectId));
           break;
         case PROCESS_STATUS:{
           await dispatch(getData(projectId));
@@ -271,15 +271,15 @@ export function renameProject(projectId, name) {
  * @param {String} projectId project id
  * @returns {Function} async dispatch
  */
-export function getCode(projectId) {
+export function getAnalysisInput(projectId) {
   return async function(dispatch) {
     async function localCallback() {
-      dispatch(localProjectError('getCode()', projectId));
+      dispatch(localProjectError('getAnalysisInput()', projectId));
     }
     async function serverCallback(localCallback) {
       const res = await apiReq(`projects/${projectId}/code`, 'GET');
-      const { code } = await res.json();
-      const data = { code };
+      const { analysisInput } = await res.json();
+      const data = { analysisInput };
       dispatch(setProjectData(projectId, data));
     }
     await projectRequest(projectId, localCallback, serverCallback);
@@ -288,10 +288,10 @@ export function getCode(projectId) {
 
 /**
  * @param {String} projectId project id
- * @param {String} code project code
+ * @param {String} analysisInput project analysis input
  * @returns {Function} async dispatch
  */
-export function saveCode(projectId, code) {
+export function saveAnalysisInput(projectId, analysisInput) {
   return async function(dispatch) {
     async function localCallback() {
       const state = store.getState();
@@ -300,19 +300,19 @@ export function saveCode(projectId, code) {
         case EMPTY_STATUS:
         case EDIT_STATUS: {
           let status = EDIT_STATUS;
-          if (code === '')
+          if (analysisInput === '')
             status = EMPTY_STATUS;
 
-          dispatch(setProjectData(projectId, { status, code }));
+          dispatch(setProjectData(projectId, { status, analysisInput }));
           break;
         }
         default:
-          dispatch(consoleError(`server api saveCode() request: '${serverStatus}' status project ${projectId}`));
+          dispatch(consoleError(`server api saveAnalysisInput() request: '${serverStatus}' status project ${projectId}`));
           break;
       }
     };
     async function serverCallback(localCallback) {
-      await dispatch(saveReq(projectId, { code }, localCallback));
+      await dispatch(saveReq(projectId, { analysisInput }, localCallback));
     };
     await projectRequest(projectId, localCallback, serverCallback);
   }
@@ -320,17 +320,17 @@ export function saveCode(projectId, code) {
 
 /**
  * @param {String} projectId project id
- * @param {String} code project code
+ * @param {String} analysisInput project analysis input
  * @param {Object} options analysis options
  * @returns {Function} async dispatch
  */
-export function processCode(projectId, code, options) {
+export function processAnalysisInput(projectId, analysisInput, options) {
   return async function(dispatch) {
     async function localCallback() {
-      dispatch(localProjectError('processCode()', projectId));
+      dispatch(localProjectError('processAnalysisInput()', projectId));
     }
     async function serverCallback(localCallback) {
-      await dispatch(saveCode(projectId, code));
+      await dispatch(saveAnalysisInput(projectId, analysisInput));
       const res = await apiPost(`projects/${projectId}/process`, options);
       switch (res.status) {
         case 200:

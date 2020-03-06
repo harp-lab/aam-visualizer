@@ -3,7 +3,7 @@ import metadataReducer from './metadata';
 
 const initialState = {
   status: 'empty',
-  code: '',
+  analysisInput: '',
   metadata: metadataReducer(undefined, { type: 'INIT' })
 };
 

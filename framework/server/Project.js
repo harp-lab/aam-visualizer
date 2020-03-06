@@ -19,7 +19,7 @@ class Project {
     this.userId = data.userId;
     this.name = data.name;
     this.analysis = data.analysis;
-    this.importCode(data.code);
+    this.importAnalysisInput(data.analysisInput);
     if (data.analysisOutput) {
       this.status = this.STATUSES.process;
       this.importAnalysisOutput(data.analysisOutput);
@@ -31,19 +31,19 @@ class Project {
     this.store = data.store;
     this.analysisOutput = data.analysisOutput;
   }
-  importCode(code) {
+  importAnalysisInput(analysisInput) {
     switch (this.status) {
       case this.STATUSES.empty:
       case this.STATUSES.edit:
       case this.STATUSES.process:
-        this.code = code;
-        if (code == "")
+        this.analysisInput = analysisInput;
+        if (analysisInput == "")
           this.status = this.STATUSES.empty;
         else
           this.status = this.STATUSES.edit;
         break;
       default:
-        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project code import rejected - immutable');
+        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project analysis input import rejected - immutable');
         break;
     }
   }
@@ -63,12 +63,12 @@ class Project {
       userId: this.userId,
       status: this.status,
       error: this.error,
-      code: this.code,
       graphs: this.graphs,
       ast: this.ast,
       store: this.store,
       name: this.name,
       analysis: this.analysis,
+      analysisInput: this.analysisInput,
       analysisOutput: this.analysisOutput
     }
   }

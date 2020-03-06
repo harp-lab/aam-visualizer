@@ -44,7 +44,7 @@ class Server {
     projectRouter.get('/code', (req, res) => {
       const projectId = req.params.projectId;
       const project = this.projects[projectId];
-      res.json({ id: projectId, code: project.code })
+      res.json({ id: projectId, analysisInput: project.analysisInput })
         .status(200).end();
     });
     projectRouter.get('/data', (req, res) => {
@@ -177,12 +177,12 @@ class Server {
   async saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - save`);
     const project  = this.projects[projectId];
-    const { name, code } = data;
+    const { name, analysisInput } = data;
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        if (code !== undefined)
-          project.importCode(code);
+        if (analysisInput !== undefined)
+          project.importAnalysisInput(analysisInput);
       default:
         if (name !== undefined)
           project.name = name;
