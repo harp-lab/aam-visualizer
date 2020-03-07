@@ -70,6 +70,26 @@ class Server {
       await this.saveProject(projectId, data);
       res.status(202).end();
     });
+    projectRouter.post('/clear', async (req, res) => {
+      const { projectId } = req.params;
+      const data = req.body;
+      const project = this.projects[projectId];
+
+      for (const key of Object.keys(data)) {
+        data[key] = undefined;
+      }
+
+      switch (project.status) {
+        case project.STATUSES.empty:
+        case project.STATUSES.edit:
+          this.saveProject(projectId, data);
+          res.status(200).end();
+          break;
+        default:
+          res.status(412).end();
+          break;
+      }
+    });
     projectRouter.post('/process', async (req, res) => {
       const projectId = req.params.projectId;
       const project = this.projects[projectId];
@@ -181,8 +201,7 @@ class Server {
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        if (analysisInput !== undefined)
-          project.importAnalysisInput(analysisInput);
+        project.importAnalysisInput(analysisInput);
       default:
         if (name !== undefined)
           project.name = name;

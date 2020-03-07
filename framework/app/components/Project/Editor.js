@@ -22,7 +22,7 @@ function Editor(props) {
 
   const [options, setOptions] = useState({ analysis: analysis[0] });
   const projectId = useSelector(getSelectedProjectId);
-  const { analysisInput: code, error: errorContent } = useSelector(getProject);
+  const { analysisInput = "", error: errorContent } = useSelector(getProject);
   const dispatch = useDispatch();
 
 
@@ -40,8 +40,8 @@ function Editor(props) {
     };
   }, []);
   useEffect(() => {
-    setValue(code);
-  }, [code]);
+    setValue(analysisInput);
+  }, [analysisInput]);
   
   let infoElement;
   let editMenu;
@@ -110,10 +110,10 @@ function Editor(props) {
 
 /**
  * @param {String} projectId project id
- * @param {String} code 
+ * @param {String} analysisInput project analysis input
  * @returns {Function} dispatch
  */
-function save(projectId, code) {
+function save(projectId, analysisInput) {
   return function(dispatch, getState) {
     const state = getState();
     const serverStatus = getProjectServerStatus(state, projectId);
@@ -121,7 +121,10 @@ function save(projectId, code) {
     switch (serverStatus) {
       case EMPTY_STATUS:
       case EDIT_STATUS:
-        dispatch(saveAnalysisInput(projectId, code));
+        if (analysisInput === "")
+          dispatch(saveAnalysisInput(projectId, undefined));
+        else
+          dispatch(saveAnalysisInput(projectId, analysisInput));
         break;
       default:
         break;

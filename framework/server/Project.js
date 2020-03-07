@@ -37,7 +37,7 @@ class Project {
       case this.STATUSES.edit:
       case this.STATUSES.process:
         this.analysisInput = analysisInput;
-        if (analysisInput == "")
+        if (!analysisInput)
           this.status = this.STATUSES.empty;
         else
           this.status = this.STATUSES.edit;
@@ -70,7 +70,7 @@ class Project {
       analysis: this.analysis,
       analysisInput: this.analysisInput,
       analysisOutput: this.analysisOutput
-    }
+    };
   }
 }
 

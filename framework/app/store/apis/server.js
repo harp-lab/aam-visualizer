@@ -56,6 +56,25 @@ function saveReq(projectId, data, callback) {
 }
 
 /**
+ * @param {String} projectId project id
+ * @param {Object} data clear data
+ * @param {Function} callback 
+ */
+function clearReq(projectId, data, callback) {
+  return async function(dispatch) {
+    const res = await apiPost(`projects/${projectId}/clear`, data);
+    switch (res.status) {
+      case 200:
+        await callback();
+        break;
+      default:
+        dispatch(queueSnackbar(`Project ${projectId} clear request failed`));
+        break;
+    }
+  }
+}
+
+/**
  * Call either local callback and/or server callback depending on project client status
  * @param {String} projectId project id
  * @param {Function} localCallback local callback
@@ -300,7 +319,7 @@ export function saveAnalysisInput(projectId, analysisInput) {
         case EMPTY_STATUS:
         case EDIT_STATUS: {
           let status = EDIT_STATUS;
-          if (analysisInput === '')
+          if (!analysisInput)
             status = EMPTY_STATUS;
 
           dispatch(setProjectData(projectId, { status, analysisInput }));
@@ -312,7 +331,10 @@ export function saveAnalysisInput(projectId, analysisInput) {
       }
     };
     async function serverCallback(localCallback) {
-      await dispatch(saveReq(projectId, { analysisInput }, localCallback));
+      if (analysisInput)
+        await dispatch(saveReq(projectId, { analysisInput }, localCallback));
+      else
+        await dispatch(clearReq(projectId, { analysisInput: true }, localCallback));
     };
     await projectRequest(projectId, localCallback, serverCallback);
   }
