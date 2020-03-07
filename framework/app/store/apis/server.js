@@ -307,7 +307,7 @@ export function getAnalysisInput(projectId) {
 
 /**
  * @param {String} projectId project id
- * @param {String} analysisInput project analysis input
+ * @param {String} [analysisInput] project analysis input
  * @returns {Function} async dispatch
  */
 export function saveAnalysisInput(projectId, analysisInput) {

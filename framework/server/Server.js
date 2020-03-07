@@ -7,17 +7,22 @@ const path = require('path');
 const Consts = require('./Consts.js');
 const G = require('./Global.js');
 const Project = require('./Project.js');
+const Database = require('./Database.js');
 
 class Server {
   constructor() {
     this.projects = {};
+    this.db = new Database();
     this.init();
   }
   async init() {
+    await this.db.init();
     await this.initData();
     this.initServer();
     this.initWatcher();
   }
+
+  /** initialize server process */
   initServer() {
     const app = express();
     app.use(express.json());
@@ -152,19 +157,29 @@ class Server {
     app.use('/api/:userId', userRouter);
     app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
+
+  /** initialize watcher process */
   initWatcher() {
     G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
     const options = { stdio: [0, 1, 2, 'ipc'] };
     const watcher = child_process.fork(path.resolve(__dirname, 'watcher.js'), [], options);
-    watcher.on('message', data => {
+    watcher.on('message', async data => {
       const action = data.action;
       switch (action) {
-        case Consts.WATCHER_ACTION_PROCESS:
-          this.readProject(Consts.OUTPUT_DIR, data.id);
+        case Consts.WATCHER_ACTION_PROCESS: {
+          this.db.setStage(data.id, this.db.STAGES.done);
+          const projectData = await this.db.getProject(data.id);
+          const project = this.projects[data.id];
+          project.import(projectData);
           break;
-        case Consts.WATCHER_ACTION_CANCEL:
-          this.readProject(Consts.SAVE_DIR, data.id);
+        }
+        case Consts.WATCHER_ACTION_CANCEL: {
+          this.db.setStage(data.id, this.db.STAGES.edit);
+          const projectData = await this.db.getProject(data.id);
+          const project = this.projects[data.id];
+          project.import(projectData);
           break;
+        }
       }
     });
     watcher.on('close', code => {
@@ -174,12 +189,16 @@ class Server {
     
     this.watcher = watcher;
   }
+
+  /** send watcher process message */
   notifyWatcher(file) {
     this.watcher.send({
       id: file,
       action: Consts.WATCHER_ACTION_PROCESS
     });
   }
+
+  /** send watcher cancel message */
   cancelWatcher(file) {
     this.watcher.send({
       id: file,
@@ -187,13 +206,23 @@ class Server {
     });
   }
 
+  /**
+   * @param {String} userId project owner user id
+   * @returns {String} project id
+   */
   async createProject(userId) {
     const projectId = `${Date.now()}`;
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - create`);
-    this.projects[projectId] = new Project(userId);
-    await this.writeProject(projectId);
+    const project = new Project(userId);
+    this.projects[projectId] = project;
+    await this.db.setProject(projectId, project.export());
     return projectId;
   }
+
+  /**
+   * @param {String} projectId project id
+   * @param {Object} data project data
+   */
   async saveProject(projectId, data) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - save`);
     const project  = this.projects[projectId];
@@ -201,20 +230,27 @@ class Server {
     switch (project.status) {
       case project.STATUSES.empty:
       case project.STATUSES.edit:
-        project.importAnalysisInput(analysisInput);
+        project.setAnalysisInput(analysisInput);
       default:
         if (name !== undefined)
           project.name = name;
-        await this.writeProject(projectId);
+        await this.db.setProject(projectId, project.export());
         break;
     }
   }
+
+  /**
+   * @param {String} projectId project id
+   */
   async deleteProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - delete`);
-    const project = this.projects[projectId];
-    await fsp.unlink(`${project.dirPath}/${projectId}`);
+    await this.db.deleteProject(projectId);
     delete this.projects[projectId];
   }
+
+  /**
+   * @param {String} projectId project id
+   */
   async processProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - process`);
     const project = this.projects[projectId];
@@ -224,15 +260,19 @@ class Server {
         break;
       case project.STATUSES.edit:
         project.status = project.STATUSES.process;
-        await this.writeProject(projectId, Consts.INPUT_DIR);
+        await this.db.setProject(projectId, project.export());
+        await this.db.setProjectStage(projectId, this.db.STAGES.process);
         this.notifyWatcher(projectId);
-        await fsp.unlink(`${Consts.SAVE_DIR}/${projectId}`);
         break;
       default:
         G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - immutable`);
         break;
     }
   }
+
+  /**
+   * @param {String} projectId project id
+   */
   async cancelProject(projectId) {
     G.log(Consts.LOG_TYPE_PROJ, `${projectId} - cancel`);
     const project = this.projects[projectId];
@@ -245,6 +285,11 @@ class Server {
         break;
     }
   }
+
+  /**
+   * @param {String} userId project owner user id
+   * @returns {Object} <{String} projectId, {Object} projectData> hashmap
+   */
   getProjectList(userId) {
     const list = {};
     for (const [id, project] of Object.entries(this.projects)) {
@@ -258,7 +303,7 @@ class Server {
     return list;
   }
   
-  // file system handlers
+  /** initialize data directories */
   async initData() {
     if (Consts.INIT_DATA) {
       G.log(Consts.LOG_TYPE_INIT, 'clear data');
@@ -272,59 +317,11 @@ class Server {
     await fsp.mkdir(Consts.INPUT_DIR, options);
     await fsp.mkdir(Consts.SAVE_DIR, options);
 
-    // read data directories
-    G.log(Consts.LOG_TYPE_INIT, 'read data');
-    await this.readProjectDir(Consts.OUTPUT_DIR);
-    await this.readProjectDir(Consts.INPUT_DIR);
-    await this.readProjectDir(Consts.SAVE_DIR);
-  }
-  async writeProject(projectId, dirPath) {
-    const project = this.projects[projectId];
-    // if no new dirPath, get set dirPath
-    if (dirPath == undefined)
-      dirPath = project.dirPath;
-    else
-      project.dirPath = dirPath;
-    
-    const filePath = `${dirPath}/${projectId}`;
-    const output = project.export(projectId);
-    const file = await fsp.open(filePath, 'w');
-    await file.writeFile(JSON.stringify(output));
-    await file.close();
-  }
-  async readProjectDir(dirPath) {
-    const fileList = await fsp.readdir(dirPath);
-    fileList.forEach(async projectId => {
-      const project = this.projects[projectId];
-      if (project)
-        G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - import duplicate`);
-      else {
-        this.projects[projectId] = new Project();
-        await this.readProject(dirPath, projectId)
-      }
-    });
-  }
-  async readProject(dirPath, projectId) {
-    let file;
-    try {
-      const filePath = path.join(dirPath, projectId);
-      file = await fsp.open(filePath);
-      const data = await file.readFile({encoding: 'utf-8'});
-      const json = JSON.parse(data);
-      const project = this.projects[projectId];
-      project.dirPath = dirPath;
-      project.import(json);
-    } catch(err) {
-      switch (err.code) {
-        case 'ENOENT':
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
-          break;
-        default:
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail (${err.code})`);
-          break;
-      }
-    } finally {
-      await file.close();
+    for (const projectId of this.db.getProjectIds()) {
+      const data = await this.db.getProject(projectId);
+      const project = new Project();
+      this.projects[projectId] = project;
+      project.import(data);
     }
   }
 }

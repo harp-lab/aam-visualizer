@@ -1,7 +1,21 @@
 const Consts = require('./Consts.js');
 const G = require('./Global.js');
 
+// variables allowed for data import/export access
+const allowedDataKeys = [
+  'userId',
+  'status',
+  'error',
+  'name',
+  'analysis',
+  'analysisInput',
+  'analysisOutput'
+];
+
 class Project {
+  /**
+   * @param {String} userId project owner user id
+   */
   constructor(userId) {
     this.userId = userId;
     this.dirPath = Consts.SAVE_DIR;
@@ -15,23 +29,20 @@ class Project {
     };
     this.status = this.STATUSES.empty;
   }
+
+  /**
+   * @param {Object} data project data
+   */
   import(data) {
-    this.userId = data.userId;
-    this.name = data.name;
-    this.analysis = data.analysis;
-    this.importAnalysisInput(data.analysisInput);
-    if (data.analysisOutput) {
-      this.status = this.STATUSES.process;
-      this.importAnalysisOutput(data.analysisOutput);
-      this.ast = data.ast;
+    for (const key of allowedDataKeys) {
+      this[key] = data[key];
     }
-    this.status = data.status;
-    if (data.status == 'error')
-      this.error = data.error;
-    this.store = data.store;
-    this.analysisOutput = data.analysisOutput;
   }
-  importAnalysisInput(analysisInput) {
+
+  /**
+   * @param {} analysisInput project analysis input
+   */
+  setAnalysisInput(analysisInput) {
     switch (this.status) {
       case this.STATUSES.empty:
       case this.STATUSES.edit:
@@ -47,7 +58,11 @@ class Project {
         break;
     }
   }
-  importAnalysisOutput(analysisOutput) {
+
+  /**
+   * @param {Object} analysisOutput project analysis output
+   */
+  setAnalysisOutput(analysisOutput) {
     switch (this.status) {
       case this.STATUSES.process:
         this.analysisOutput = analysisOutput;
@@ -58,19 +73,18 @@ class Project {
         break;
     }
   }
+
+  /**
+   * export project object data format
+   * @returns {Object} project data
+   */
   export() {
-    return {
-      userId: this.userId,
-      status: this.status,
-      error: this.error,
-      graphs: this.graphs,
-      ast: this.ast,
-      store: this.store,
-      name: this.name,
-      analysis: this.analysis,
-      analysisInput: this.analysisInput,
-      analysisOutput: this.analysisOutput
-    };
+    const data = {};
+    for (const key of allowedDataKeys) {
+      data[key] = this[key];
+    }
+
+    return data;
   }
 }
 

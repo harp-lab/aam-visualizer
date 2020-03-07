@@ -16,8 +16,6 @@ function Line(props) {
       lineId={ lineId }
       chId={ chId } />;
   });
-
-  console.log(code);
   
   return (
     <div key={ lineId }>
