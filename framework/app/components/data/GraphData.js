@@ -38,7 +38,7 @@ function GraphData(graphData, refData) {
 
       for (const [childId, edge] of Object.entries(children)) {
         if (!graph[childId])
-          data.push(exportNode(nodeId));
+          data.push(exportNode(childId));
         const edgeId = `${nodeId}-${childId}`;
         data.push(EdgeData(edgeId, nodeId, childId, edge));
       }
