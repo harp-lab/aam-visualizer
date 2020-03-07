@@ -16,12 +16,14 @@ function Line(props) {
       lineId={ lineId }
       chId={ chId } />;
   });
+
+  console.log(code);
   
   return (
     <div key={ lineId }>
       <Gutter
         lineId={ lineId }
-        lastLine={ lineId === Object.keys(code).length - 1 }
+        lastLine={ lineId == Object.keys(code).length - 1 }
         width={ gutterWidth }
         onSet={ setGutterWidth } />
       <Typography
@@ -41,10 +43,12 @@ function Gutter(props) {
   const { lineId, lastLine, width, theme, onSet } = props;
 
   function set(ref) {
-    if (lastLine) {
+    if (ref && lastLine) {
       const bounds = ref.getBoundingClientRect();
       const currWidth = bounds.width;
-      if (width !== currWidth) setGutterWidth(currWidth);
+      if (width !== currWidth) {
+        onSet(currWidth);
+      }
     }
   }
 
