@@ -1,6 +1,8 @@
 import { createMuiTheme } from '@material-ui/core/styles';
 import { amber, blue, deepPurple, yellow } from '@material-ui/core/colors';
 
+import { theme as fextTheme } from 'extensions/themes';
+
 const theme = createMuiTheme({
   mixins: {
     message: {
@@ -33,6 +35,6 @@ const theme = createMuiTheme({
       overlay: 'rgba(255, 255, 255, 0.5)'
     }
   },
-}, undefined);
+}, fextTheme);
 
 export default theme;
