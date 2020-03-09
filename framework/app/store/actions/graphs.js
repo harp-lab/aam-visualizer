@@ -111,22 +111,6 @@ export function selectEdges(graphId, edgeIds) {
     dispatch(setGraphMetadata(graphId, {
       selectedEdges: edgeIds
     }));
-
-    const state = getState();
-    const { graph } = getGraph(state, graphId);
-    const mainGraphId = getMainGraphId(state);
-
-    const suggestedNodes = new Set();
-    for (const edgeId of edgeIds) {
-      const [nodeId, childId] = edgeId.split('-');
-      const edgeData = graph[nodeId][childId];
-      const { calls } = edgeData;
-      if (calls)
-        for (const nodeId of calls) {
-          suggestedNodes.add(nodeId);
-        }
-    }
-    dispatch(suggestNodes(mainGraphId, [...suggestedNodes]));
   };
 }
 export function setPositions(graphId, positions) {

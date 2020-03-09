@@ -27,7 +27,7 @@ import cytoscape from 'cytoscape';
 function Graph(props) {
   const {
     graphId, edgePredicate = edge => false,
-    onNodeSelect, onNodeUnselect,
+    onNodeSelect, onNodeUnselect, onEdgeSelect, onEdgeUnselect,
     external, config,
     theme, style } = props;
   const projectId = useSelector(getSelectedProjectId);
@@ -182,13 +182,20 @@ function Graph(props) {
         if (edgePredicate(edge)) {
           const edgeId = edge.id();
           dispatch(selectEdges(graphId, [edgeId]));
+          if (onEdgeSelect)
+            onEdgeSelect(edgeId);
         } else
           edge.unselect();
       }
     });
     cy.on('unselect', 'edge', evt => {
-      if (events.current)
+      if (events.current) {
+        const edge = evt.target;
+        const edgeId = edge.id();
         dispatch(selectEdges(graphId, []));
+        if (onEdgeUnselect)
+          onEdgeUnselect(edgeId);
+      }
     });
     
     // add nodes 
