@@ -16,8 +16,39 @@ export const dequeueSnackbar = () => ({
  * @param {String} message 
  * @returns {Function} dispatch
  */
+export function consoleDebug(message) {
+  return function(dispatch) {
+    console.debug(`[debug] ${message}`)
+  };
+}
+
+/**
+ * @param {String} message 
+ * @returns {Function} dispatch
+ */
+export function consoleWarn(message) {
+  return function(dispatch) {
+    console.warn(`[warn] ${message}`)
+  };
+}
+
+/**
+ * @param {String} message 
+ * @returns {Function} dispatch
+ */
 export function consoleError(message) {
-  return dispatch => console.error(`[error] ${message}`);
+  return function(dispatch) {
+    console.error(`[error] ${message}`)
+  };
+}
+
+/**
+ * @param {String} functionName function name
+ */
+export function warnDeprecate(functionName) {
+  return function(dispatch) {
+    dispatch(consoleWarn(`${functionName}() deprecated`));
+  }
 }
 
 export const showLoading = () => ({

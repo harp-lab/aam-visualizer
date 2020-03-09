@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
-import { getProjectAnalysisOutput } from 'store/selectors';
-import { getProjectMetadata } from './projects';
+import { warnDeprecate } from 'store/actions';
+import { getProjectAnalysisOutput, getProjectMetadata } from './projects';
 
 export const getGraphs = createSelector(
   state => getProjectAnalysisOutput(state),
@@ -101,25 +101,21 @@ export const getBubbling = createSelector(
   }
 );
 
-/**
- * Get main graph id
- * @param {Object} state
- * @returns {String} main graph id
- */
+/** deprecated */
 export const getMainGraphId = createSelector(
   state => getProjectMetadata(state),
-  metadata => metadata.mainGraphId || 'funcs'
+  metadata => {
+    warnDeprecate('getMainGraphId');
+    return metadata.mainGraphId || 'funcs';
+  }
 );
 
-/**
- * Get sub graph id
- * @param {Object} state
- * @returns {String} sub graph id
- */
+/** deprecated */
 export const getSubGraphId = createSelector(
   state => getSelectedNodes(state, getMainGraphId(state)),
   state => getProjectAnalysisOutput(state),
   (selectedNodes, analysisOutput) => {
+    warnDeprecate('getSubGraphId');
     let subGraphId = 'states';
     if (selectedNodes.length > 0) {
       const nodeId = selectedNodes[0];
@@ -134,9 +130,9 @@ export const getSubGraphId = createSelector(
 
 export const getFocusedGraph = createSelector(
   state => getProjectMetadata(state),
-  getMainGraphId,
-  (metadata, mainGraphId) => metadata.focusedGraph || mainGraphId
+  metadata => metadata.focusedGraph
 );
+
 export function getGraphNodes(store, graphId) {
   const { graph } = getGraph(store, graphId);
   const nodeIds = [];

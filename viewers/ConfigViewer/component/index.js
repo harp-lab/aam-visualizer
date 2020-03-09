@@ -5,9 +5,10 @@ import { refreshStacks } from 'viewers/StackViewer';
 import { PanelViewer } from 'library/base';
 import { Panel } from 'library/connected';
 import { hoverNodes } from 'store/actions';
-import { getPanels, getProjectAnalysisOutput, getSubGraphId } from 'store/selectors';
+import { getPanels, getProjectAnalysisOutput } from 'store/selectors';
 
 import { CONFIG_PANEL } from 'fext/store/consts';
+import { getSubGraphId } from 'fext/store/selectors';
 
 import Config from './Config';
 

@@ -36,13 +36,6 @@ export function removeGraphViewer(graphId, projectId) {
   return setGraphViewers(graphId, viewers - 1, projectId);
 }
 
-export function setMainGraphId(graphId) {
-  const state = store.getState();
-  const projectId = getSelectedProjectId(state);
-  return setMetadata(projectId, {
-    mainGraphId: graphId
-  });
-}
 export function setFocusedGraph(graphId) {
   const state = store.getState();
   const projectId = getSelectedProjectId(state);

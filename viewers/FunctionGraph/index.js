@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Pane, SplitPane } from 'library/base';
 import { Graph } from 'library/connected';
-import { getMainGraphId, getSubGraphId } from 'store/selectors';
+import { getMainGraphId, getSubGraphId } from 'fext/store/selectors';
 
 import GraphLabel from './GraphLabel';
 
