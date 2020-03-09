@@ -9,3 +9,8 @@ exports.engine = function(input, output) {
     args: ['engine.rkt', '-o', output, input]
   };
 }
+
+/**
+ * provide theme override
+ */
+exports.theme = {};

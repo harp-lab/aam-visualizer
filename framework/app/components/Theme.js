@@ -1,8 +1,5 @@
-import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
-import amber from '@material-ui/core/colors/amber';
-import blue from '@material-ui/core/colors/blue';
-import deepPurple from '@material-ui/core/colors/deepPurple';
-import yellow from '@material-ui/core/colors/yellow';
+import { createMuiTheme } from '@material-ui/core/styles';
+import { amber, blue, deepPurple, yellow } from '@material-ui/core/colors';
 
 const theme = createMuiTheme({
   mixins: {
@@ -36,6 +33,6 @@ const theme = createMuiTheme({
       overlay: 'rgba(255, 255, 255, 0.5)'
     }
   },
-});
+}, undefined);
 
 export default theme;
