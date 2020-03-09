@@ -8,9 +8,8 @@ import {
   CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
 } from 'store/consts';
 
-import { ProjectLayout } from 'extensions/layouts';
+import { EditorLayout, ProjectLayout } from 'extensions/layouts';
 
-import Editor from './Editor';
 import Toolbar from './Toolbar';
 
 function Project() {
@@ -44,7 +43,7 @@ function Project() {
   switch (serverStatus) {
     case EMPTY_STATUS:
     case EDIT_STATUS:
-      viewElement = <Editor edit />;
+      viewElement = <EditorLayout />;
       break;
     case PROCESS_STATUS:
       viewElement = <Loading status='Processing' />;

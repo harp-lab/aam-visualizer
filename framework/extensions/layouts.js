@@ -16,4 +16,5 @@ function reqLayout(moduleName, layoutName) {
   return layout;
 }
 
+export const EditorLayout = reqLayout(layouts, 'EditorLayout');
 export const ProjectLayout = reqLayout(layouts, 'ProjectLayout');
