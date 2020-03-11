@@ -12,23 +12,31 @@ import {
 import { getSelectedProjectId, getProjectAnalysisOutput, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
+import cyHtmlLabel from 'cytoscape-node-html-label';
+cyHtmlLabel(cytoscape);
+
+import { refreshEventHandlers } from './events';
 
 /**
  * @param {Object} props 
  * @param {String} props.graphId graph id
- * @param {Function} props.edgePredicate edge => predicate, boolean result determines edge selectability
- * @param {Function} props.onNodeSelect node select callback
- * @param {Function} props.onNodeUnselect node unselect callback
- * @param {Boolean} props.external disable graph id active registration
- * @param {Object} props.config cytoscape config override
- * @param {Object} theme
+ * @param {Function} [props.edgePredicate] edge => predicate, boolean result determines edge selectability
+ * @param {Function} [props.onNodeSelect] node select callback
+ * @param {Function} [props.onNodeUnselect] node unselect callback
+ * @param {Boolean} [props.external] disable graph id active registration
+ * @param {Object} [props.config] cytoscape config override
+ * @param {Array} [props.htmlLabels] cytoscape html labels
  * @param {Object} style
  */
 function Graph(props) {
   const {
-    graphId, edgePredicate = edge => false,
-    onNodeSelect, onNodeUnselect, onEdgeSelect, onEdgeUnselect,
-    external, config,
+    graphId,
+    onNodeSelect, onNodeUnselect,
+    edgePredicate = edge => false, onEdgeSelect, onEdgeUnselect,
+    external,
+    config,
+    layout = { name: 'cose', directed: true },
+    htmlLabels = [],
     theme, style } = props;
   const projectId = useSelector(getSelectedProjectId);
   const analOut = useSelector(getProjectAnalysisOutput);
@@ -100,6 +108,7 @@ function Graph(props) {
         return defaultStyle;
     }
   }
+
   const cyRef = useRef(cytoscape(config || defaultConfig));
   const cy = cyRef.current;
 
@@ -112,7 +121,7 @@ function Graph(props) {
   } = metadata;
 
   
-  // mount/unmount
+  // mount/unmount headless cytoscape
   useEffect(() => {
     cy.mount(cyElem.current);
     return () => cy.unmount();
@@ -146,81 +155,43 @@ function Graph(props) {
     }
   }
 
-  // graph change
-  useEffect(() => {
-    // event handlers
-    ['tap', 'select', 'unselect', 'mouseover', 'mouseout'].forEach(evt => cy.off(evt));
-    cy.on('tap', () => dispatch(setFocusedGraph(graphId)));
-    cy.on('select', 'node', evt => {
-      if (events.current) {
-        const node = evt.target;
-        const nodeId = node.id();
-        dispatch(selectNodes(graphId, [nodeId]));
-        if (onNodeSelect) onNodeSelect(nodeId);
-      }
-    });
-    cy.on('unselect', 'node', evt => {
-      if (events.current) {
-        const node = evt.target;
-        const nodeId = node.id();
-        dispatch(unselectNodes(graphId, [nodeId]));
-        if (onNodeUnselect) onNodeUnselect(nodeId);
-      }
-    });
-    cy.on('mouseover', 'node', evt => {
-      const node = evt.target;
-      const nodeId = node.id();
-      if (hoveredNodes != [nodeId])
-        dispatch(hoverNodes(graphId, [nodeId]));
-    });
-    cy.on('mouseout', 'node', evt => {
-      dispatch(hoverNodes(graphId, []));
-    });
-    cy.on('select', 'edge', evt => {
-      if (events.current) {
-        const edge = evt.target;
-        if (edgePredicate(edge)) {
-          const edgeId = edge.id();
-          dispatch(selectEdges(graphId, [edgeId]));
-          if (onEdgeSelect)
-            onEdgeSelect(edgeId);
-        } else
-          edge.unselect();
-      }
-    });
-    cy.on('unselect', 'edge', evt => {
-      if (events.current) {
-        const edge = evt.target;
-        const edgeId = edge.id();
-        dispatch(selectEdges(graphId, []));
-        if (onEdgeUnselect)
-          onEdgeUnselect(edgeId);
-      }
-    });
-    
-    // add nodes 
-    cy.add(data);
+  // load event handlers
+  const eventHandlerData = {
+    cy,
+    eventsEnabledRef: events,
+    dispatch,
+    graphId,
+    onNodeSelect, onNodeUnselect,
+    onEdgeSelect, onEdgeUnselect, edgePredicate,
+    hoveredNodes
+  };
+  useEffect(() => { refreshEventHandlers(eventHandlerData); }, [graphId]);
+  
+  // load graph html labels
+  useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]);
 
-    // load node positions
+  // load/clear graph data
+  useEffect(() => {
+    cy.add(data);
+    return () => { cy.nodes().remove(); };
+  }, [graphId]);
+
+  // load/save node positions
+  useEffect(() => {
     if (positions) {
       cy.nodes()
         .positions(element => positions[element.data('id')]);
       cy.fit();
     } else
-      cy.layout({ name: 'cose', directed: true })
-        .run();
+      cy.layout(layout).run();
     
     return () => {
-      // save node positions
       const positions = {};
       for (const node of data) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$id(nodeId).position();
       }
       dispatch(setPositions(graphId, positions));
-
-      // remove nodes
-      cy.nodes().remove();
     };
   }, [graphId]);
 
