@@ -24,7 +24,8 @@ import { refreshEventHandlers } from './events';
  * @param {Function} [props.onNodeSelect] node select callback
  * @param {Function} [props.onNodeUnselect] node unselect callback
  * @param {Boolean} [props.external] disable graph id active registration
- * @param {Object} [props.config] cytoscape config override
+ * @param {Object} [props.config] cytoscape config
+ * @param {Object} [props.layout] cytoscape layout
  * @param {Array} [props.htmlLabels] cytoscape html labels
  * @param {Object} style
  */
