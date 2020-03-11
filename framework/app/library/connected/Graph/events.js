@@ -81,15 +81,11 @@ function addUnselectEvent(data) {
   });
 }
 function addMouseoverEvent(data) {
-  const {
-    cy, dispatch, graphId,
-    hoveredNodes
-  } = data;
+  const { cy, dispatch, graphId } = data;
   cy.on(EVENTS.MOUSEOVER, 'node', evt => {
     const node = evt.target;
     const nodeId = node.id();
-    if (hoveredNodes != [nodeId])
-      dispatch(hoverNodes(graphId, [nodeId]));
+    dispatch(hoverNodes(graphId, [nodeId]));
   });
 }
 function addMouseoutEvent(data) {

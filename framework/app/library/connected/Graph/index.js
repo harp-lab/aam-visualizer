@@ -3,18 +3,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { withTheme } from '@material-ui/styles';
 import { GraphData } from 'components/data';
 import { PaneMessage } from 'library/base';
-import {
-  addGraphViewer, removeGraphViewer,
-  setFocusedGraph,
-  selectNodes, unselectNodes, hoverNodes, selectEdges,
-  setPositions
-} from 'store/actions'
-import { getSelectedProjectId, getProjectAnalysisOutput, getGraph, getGraphRefData, getGraphMetadata, getFocusedGraph } from 'store/selectors';
+import { addGraphViewer, removeGraphViewer, setPositions } from 'store/actions'
+import { getSelectedProjectId, getGraph, getGraphRefData, getGraphMetadata, isFocusedGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
 import cyHtmlLabel from 'cytoscape-node-html-label';
 cyHtmlLabel(cytoscape);
 
+import { cyConfig } from './configs';
 import { refreshEventHandlers } from './events';
 
 /**
@@ -33,86 +29,22 @@ function Graph(props) {
   const {
     graphId,
     onNodeSelect, onNodeUnselect,
-    edgePredicate = edge => false, onEdgeSelect, onEdgeUnselect,
+    edgePredicate = edge => false,
+    onEdgeSelect, onEdgeUnselect,
     external,
     config,
     layout = { name: 'cose', directed: true },
     htmlLabels = [],
     theme, style } = props;
   const projectId = useSelector(getSelectedProjectId);
-  const analOut = useSelector(getProjectAnalysisOutput);
-  if (!analOut.graphs[graphId]) return <PaneMessage content={ `'${graphId}' graph undefined` } />;
   const graphData = useSelector(state => getGraph(state, graphId));
+
+  // check if graph data defined
+  if (!graphData)
+    return <PaneMessage content={ `'${graphId}' graph undefined` } />;
+
   const refData = useSelector(state => getGraphRefData(state, graphId));
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
-  const focusedGraph = useSelector(getFocusedGraph);
-  const focused = focusedGraph === graphId;
-  const dispatch = useDispatch();
-  const cyElem = useRef(undefined);
-  const bounds = useRef(undefined);
-  const events = useRef(false);
-  const data = GraphData(graphData, refData);
-
-  const defaultConfig = {
-    style: [{
-        selector: 'node',
-        style: {
-          'label': 'data(label)',
-          'text-wrap': 'wrap'
-        }
-      }, {
-        selector: 'node[entrypoint]',
-        style: {
-          'shape': 'round-tag',
-          'background-color': theme.palette.primary.main
-        }
-      }, {
-        selector: 'node:selected',
-        style: { 'background-color': theme.palette.select.main }
-      }, {
-        selector: 'edge',
-        style: {
-          'label': 'data(label)',
-          'curve-style': 'bezier',
-          'line-color': getStyle('line-color', theme.palette.grey['500']),
-          'line-style': getStyle('line-style', 'solid'),
-          'target-arrow-shape': 'triangle',
-          'target-arrow-color': getStyle('target-arrow-color', theme.palette.grey['500'])
-        }
-      }, {
-        selector: 'edge:selected',
-        style: {
-          'line-color': theme.palette.select.main,
-          'target-arrow-color': theme.palette.select.main
-        }
-      }, {
-        selector: '.suggested',
-        style: { 'background-color': theme.palette.suggest.main }
-      }, {
-        selector: element => {
-          return element.hasClass('suggested') && element.selected();
-        },
-        style: { 'background-color': theme.palette.suggest.dark }
-      }, {
-        selector: '.hovered',
-        style: { 'background-color': theme.palette.hover.main }
-      }
-    ],
-    headless: true
-  };
-  function getStyle(prop, defaultStyle) {
-    return element => {
-      const style = element.data('style');
-      if (style && style[prop])
-        return style[prop];
-      else
-        return defaultStyle;
-    }
-  }
-
-  const cyRef = useRef(cytoscape(config || defaultConfig));
-  const cy = cyRef.current;
-
   const {
     positions,
     selectedNodes = [],
@@ -120,8 +52,67 @@ function Graph(props) {
     hoveredNodes = [],
     suggestedNodes = []
   } = metadata;
-
+  const focusedGraph = useSelector(state => isFocusedGraph(state, graphId));
+  const focused = focusedGraph === graphId;
+  const dispatch = useDispatch();
+  const bounds = useRef(undefined);
+  const eventsEnabledRef = useRef(false);
+  const data = GraphData(graphData, refData);
   
+  const cyElem = useRef(undefined);
+  const cyRef = useRef(cytoscape(config || cyConfig(theme)));
+  const cy = cyRef.current;
+
+  /**
+   * toggle eventsEnabled flag to disable event handlers while executing callback
+   * @param {Function} callback 
+   */
+  function ignoreEvents(callback) {
+    eventsEnabledRef.current = false;
+    callback();
+    eventsEnabledRef.current = true;
+  }
+  
+  /**
+   * @param {Array<String>} elemIds cytoscape element ids
+   */
+  function select(elemIds) {
+    elemIds.forEach(elemId => cy.$id(elemId).select());
+  }
+
+  /**
+   * @param {Array<String>} elemIds cytoscape element ids
+   */
+  function unselect(elemIds) {
+    elemIds.forEach(elemId => cy.$id(elemId).unselect())
+  }
+
+  /**
+   * @param {Array<String>} nodeIds cytoscape node ids
+   * @param {String} className class to add
+   */
+  function addClass(nodeIds, className) {
+    cy.batch(() => {
+      for (const nodeId of nodeIds) {
+        const node = cy.getElementById(nodeId);
+        node.addClass(className);
+      }
+    });
+  }
+
+  /**
+   * @param {Array<String>} nodeIds cytoscape node ids
+   * @param {String} className class to remove
+   */
+  function removeClass(nodeIds, className) {
+    cy.batch(() => {
+      for (const nodeId of nodeIds) {
+        const node = cy.getElementById(nodeId);
+        node.removeClass(className);
+      }
+    });
+  }
+
   // mount/unmount headless cytoscape
   useEffect(() => {
     cy.mount(cyElem.current);
@@ -131,9 +122,7 @@ function Graph(props) {
   useEffect(() => {
     if (focused) {
       document.addEventListener('keydown', keyDown );
-      return () => {
-        document.removeEventListener('keydown', keyDown )
-      }
+      return () => { document.removeEventListener('keydown', keyDown ); }
     }
   }, [focused]);
   function keyDown(evt) {
@@ -159,17 +148,15 @@ function Graph(props) {
   // load event handlers
   const eventHandlerData = {
     cy,
-    eventsEnabledRef: events,
+    eventsEnabledRef,
     dispatch,
     graphId,
     onNodeSelect, onNodeUnselect,
-    onEdgeSelect, onEdgeUnselect, edgePredicate,
-    hoveredNodes
+    onEdgeSelect, onEdgeUnselect, edgePredicate
   };
   useEffect(() => { refreshEventHandlers(eventHandlerData); }, [graphId]);
   
-  // load graph html labels
-  useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]);
+  useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
 
   // load/clear graph data
   useEffect(() => {
@@ -200,81 +187,32 @@ function Graph(props) {
   useEffect(() => {
     if (!external) {
       dispatch(addGraphViewer(graphId));
-
-      return () => {
-        dispatch(removeGraphViewer(graphId, projectId));
-      };
+      return () => { dispatch(removeGraphViewer(graphId, projectId)); };
     }
   }, [graphId]);
   
-  // marking nodes
+  // mark nodes
   useEffect(() => {
-    events.current = false;
-    select([...selectedNodes, ...selectedEdges]);
-    events.current = true;
-
-    function select(elemIds) {
-      elemIds.forEach(elemId => cy.$id(elemId).select());
-    }
-    function unselect(elemIds) {
-      elemIds.forEach(elemId => cy.$id(elemId).unselect())
-    }
-
+    ignoreEvents(() => select([...selectedNodes, ...selectedEdges]));
     return () => {
-      events.current = false;
-      unselect([...selectedNodes, selectedEdges]);
-      events.current = true;
+      ignoreEvents(() => unselect([...selectedNodes, selectedEdges]))
     };
   }, [selectedNodes, selectedEdges]);
   useEffect(() => {
-    events.current = false;
-    addClass(suggestedNodes, 'suggested');
-    events.current = true;
-    
+    ignoreEvents(() => addClass(suggestedNodes, 'suggested'));
     return () => {
-      events.current = false;
-      removeClass(suggestedNodes, 'suggested');
-      events.current = true;
+      ignoreEvents(() => removeClass(suggestedNodes, 'suggested'));
     };
   }, [suggestedNodes]);
   useEffect(() => {
-    events.current = false;
-    addClass(hoveredNodes, 'hovered');
-    events.current = true;
-
+    ignoreEvents(() => addClass(hoveredNodes, 'hovered'));
     return () => {
-      events.current = false;
-      removeClass(hoveredNodes, 'hovered');
-      events.current = true;
+      ignoreEvents(() => removeClass(hoveredNodes, 'hovered'));
     };
   }, [hoveredNodes]);
 
-  function addClass(nodeIds, className) {
-    cy.batch(() => {
-      for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.addClass(className);
-      }
-    });
-  }
-  function removeClass(nodeIds, className) {
-    cy.batch(() => {
-      for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.removeClass(className);
-      }
-    });
-  }
-
-  // resize on bound changes
-  useEffect(() => {
-    cy.resize();
-  }, [bounds.current]);
-
-  // update
-  useEffect(() => {
-    bounds.current = cyElem.current.getBoundingClientRect();
-  });
+  useEffect(() => { bounds.current = cyElem.current.getBoundingClientRect(); }); // get current bounds
+  useEffect(() => { cy.resize(); }, [bounds.current]); // resize cytoscape on bound changes
 
   return <div
     ref={ cyElem }

@@ -128,9 +128,23 @@ export const getSubGraphId = createSelector(
   }
 );
 
+/**
+ * @param {Object} state
+ * @returns {String} focused graph id
+ */
 export const getFocusedGraph = createSelector(
   state => getProjectMetadata(state),
   metadata => metadata.focusedGraph
+);
+
+/**
+ * @param {String} graphId graph id to check
+ * @returns {Boolean} graph id is focused
+ */
+export const isFocusedGraph = createSelector(
+  (state, graphId) => graphId,
+  (state, graphId) => getFocusedGraph(state),
+  (graphId, focusedGraphId) => graphId === focusedGraphId
 );
 
 export function getGraphNodes(store, graphId) {
