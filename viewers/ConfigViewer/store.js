@@ -7,7 +7,7 @@ import {
 } from 'store/selectors';
 
 import { CONFIG_PANEL } from 'fext/store/consts';
-import { getSubGraphId } from 'fext/store/selectors';
+import { getSubGraphId, getToggleGraphId } from 'fext/store/selectors';
 
 export function generateConfigs(projectId) {
   return (dispatch, getState) => {
@@ -57,10 +57,15 @@ export function generateConfigs(projectId) {
   };
 }
 
+/**
+ * refresh config panels based on selected subgraph nodes
+ * @returns action
+ */
 export function refreshConfigs() {
   const state = store.getState();
   const subGraphId = getSubGraphId(state);
-  const selectedConfigs = getSelectedNodes(state, subGraphId);
+  const toggleGraphId = getToggleGraphId(state, subGraphId);
+  const selectedConfigs = getSelectedNodes(state, toggleGraphId);
   return refreshPanels(CONFIG_PANEL, (panelId, data) => {
     if (selectedConfigs.includes(panelId)) {
       return { selected: true, hidden: false };

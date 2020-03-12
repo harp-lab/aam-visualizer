@@ -1,16 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { withTheme } from '@material-ui/styles';
-import { GraphData } from 'components/data';
 import { PaneMessage } from 'library/base';
-import { addGraphViewer, removeGraphViewer, setPositions } from 'store/actions'
-import { getSelectedProjectId, getGraph, getGraphRefData, getGraphMetadata, isFocusedGraph } from 'store/selectors';
+import { addGraphViewer, removeGraphViewer } from 'store/actions'
+import { getSelectedProjectId, getGraph, getGraphMetadata, isFocusedGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
 import cyHtmlLabel from 'cytoscape-node-html-label';
 cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
+import useData from './useData';
 import useEventHandlers from './useEventHandlers';
 
 /**
@@ -43,10 +43,8 @@ function Graph(props) {
   if (!graphData)
     return <PaneMessage content={ `'${graphId}' graph undefined` } />;
 
-  const refData = useSelector(state => getGraphRefData(state, graphId));
   const metadata = useSelector(state => getGraphMetadata(state, graphId));
   const {
-    positions,
     selectedNodes = [],
     selectedEdges = [],
     hoveredNodes = [],
@@ -56,8 +54,6 @@ function Graph(props) {
   const focused = focusedGraph === graphId;
   const dispatch = useDispatch();
   const bounds = useRef(undefined);
-  const eventsEnabledRef = useRef(false);
-  const data = GraphData(graphData, refData);
   
   const cyElem = useRef(undefined);
   const cyRef = useRef(cytoscape(config || cyConfig(theme)));
@@ -146,38 +142,14 @@ function Graph(props) {
   }
 
   // use event handlers
-  useEventHandlers(cy, graphId, {
-    eventsEnabledRef,
+  const eventsEnabledRef = useEventHandlers(cy, graphId, {
     onNodeSelect, onNodeUnselect,
     onEdgeSelect, onEdgeUnselect, edgePredicate
   });
+  useData(cy, graphId, layout); // load/clear graph data
   
   useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
-
-  // load/clear graph data
-  useEffect(() => {
-    cy.add(data); // load graph data
-
-    // load graph layout
-    if (positions) {
-      cy.nodes()
-        .positions(element => positions[element.data('id')]);
-      cy.fit();
-    } else
-      cy.layout(layout).run();
-
-    return () => {
-      // save graph layout
-      const positions = {};
-      for (const node of data) {
-        const nodeId = node.data.id;
-        positions[nodeId] = cy.$id(nodeId).position();
-      }
-      dispatch(setPositions(graphId, positions));
-
-      cy.nodes().remove(); // clear graph data
-    };
-  }, [graphData]);
+  
 
   // register active graph id
   useEffect(() => {

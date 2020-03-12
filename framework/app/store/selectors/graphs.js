@@ -40,6 +40,15 @@ export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, grap
 /**
  * @param {Object} state
  * @param {String} graphId graph id
+ */
+export const getGraphPositions = createSelector(
+  (state, graphId) => getGraphMetadata(state, graphId),
+  metadata => metadata.positions
+);
+
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
  * @param {String} [projectId = <current project id>] project id
  * @returns {Number} active graph viewers
  */
