@@ -177,7 +177,7 @@ function Graph(props) {
 
       cy.nodes().remove(); // clear graph data
     };
-  }, [graphId]);
+  }, [graphData]);
 
   // register active graph id
   useEffect(() => {
