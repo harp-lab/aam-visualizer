@@ -11,6 +11,36 @@ import {
   MOUSEOVER_EVENT, MOUSEOUT_EVENT
 } from './consts';
 
+
+/**
+ * connect cytoscape instance event handlers
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ * @returns {Function} calls input function with disabled event handlers
+ */
+export default function useEventHandlers(cy, graphId, eventData) {
+  const enabledRef = useRef(false);
+
+  /**
+   * toggle eventsEnabled flag to disable event handlers while executing callback
+   * @param {Function} callback 
+   */
+  function ignoreEvents(callback) {
+    enabledRef.current = false;
+    callback();
+    enabledRef.current = true;
+  }
+
+  useTapEvent(cy, graphId, enabledRef, eventData);
+  useSelectEvent(cy, graphId, enabledRef, eventData);
+  useUnselectEvent(cy, graphId, enabledRef, eventData);
+  useMouseoverEvent(cy, graphId, enabledRef, eventData);
+  useMouseoutEvent(cy, graphId, enabledRef, eventData);
+
+  return ignoreEvents;
+}
+
 /**
  * @param {Object} cy cytoscape instance
  * @param {String} graphId graph id
@@ -36,7 +66,7 @@ function useTapEvent(cy, graphId, enabledRef, eventData) {
  * @param {Function} eventData.edgePredicate boolean function taking edge and returning if selection allowed
  */
 function useSelectEvent(cy, graphId, enabledRef, eventData) {
-  const { onNodeSelect, onEdgeSelect,  edgePredicate } = eventData;
+  const { onNodeSelect, onEdgeSelect, edgePredicate } = eventData;
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -134,23 +164,4 @@ function useMouseoutEvent(cy, graphId, enabledRef, eventData) {
       dispatch(hoverNodes(graphId, []));
     });
   }, [graphId]);
-}
-
-/**
- * refresh cytoscape instance event handlers
- * @param {Object} cy cytoscape instance
- * @param {String} graphId graph id
- * @param {Object} eventData event handler data
- * @returns {Object} events enabled flag
- */
-export default function useEventHandlers(cy, graphId, eventData) {
-  const enabledRef = useRef(false);
-
-  useTapEvent(cy, graphId, enabledRef, eventData);
-  useSelectEvent(cy, graphId, enabledRef, eventData);
-  useUnselectEvent(cy, graphId, enabledRef, eventData);
-  useMouseoverEvent(cy, graphId, enabledRef, eventData);
-  useMouseoutEvent(cy, graphId, enabledRef, eventData);
-
-  return enabledRef;
 }

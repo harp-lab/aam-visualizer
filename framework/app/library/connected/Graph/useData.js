@@ -4,6 +4,12 @@ import { GraphData } from 'components/data';
 import { setPositions } from 'store/actions'
 import { getGraph, getGraphRefData, getGraphPositions } from 'store/selectors';
 
+/**
+ * connect cytoscape instance data
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} layout cytoscape layout config
+ */
 export default function useData(cy, graphId, layout) {
   const graphData = useSelector(state => getGraph(state, graphId));
   const refData = useSelector(state => getGraphRefData(state, graphId));

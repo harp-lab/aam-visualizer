@@ -12,6 +12,7 @@ cyHtmlLabel(cytoscape);
 import { cyConfig } from './configs';
 import useData from './useData';
 import useEventHandlers from './useEventHandlers';
+import useSize from './useSize';
 
 /**
  * @param {Object} props 
@@ -53,21 +54,10 @@ function Graph(props) {
   const focusedGraph = useSelector(state => isFocusedGraph(state, graphId));
   const focused = focusedGraph === graphId;
   const dispatch = useDispatch();
-  const bounds = useRef(undefined);
   
-  const cyElem = useRef(undefined);
+  const cyElemRef = useRef(undefined);
   const cyRef = useRef(cytoscape(config || cyConfig(theme)));
   const cy = cyRef.current;
-
-  /**
-   * toggle eventsEnabled flag to disable event handlers while executing callback
-   * @param {Function} callback 
-   */
-  function ignoreEvents(callback) {
-    eventsEnabledRef.current = false;
-    callback();
-    eventsEnabledRef.current = true;
-  }
   
   /**
    * @param {Array<String>} elemIds cytoscape element ids
@@ -111,7 +101,7 @@ function Graph(props) {
 
   // mount/unmount headless cytoscape
   useEffect(() => {
-    cy.mount(cyElem.current);
+    cy.mount(cyElemRef.current);
     return () => cy.unmount();
   }, []);
 
@@ -141,12 +131,13 @@ function Graph(props) {
     }
   }
 
-  // use event handlers
-  const eventsEnabledRef = useEventHandlers(cy, graphId, {
+  // connect event handlers
+  const ignoreEvents = useEventHandlers(cy, graphId, {
     onNodeSelect, onNodeUnselect,
     onEdgeSelect, onEdgeUnselect, edgePredicate
   });
-  useData(cy, graphId, layout); // load/clear graph data
+  useData(cy, graphId, layout); // connect graph data
+  useSize(cyElemRef, cy);
   
   useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
   
@@ -179,11 +170,8 @@ function Graph(props) {
     };
   }, [hoveredNodes]);
 
-  useEffect(() => { bounds.current = cyElem.current.getBoundingClientRect(); }); // get current bounds
-  useEffect(() => { cy.resize(); }, [bounds.current]); // resize cytoscape on bound changes
-
   return <div
-    ref={ cyElem }
+    ref={ cyElemRef }
     style={{
       flex: '1 1 1%',
       display: 'block',
