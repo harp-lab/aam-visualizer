@@ -11,7 +11,7 @@ import cyHtmlLabel from 'cytoscape-node-html-label';
 cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
-import { refreshEventHandlers } from './events';
+import { useEventHandlers } from './events';
 
 /**
  * @param {Object} props 
@@ -145,16 +145,12 @@ function Graph(props) {
     }
   }
 
-  // load event handlers
-  const eventHandlerData = {
-    cy,
+  // use event handlers
+  useEventHandlers(cy, graphId, {
     eventsEnabledRef,
-    dispatch,
-    graphId,
     onNodeSelect, onNodeUnselect,
     onEdgeSelect, onEdgeUnselect, edgePredicate
-  };
-  useEffect(() => { refreshEventHandlers(eventHandlerData); }, [graphId]);
+  });
   
   useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
 

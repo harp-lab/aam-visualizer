@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   setFocusedGraph,
   selectNodes, unselectNodes, hoverNodes, selectEdges,
@@ -5,92 +7,145 @@ import {
 
 import { EVENTS } from './consts';
 
-const HANDLERS = [
-  addTapEvent,
-  addSelectEvent,
-  addUnselectEvent,
-  addMouseoverEvent,
-  addMouseoutEvent
-];
-
-export function refreshEventHandlers(data) {
-  const { cy } = data;
-  for (const event of Object.values(EVENTS)) {
-    cy.off(event);
-  }
-  for (const handler of HANDLERS) {
-    handler(data);
-  }
+/**
+ * refresh cytoscape instance event handlers
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ */
+export function useEventHandlers(cy, graphId, eventData) {
+  useTapEvent(cy, graphId, eventData);
+  useSelectEvent(cy, graphId, eventData);
+  useUnselectEvent(cy, graphId, eventData);
+  useMouseoverEvent(cy, graphId, eventData);
+  useMouseoutEvent(cy, graphId, eventData);
 }
 
-function addTapEvent(data) {
-  const { cy, dispatch, graphId } = data;
-  cy.on(EVENTS.TAP, () => dispatch(setFocusedGraph(graphId)));
+/**
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ */
+function useTapEvent(cy, graphId, eventData) {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    cy.off(EVENTS.TAP);
+    cy.on(EVENTS.TAP, () => dispatch(setFocusedGraph(graphId)));
+  }, [graphId]);
 }
-function addSelectEvent(data) {
+
+/**
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ * @param {Object} eventData.eventsEnabledRef events enabled flag
+ * @param {Function} eventData.onNodeSelect node select callback
+ * @param {Function} eventData.onEdgeSelect edge select callback
+ * @param {Function} eventData.edgePredicate boolean function taking edge and returning if selection allowed
+ */
+function useSelectEvent(cy, graphId, eventData) {
   const {
-    cy, eventsEnabledRef, dispatch,
-    graphId,
-    onNodeSelect, edgePredicate, onEdgeSelect
-  } = data;
-  cy.on(EVENTS.SELECT, 'node', evt => {
-    if (eventsEnabledRef.current) {
-      const node = evt.target;
-      const nodeId = node.id();
-      dispatch(selectNodes(graphId, [nodeId]));
-      if (onNodeSelect)
-        onNodeSelect(nodeId);
-    }
-  });
-  cy.on(EVENTS.SELECT, 'edge', evt => {
-    if (eventsEnabledRef.current) {
-      const edge = evt.target;
-      if (edgePredicate(edge)) {
-        const edgeId = edge.id();
-        dispatch(selectEdges(graphId, [edgeId]));
-        if (onEdgeSelect)
-          onEdgeSelect(edgeId);
-      } else
-        edge.unselect();
-    }
-  });
+    eventsEnabledRef,
+    onNodeSelect, onEdgeSelect,
+    edgePredicate
+  } = eventData;
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    cy.off(EVENTS.SELECT);
+    cy.on(EVENTS.SELECT, 'node', evt => {
+      if (eventsEnabledRef.current) {
+        const node = evt.target;
+        const nodeId = node.id();
+        dispatch(selectNodes(graphId, [nodeId]));
+        if (onNodeSelect)
+          onNodeSelect(nodeId);
+      }
+    });
+    cy.on(EVENTS.SELECT, 'edge', evt => {
+      if (eventsEnabledRef.current) {
+        const edge = evt.target;
+        if (edgePredicate(edge)) {
+          const edgeId = edge.id();
+          dispatch(selectEdges(graphId, [edgeId]));
+          if (onEdgeSelect)
+            onEdgeSelect(edgeId);
+        } else
+          edge.unselect();
+      }
+    });
+  }, [graphId]);
 }
-function addUnselectEvent(data) {
+
+/**
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ * @param {Object} eventData.eventsEnabledRef events enabled flag
+ * @param {Function} eventData.onNodeUnselect node unselect callback
+ * @param {Function} eventData.onEdgeUnselect edge unselect callback
+ */
+function useUnselectEvent(cy, graphId, eventData) {
   const {
-    cy, eventsEnabledRef, dispatch,
-    graphId,
+    eventsEnabledRef,
     onNodeUnselect, onEdgeUnselect
-  } = data;
-  cy.on(EVENTS.UNSELECT, 'node', evt => {
-    if (eventsEnabledRef.current) {
+  } = eventData;
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    cy.off(EVENTS.UNSELECT);
+    cy.on(EVENTS.UNSELECT, 'node', evt => {
+      if (eventsEnabledRef.current) {
+        const node = evt.target;
+        const nodeId = node.id();
+        dispatch(unselectNodes(graphId, [nodeId]));
+        if (onNodeUnselect)
+          onNodeUnselect(nodeId);
+      }
+    });
+    cy.on(EVENTS.UNSELECT, 'edge', evt => {
+      if (eventsEnabledRef.current) {
+        const edge = evt.target;
+        const edgeId = edge.id();
+        dispatch(selectEdges(graphId, []));
+        if (onEdgeUnselect)
+          onEdgeUnselect(edgeId);
+      }
+    });
+  }, [graphId]);
+}
+
+/**
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ */
+function useMouseoverEvent(cy, graphId, eventData) {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    cy.off(EVENTS.MOUSEOVER);
+    cy.on(EVENTS.MOUSEOVER, 'node', evt => {
       const node = evt.target;
       const nodeId = node.id();
-      dispatch(unselectNodes(graphId, [nodeId]));
-      if (onNodeUnselect)
-        onNodeUnselect(nodeId);
-    }
-  });
-  cy.on(EVENTS.UNSELECT, 'edge', evt => {
-    if (eventsEnabledRef.current) {
-      const edge = evt.target;
-      const edgeId = edge.id();
-      dispatch(selectEdges(graphId, []));
-      if (onEdgeUnselect)
-        onEdgeUnselect(edgeId);
-    }
-  });
+      dispatch(hoverNodes(graphId, [nodeId]));
+    });
+  }, [graphId]);
 }
-function addMouseoverEvent(data) {
-  const { cy, dispatch, graphId } = data;
-  cy.on(EVENTS.MOUSEOVER, 'node', evt => {
-    const node = evt.target;
-    const nodeId = node.id();
-    dispatch(hoverNodes(graphId, [nodeId]));
-  });
-}
-function addMouseoutEvent(data) {
-  const { cy, dispatch, graphId } = data;
-  cy.on(EVENTS.MOUSEOUT, 'node', evt => {
-    dispatch(hoverNodes(graphId, []));
-  });
+
+/**
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ */
+function useMouseoutEvent(cy, graphId, eventData) {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    cy.off(EVENTS.MOUSEOUT);
+    cy.on(EVENTS.MOUSEOUT, 'node', evt => {
+      dispatch(hoverNodes(graphId, []));
+    });
+  }, [graphId]);
 }
