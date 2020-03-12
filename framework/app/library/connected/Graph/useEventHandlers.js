@@ -8,20 +8,6 @@ import {
 import { EVENTS } from './consts';
 
 /**
- * refresh cytoscape instance event handlers
- * @param {Object} cy cytoscape instance
- * @param {String} graphId graph id
- * @param {Object} eventData event handler data
- */
-export function useEventHandlers(cy, graphId, eventData) {
-  useTapEvent(cy, graphId, eventData);
-  useSelectEvent(cy, graphId, eventData);
-  useUnselectEvent(cy, graphId, eventData);
-  useMouseoverEvent(cy, graphId, eventData);
-  useMouseoutEvent(cy, graphId, eventData);
-}
-
-/**
  * @param {Object} cy cytoscape instance
  * @param {String} graphId graph id
  * @param {Object} eventData event handler data
@@ -148,4 +134,18 @@ function useMouseoutEvent(cy, graphId, eventData) {
       dispatch(hoverNodes(graphId, []));
     });
   }, [graphId]);
+}
+
+/**
+ * refresh cytoscape instance event handlers
+ * @param {Object} cy cytoscape instance
+ * @param {String} graphId graph id
+ * @param {Object} eventData event handler data
+ */
+export default function useEventHandlers(cy, graphId, eventData) {
+  useTapEvent(cy, graphId, eventData);
+  useSelectEvent(cy, graphId, eventData);
+  useUnselectEvent(cy, graphId, eventData);
+  useMouseoverEvent(cy, graphId, eventData);
+  useMouseoutEvent(cy, graphId, eventData);
 }

@@ -11,7 +11,7 @@ import cyHtmlLabel from 'cytoscape-node-html-label';
 cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
-import { useEventHandlers } from './events';
+import useEventHandlers from './useEventHandlers';
 
 /**
  * @param {Object} props 
@@ -156,26 +156,26 @@ function Graph(props) {
 
   // load/clear graph data
   useEffect(() => {
-    cy.add(data);
-    return () => { cy.nodes().remove(); };
-  }, [graphId]);
+    cy.add(data); // load graph data
 
-  // load/save node positions
-  useEffect(() => {
+    // load graph layout
     if (positions) {
       cy.nodes()
         .positions(element => positions[element.data('id')]);
       cy.fit();
     } else
       cy.layout(layout).run();
-    
+
     return () => {
+      // save graph layout
       const positions = {};
       for (const node of data) {
         const nodeId = node.data.id;
         positions[nodeId] = cy.$id(nodeId).position();
       }
       dispatch(setPositions(graphId, positions));
+
+      cy.nodes().remove(); // clear graph data
     };
   }, [graphId]);
 
