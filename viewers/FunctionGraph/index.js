@@ -5,7 +5,7 @@ import { Graph } from 'library/connected';
 import { suggestNodes } from 'store/actions';
 import { getGraph, getSelectedEdges } from 'store/selectors';
 
-import { getMainGraphId, getSubGraphId } from 'fext/store/selectors';
+import { getMainGraphId, getSubGraphId, getToggleGraphId } from 'fext/store/selectors';
 
 import GraphLabel from './GraphLabel';
 
@@ -13,6 +13,8 @@ import GraphLabel from './GraphLabel';
 function FunctionGraph() {
   const mainGraphId = useSelector(getMainGraphId);
   const subGraphId = useSelector(getSubGraphId);
+  const toggleMainGraphId = useSelector(state => getToggleGraphId(state, mainGraphId));
+  const toggleSubGraphId = useSelector(state => getToggleGraphId(state, subGraphId));
   const dispatch = useDispatch();
 
   function refresh() {
@@ -40,12 +42,12 @@ function FunctionGraph() {
     <SplitPane horizontal>
       <Pane height='50%'>
         <GraphLabel graphId={ mainGraphId } />
-        <Graph graphId={ mainGraphId } />
+        <Graph graphId={ toggleMainGraphId } />
       </Pane>
       <Pane height='50%'>
         <GraphLabel graphId={ subGraphId } />
         <Graph
-          graphId={ subGraphId }
+          graphId={ toggleSubGraphId }
           edgePredicate={ edge => {
             const style = edge.data('style');
             if (style) return style['line-style'] === 'dashed';
@@ -56,7 +58,5 @@ function FunctionGraph() {
       </Pane>
     </SplitPane>);
 }
-
-
 
 export default FunctionGraph;

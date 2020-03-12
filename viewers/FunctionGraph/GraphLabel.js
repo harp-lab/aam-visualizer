@@ -4,8 +4,9 @@ import { Toolbar, Typography } from '@material-ui/core';
 import { BubbleChart } from '@material-ui/icons';
 import { useTheme } from '@material-ui/styles';
 import { IconToggle, Spacer } from 'library/base';
-import { toggleBubbling } from 'store/actions';
-import { getBubbling } from 'store/selectors';
+
+import { toggleBubbling } from 'fext/store/actions';
+import { getBubbling } from 'fext/store/selectors';
 
 /**
  * GraphLabel component

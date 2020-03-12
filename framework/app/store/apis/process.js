@@ -1,3 +1,5 @@
+import { getBubbledGraphId } from 'fext/store/selectors';
+
 // TODO change graphData.start to array of entrypoints instead of one entrypoint
 
 export function process(data) {
@@ -52,28 +54,27 @@ function wrapStates(analysisOutput) {
  */
 function bubblePaths(analysisOutput) {
   const { graphs, configs } = analysisOutput;
-  const bubbled = {};
   const counter = new BubbleCounter();
 
   for (const [graphId, graphData] of Object.entries(graphs)) {
+    const bubbledGraphId = getBubbledGraphId(graphId);
     switch (graphId) {
       case 'states': {
         const pathStarts = getPathStarts(graphData);
         const bubbles = getBubbles(counter, pathStarts, graphData);
         bubbleConfigs(bubbles, configs);
-        bubbled[graphId] = getGraph(bubbles);
+        graphs[bubbledGraphId] = getGraph(bubbles);
         break;
       }
       default: {
         const pathStarts = getPathStarts(graphData);
         const bubbles = getBubbles(counter, pathStarts, graphData);
         spreadBubbles(counter, bubbles, graphData, analysisOutput);
-        bubbled[graphId] = getGraph(bubbles);
+        graphs[bubbledGraphId] = getGraph(bubbles);
         break;
       }
     }
   }
-  graphs['bubbled'] = bubbled;
 }
 /**
  * Get graph path start node ids

@@ -65,42 +65,6 @@ export const getViewedGraphIds = createSelector(
   }
 );
 
-/**
- * Get bubbled graph
- * @param {Object} state
- * @param {String} graphId graph id
- * @returns {Object} bubbled graph, undefined if unavailable
- */
-export const getBubbledGraph = createSelector(
-  getGraphs,
-  (state, graphId) => graphId,
-  (graphs, graphId) => {
-    const { bubbled: bubbledGraphs } = graphs;
-    if (bubbledGraphs && bubbledGraphs[graphId])
-      return bubbledGraphs[graphId];
-    else
-      return undefined;
-  }
-);
-
-/**
- * Get bubbled state of graph
- * @param {Object} state
- * @param {String} graphId graph id
- * @returns {Boolean} graph bubbled state, undefined if unavailable
- */
-export const getBubbling = createSelector(
-  getBubbledGraph,
-  getGraphMetadata,
-  (graph, metadata) => {
-    const { bubbled } = metadata;
-    if (graph && bubbled === undefined)
-      return true
-    else
-      return bubbled;
-  }
-);
-
 /** deprecated */
 export const getMainGraphId = createSelector(
   state => getProjectMetadata(state),
@@ -164,16 +128,9 @@ export function getGraphNodes(store, graphId) {
  * @returns {Object} graph data
  */
 export const getGraph = createSelector(
-  getGraphs,
+  (state, graphId) => getGraphs(state),
   (state, graphId) => graphId,
-  getBubbling,
-  getBubbledGraph,
-  (graphs, graphId, bubbled, bubbledGraph) => {
-    if (bubbled)
-      return bubbledGraph;
-    else
-      return graphs[graphId];
-  }
+  (graphs, graphId) => graphs[graphId]
 );
 
 /**
