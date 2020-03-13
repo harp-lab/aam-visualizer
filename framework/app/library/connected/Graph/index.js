@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { withTheme } from '@material-ui/styles';
 import { PaneMessage } from 'library/base';
 import { addGraphViewer, removeGraphViewer } from 'store/actions'
-import { getSelectedProjectId, getGraph, getGraphMetadata, isFocusedGraph } from 'store/selectors';
+import { getSelectedProjectId, getGraph } from 'store/selectors';
 
 import cytoscape from 'cytoscape';
 import cyHtmlLabel from 'cytoscape-node-html-label';
@@ -11,8 +11,9 @@ cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
 import useData from './useData';
-import useMetadata from './useMetadata';
 import useEventHandlers from './useEventHandlers';
+import useInput from './useInput';
+import useMetadata from './useMetadata';
 import useSize from './useSize';
 
 /**
@@ -45,8 +46,6 @@ function Graph(props) {
   if (!graphData)
     return <PaneMessage content={ `'${graphId}' graph undefined` } />;
 
-  const focusedGraph = useSelector(state => isFocusedGraph(state, graphId));
-  const focused = focusedGraph === graphId;
   const dispatch = useDispatch();
   
   const cyElemRef = useRef(undefined);
@@ -60,44 +59,19 @@ function Graph(props) {
     return () => cy.unmount();
   }, []);
 
-  useEffect(() => {
-    if (focused) {
-      document.addEventListener('keydown', keyDown );
-      return () => { document.removeEventListener('keydown', keyDown ); }
-    }
-  }, [focused]);
-  function keyDown(evt) {
-    const selectedNodes = cy.$('node:selected');
-    switch (evt.key) {
-      case 'ArrowLeft':
-        const prevNodes = selectedNodes.incomers().nodes();
-        if (prevNodes.length == 1) {
-          selectedNodes.unselect();
-          prevNodes.select();
-        }
-        break;
-      case 'ArrowRight':
-        const nextNodes = selectedNodes.outgoers().nodes();
-        if (nextNodes.length == 1) {
-          selectedNodes.unselect();
-          nextNodes.select();
-        }
-        break;
-    }
-  }
 
   // connect event handlers
   const ignoreEvents = useEventHandlers(cy, graphId, {
     onNodeSelect, onNodeUnselect,
     onEdgeSelect, onEdgeUnselect, edgePredicate
   });
+  useInput(cy, graphId); // connect global event handlers
   useData(cy, graphId, layout); // connect graph data
   useMetadata(cy, graphId, ignoreEvents); // connect graph metadata
   useSize(cyElemRef, cy);
   
   useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
   
-
   // register active graph id
   useEffect(() => {
     if (!external) {

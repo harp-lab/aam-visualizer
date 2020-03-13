@@ -5,12 +5,11 @@ import {
   selectNodes, unselectNodes, hoverNodes, selectEdges,
 } from 'store/actions'
 
-import {
-  TAP_EVENT,
-  SELECT_EVENT, UNSELECT_EVENT,
-  MOUSEOVER_EVENT, MOUSEOUT_EVENT
-} from './consts';
-
+const TAP_EVENT = 'tap';
+const SELECT_EVENT = 'select';
+const UNSELECT_EVENT = 'unselect';
+const MOUSEOVER_EVENT = 'mouseover';
+const MOUSEOUT_EVENT = 'mouseout';
 
 /**
  * connect cytoscape instance event handlers
@@ -20,7 +19,7 @@ import {
  * @returns {Function} calls input function with disabled event handlers
  */
 export default function useEventHandlers(cy, graphId, eventData) {
-  const enabledRef = useRef(false);
+  const enabledRef = useRef(true);
 
   /**
    * toggle eventsEnabled flag to disable event handlers while executing callback
