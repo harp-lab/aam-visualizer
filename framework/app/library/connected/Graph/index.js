@@ -11,6 +11,7 @@ cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
 import useData from './useData';
+import useMetadata from './useMetadata';
 import useEventHandlers from './useEventHandlers';
 import useSize from './useSize';
 
@@ -44,13 +45,6 @@ function Graph(props) {
   if (!graphData)
     return <PaneMessage content={ `'${graphId}' graph undefined` } />;
 
-  const metadata = useSelector(state => getGraphMetadata(state, graphId));
-  const {
-    selectedNodes = [],
-    selectedEdges = [],
-    hoveredNodes = [],
-    suggestedNodes = []
-  } = metadata;
   const focusedGraph = useSelector(state => isFocusedGraph(state, graphId));
   const focused = focusedGraph === graphId;
   const dispatch = useDispatch();
@@ -59,45 +53,6 @@ function Graph(props) {
   const cyRef = useRef(cytoscape(config || cyConfig(theme)));
   const cy = cyRef.current;
   
-  /**
-   * @param {Array<String>} elemIds cytoscape element ids
-   */
-  function select(elemIds) {
-    elemIds.forEach(elemId => cy.$id(elemId).select());
-  }
-
-  /**
-   * @param {Array<String>} elemIds cytoscape element ids
-   */
-  function unselect(elemIds) {
-    elemIds.forEach(elemId => cy.$id(elemId).unselect())
-  }
-
-  /**
-   * @param {Array<String>} nodeIds cytoscape node ids
-   * @param {String} className class to add
-   */
-  function addClass(nodeIds, className) {
-    cy.batch(() => {
-      for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.addClass(className);
-      }
-    });
-  }
-
-  /**
-   * @param {Array<String>} nodeIds cytoscape node ids
-   * @param {String} className class to remove
-   */
-  function removeClass(nodeIds, className) {
-    cy.batch(() => {
-      for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.removeClass(className);
-      }
-    });
-  }
 
   // mount/unmount headless cytoscape
   useEffect(() => {
@@ -137,6 +92,7 @@ function Graph(props) {
     onEdgeSelect, onEdgeUnselect, edgePredicate
   });
   useData(cy, graphId, layout); // connect graph data
+  useMetadata(cy, graphId, ignoreEvents); // connect graph metadata
   useSize(cyElemRef, cy);
   
   useEffect(() => { cy.nodeHtmlLabel(htmlLabels); }, [graphId]); // load graph html labels
@@ -149,26 +105,6 @@ function Graph(props) {
       return () => { dispatch(removeGraphViewer(graphId, projectId)); };
     }
   }, [graphId]);
-  
-  // mark nodes
-  useEffect(() => {
-    ignoreEvents(() => select([...selectedNodes, ...selectedEdges]));
-    return () => {
-      ignoreEvents(() => unselect([...selectedNodes, selectedEdges]))
-    };
-  }, [selectedNodes, selectedEdges]);
-  useEffect(() => {
-    ignoreEvents(() => addClass(suggestedNodes, 'suggested'));
-    return () => {
-      ignoreEvents(() => removeClass(suggestedNodes, 'suggested'));
-    };
-  }, [suggestedNodes]);
-  useEffect(() => {
-    ignoreEvents(() => addClass(hoveredNodes, 'hovered'));
-    return () => {
-      ignoreEvents(() => removeClass(hoveredNodes, 'hovered'));
-    };
-  }, [hoveredNodes]);
 
   return <div
     ref={ cyElemRef }

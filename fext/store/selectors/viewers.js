@@ -3,6 +3,7 @@ import store from 'store';
 import { getProjectAnalysisOutput, getProjectMetadata, getSelectedNodes } from 'store/selectors';
 
 import { CSTACK_STACK, FRAME_STACK } from 'fext/store/consts';
+import { getToggleGraphId } from 'fext/store/selectors';
 
 /**
  * @param {Object} state
@@ -14,12 +15,20 @@ export const getMainGraphId = createSelector(
 );
 
 /**
- * Get sub graph id
+ * @param {Object} state
+ * @returns {String} main graph toggle id
+ */
+export const getMainToggleGraphId = createSelector(
+  state => getToggleGraphId(state, getMainGraphId(state)),
+  mainToggleGraphId => mainToggleGraphId
+);
+
+/**
  * @param {Object} state
  * @returns {String} sub graph id
  */
 export const getSubGraphId = createSelector(
-  state => getSelectedNodes(state, getMainGraphId(state)),
+  state => getSelectedNodes(state, getMainToggleGraphId(state)),
   state => getProjectAnalysisOutput(state),
   (selectedNodes, analysisOutput) => {
     let subGraphId = 'states';
