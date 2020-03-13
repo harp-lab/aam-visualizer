@@ -33,9 +33,45 @@ export const getGraphMetadata = createSelector(
   (graphId, metadata) => metadata[graphId] || {}
 );
 
-export const getSelectedNodes = (store, graphId) => getGraphMetadata(store, graphId).selectedNodes || [];
-export const getHoveredNodes = (store, graphId) => getGraphMetadata(store, graphId).hoveredNodes || [];
-export const getSelectedEdges = (store, graphId) => getGraphMetadata(store, graphId).selectedEdges || [];
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Array<String>} selected node ids
+ */
+export const getSelectedNodes = createSelector(
+  getGraphMetadata,
+  metadata => metadata.selectedNodes || []
+);
+
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Array<String>} selected edge ids
+ */
+export const getSelectedEdges = createSelector(
+  getGraphMetadata,
+  metadata => metadata.selectedEdges || []
+);
+
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Array<String>} hovered node ids
+ */
+export const getHoveredNodes = createSelector(
+  getGraphMetadata,
+  metadata => metadata.hoveredNodes || []
+);
+
+/**
+ * @param {Object} state
+ * @param {String} graphId graph id
+ * @returns {Array<String>} suggested node ids
+ */
+export const getSuggestedNodes = createSelector(
+  getGraphMetadata,
+  metadata => metadata.suggestedNodes || []
+);
 
 /**
  * @param {Object} state

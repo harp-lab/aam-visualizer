@@ -1,37 +1,46 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { getGraphMetadata } from 'store/selectors';
+import { getSelectedNodes, getSelectedEdges, getHoveredNodes, getSuggestedNodes } from 'store/selectors';
 
 export default function useMetadata(cy, graphId, ignoreEvents) {
-  const {
-    selectedNodes = [],
-    selectedEdges = [],
-    hoveredNodes = [],
-    suggestedNodes = []
-  } = useSelector(state => getGraphMetadata(state, graphId));
+  const selectedNodes = useSelector(state => getSelectedNodes(state, graphId));
+  const selectedEdges = useSelector(state => getSelectedEdges(state, graphId));
+  const hoveredNodes = useSelector(state => getHoveredNodes(state, graphId));
+  const suggestedNodes = useSelector(state => getSuggestedNodes(state, graphId));
+
   /**
    * @param {Array<String>} elemIds cytoscape element ids
    */
-  function select(elemIds) {
-    elemIds.forEach(elemId => cy.$id(elemId).select());
+  async function select(elemIds) {
+    cy.batch(() => {
+      for (const elemId of elemIds) {
+        cy.getElementById(elemId)
+          .select();
+      }
+    });
   }
 
   /**
    * @param {Array<String>} elemIds cytoscape element ids
    */
-  function unselect(elemIds) {
-    elemIds.forEach(elemId => cy.$id(elemId).unselect())
+  async function unselect(elemIds) {
+    cy.batch(() => {
+      for (const elemId of elemIds) {
+        cy.getElementById(elemId)
+          .unselect();
+      }
+    });
   }
 
   /**
    * @param {Array<String>} nodeIds cytoscape node ids
    * @param {String} className class to add
    */
-  function addClass(nodeIds, className) {
+  async function addClass(nodeIds, className) {
     cy.batch(() => {
       for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.addClass(className);
+        cy.getElementById(nodeId)
+          .addClass(className);
       }
     });
   }
@@ -40,16 +49,15 @@ export default function useMetadata(cy, graphId, ignoreEvents) {
    * @param {Array<String>} nodeIds cytoscape node ids
    * @param {String} className class to remove
    */
-  function removeClass(nodeIds, className) {
+  async function removeClass(nodeIds, className) {
     cy.batch(() => {
       for (const nodeId of nodeIds) {
-        const node = cy.getElementById(nodeId);
-        node.removeClass(className);
+        cy.getElementById(nodeId)
+          .removeClass(className);
       }
     });
   }
 
-  // mark nodes
   useEffect(() => {
     ignoreEvents(() => select([...selectedNodes, ...selectedEdges]));
     return () => {
