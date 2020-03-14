@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { GraphData } from 'components/data';
 import { setPositions } from 'store/actions'
 import { getGraph, getGraphRefData, getGraphPositions } from 'store/selectors';
+
+import { GraphData } from './data';
 
 /**
  * connect cytoscape instance data
@@ -16,8 +17,8 @@ export default function useData(cy, graphId, layout) {
   const positions = useSelector(state => getGraphPositions(state, graphId));
   const dispatch = useDispatch();
 
-  const data = GraphData(graphData, refData);
   useEffect(() => {
+    const data = GraphData(graphData, refData);
     cy.add(data); // load graph data
 
     // load graph layout

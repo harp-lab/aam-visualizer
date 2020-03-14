@@ -10,11 +10,7 @@ import cyHtmlLabel from 'cytoscape-node-html-label';
 cyHtmlLabel(cytoscape);
 
 import { cyConfig } from './configs';
-import useData from './useData';
-import useEventHandlers from './useEventHandlers';
-import useInput from './useInput';
-import useMetadata from './useMetadata';
-import useSize from './useSize';
+import { useData, useEventHandlers, useInput, useMetadata, useSize } from './hooks';
 
 /**
  * @param {Object} props 
