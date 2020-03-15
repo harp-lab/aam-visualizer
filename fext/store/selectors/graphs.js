@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { getGraphs, getGraphMetadata } from 'store/selectors';
+import { getGraphs, getGraphMetadata, getProjectAnalysisOutput } from 'store/selectors';
 
 /**
  * @param {String} graphId graph id
@@ -53,5 +53,28 @@ export const getToggleGraphId = createSelector(
     if (bubbled)
       toggleGraphId = bubbledGraphId;
     return toggleGraphId;
+  }
+);
+
+/**
+ * Get reference data for graph nodes
+ * @param {String} graphId graph id
+ */
+export const getGraphRefData = createSelector(
+  (state, graphId) => graphId,
+  (state, graphId) => getProjectAnalysisOutput(state),
+  (graphId, analOut) => {
+    let refData;
+    switch (graphId) {
+      case 'funcs':
+        refData = analOut.funcs;
+        break;
+      case 'states':
+      default:
+        refData = analOut.configs;
+        break;
+    }
+
+    return refData;
   }
 );

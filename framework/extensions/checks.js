@@ -13,6 +13,22 @@ export function reqObject(namespace, objectName) {
 }
 
 /**
+ * guarantee function factory
+ * @param {Object} namespace module namespace
+ * @param {String} factoryName factory name
+ * @returns {Function} function
+ */
+export function reqFunctionFactory(namespace, factoryName) {
+  let factory = namespace[factoryName];
+  if (!factory) {
+    factory = function() {
+      return function() {};
+    };
+  }
+  return factory;
+}
+
+/**
  * guarantee React element
  * @param {String} namespace module namespace
  * @param {String} element element name

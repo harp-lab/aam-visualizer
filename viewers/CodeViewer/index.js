@@ -4,9 +4,11 @@ import { createSelector } from 'reselect';
 import { selectNodes, hoverNodes } from 'store/actions';
 import {
   getNodeAsts,
-  getViewedGraphIds, getGraphNodes, getGraphRefData,
+  getViewedGraphIds, getGraphNodes,
   getProject
 } from 'store/selectors';
+
+import { getGraphRefData } from 'fext/store/selectors';
 
 import Context from './Context';
 import Line from './Line';

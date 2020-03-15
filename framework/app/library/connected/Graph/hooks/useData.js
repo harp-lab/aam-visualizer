@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPositions } from 'store/actions'
-import { getGraph, getGraphRefData, getGraphPositions } from 'store/selectors';
+import { getGraph, getGraphPositions } from 'store/selectors';
 
 import { GraphData } from './data';
 
@@ -13,12 +13,11 @@ import { GraphData } from './data';
  */
 export default function useData(cy, graphId, layout) {
   const graphData = useSelector(state => getGraph(state, graphId));
-  const refData = useSelector(state => getGraphRefData(state, graphId));
   const positions = useSelector(state => getGraphPositions(state, graphId));
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const data = GraphData(graphData, refData);
+    const data = GraphData(graphId, graphData);
     cy.add(data); // load graph data
 
     // load graph layout
