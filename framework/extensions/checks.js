@@ -13,6 +13,20 @@ export function reqObject(namespace, objectName) {
 }
 
 /**
+ * guarantee function
+ * @param {Object} namespace module namespace
+ * @param {String} functionName function name
+ * @returns {Function} function
+ */
+export function reqFunction(namespace, functionName) {
+  let func = namespace[functionName];
+  if (!func) {
+    func = function() {};
+  }
+  return func;
+}
+
+/**
  * guarantee function factory
  * @param {Object} namespace module namespace
  * @param {String} factoryName factory name

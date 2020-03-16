@@ -5,12 +5,13 @@ import {
   queueSnackbar,
   consoleError
 } from 'store/actions';
-import { process } from 'store/apis';
 import {
   EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS,
   CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
 } from 'store/consts';
 import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store/selectors';
+
+import { dataProcessHook } from 'extensions/store/hooks';
 
 /**
  * @param {String} url user req url
@@ -407,8 +408,8 @@ export function getData(projectId) {
       switch (res.status) {
         case 200:
           const data = await res.json();
-          process(data) // TODO separate out secondary processing
-          dispatch(setProjectData(projectId, data));
+          const processedData = { ...data, ...dataProcessHook(data) };
+          dispatch(setProjectData(projectId, processedData));
           dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS));
           break;
         case 204:

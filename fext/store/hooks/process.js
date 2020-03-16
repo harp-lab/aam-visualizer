@@ -2,7 +2,11 @@ import { getBubbledGraphId } from 'fext/store/selectors';
 
 // TODO change graphData.start to array of entrypoints instead of one entrypoint
 
-export function process(data) {
+/**
+ * @param {Object} data project data
+ * @returns {Object} processed project data
+ */
+export function dataProcessHook(data) {
   const { processed, analysisOutput } = data;
   if (!processed) {
     legacy(analysisOutput);
@@ -10,6 +14,8 @@ export function process(data) {
     bubblePaths(analysisOutput);
     data.processed = true;
   }
+
+  return data;
 }
 
 /**
