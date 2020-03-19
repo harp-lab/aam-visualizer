@@ -2,13 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { batch, useSelector, useDispatch } from 'react-redux';
 import { createSelector } from 'reselect';
 import { selectNodes, hoverNodes } from 'store/actions';
-import {
-  getNodeAsts,
-  getViewedGraphIds, getGraphNodes,
-  getProject
-} from 'store/selectors';
+import { getViewedGraphIds, getGraphNodes, getProject } from 'store/selectors';
 
-import { getGraphRefData } from 'fext/store/selectors';
+import { getNodeAsts, getGraphRefData } from 'fext/store/selectors';
 
 import Context from './Context';
 import Line from './Line';

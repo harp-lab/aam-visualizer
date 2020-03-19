@@ -1,8 +1,10 @@
 import React, { useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { getSelectedAsts, getHoveredAsts, getProjectAnalysisOutput } from 'store/selectors';
+import { getProjectAnalysisOutput } from 'store/selectors';
 import { withTheme } from '@material-ui/styles';
 import { indigo } from '@material-ui/core/colors';
+
+import { getSelectedAsts, getHoveredAsts } from 'fext/store/selectors';
 
 import Context from './Context';
 
