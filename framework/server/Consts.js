@@ -33,5 +33,6 @@ exports.LOG_TYPE_PROJ = 'proj';
 exports.LOG_TYPE_WATCHER = 'wtch';
 
 // watcher
+exports.WATCHER_PATH = path.resolve(__dirname, 'watcher.js');
 exports.WATCHER_ACTION_PROCESS = 'process';
 exports.WATCHER_ACTION_CANCEL = 'cancel';

@@ -1,3 +1,3 @@
-const Server = require('./Server.js');
+const Server = require('./Server');
 
 const server = new Server();

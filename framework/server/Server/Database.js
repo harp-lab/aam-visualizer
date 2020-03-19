@@ -2,7 +2,8 @@ const fse = require('fs-extra');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
-const Consts = require('./Consts.js');
+
+const Consts = require('../Consts.js');
 
 const DATA_DIR = path.resolve(Consts.SERVER_DIR, 'data');
 const EDIT_DIR = path.resolve(DATA_DIR, 'save');

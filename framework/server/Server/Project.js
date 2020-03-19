@@ -1,5 +1,5 @@
-const Consts = require('./Consts.js');
-const G = require('./Global.js');
+const Consts = require('../Consts.js');
+const G = require('../Global.js');
 
 // variables allowed for data import/export access
 const allowedDataKeys = [

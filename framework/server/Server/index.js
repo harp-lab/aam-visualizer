@@ -3,11 +3,13 @@ const express = require('express');
 const fse = require('fs-extra');
 const fs = require('fs');
 const fsp = fs.promises;
-const path = require('path');
-const Consts = require('./Consts.js');
-const G = require('./Global.js');
-const Project = require('./Project.js');
-const Database = require('./Database.js');
+
+const Consts = require('../Consts');
+const G = require('../Global');
+
+const Project = require('./Project');
+const Database = require('./Database');
+const UserRouter = require('./routers/UserRouter');
 
 class Server {
   constructor() {
@@ -37,124 +39,9 @@ class Server {
       next();
     });
 
-    // handle project requests
-    const projectRouter = express.Router({ mergeParams: true });
-    projectRouter.all('*', (req, res, next) => {
-      const projectId = req.params.projectId;
-      if (this.projects[projectId])
-        next();
-      else
-        res.status(404).end();
-    });
-    projectRouter.get('/code', (req, res) => {
-      const projectId = req.params.projectId;
-      const project = this.projects[projectId];
-      res.json({ id: projectId, analysisInput: project.analysisInput })
-        .status(200).end();
-    });
-    projectRouter.get('/data', (req, res) => {
-      const projectId = req.params.projectId;
-      const project = this.projects[projectId];
-      switch (project.status) {
-        case project.STATUSES.done:
-        case project.STATUSES.error:
-          res.json(project.export(projectId))
-            .status(200).end();
-          break;
-        case project.STATUSES.process:
-          res.status(204).end();
-          break;
-        default:
-          res.status(412).end();
-          break;
-      }
-    });
-    projectRouter.post('/save', async (req, res) => {
-      const projectId = req.params.projectId;
-      const data = req.body;
-      await this.saveProject(projectId, data);
-      res.status(202).end();
-    });
-    projectRouter.post('/clear', async (req, res) => {
-      const { projectId } = req.params;
-      const data = req.body;
-      const project = this.projects[projectId];
+    // request routing
+    app.use('/api/:userId', UserRouter(this));
 
-      for (const key of Object.keys(data)) {
-        data[key] = undefined;
-      }
-
-      switch (project.status) {
-        case project.STATUSES.empty:
-        case project.STATUSES.edit:
-          this.saveProject(projectId, data);
-          res.status(200).end();
-          break;
-        default:
-          res.status(412).end();
-          break;
-      }
-    });
-    projectRouter.post('/process', async (req, res) => {
-      const projectId = req.params.projectId;
-      const project = this.projects[projectId];
-      switch (project.status) {
-        case project.STATUSES.edit:
-          const options = req.body;
-          project.analysis = options.analysis;
-          await this.processProject(projectId);
-          res.status(200).end();
-          break;
-        default:
-          res.status(412).end();
-          break;
-      }
-    });
-    projectRouter.post('/cancel', async (req, res) => {
-      const projectId = req.params.projectId;
-      const project = this.projects[projectId];
-      switch (project.status) {
-        case project.STATUSES.process:
-          await this.cancelProject(projectId);
-          res.status(200).end();
-          break;
-        case project.STATUSES.done:
-          res.status(409).end();
-          break;
-        default:
-          res.status(412).end();
-          break;
-      }
-    });
-    projectRouter.post('/delete', async (req, res) => {
-      const projectId = req.params.projectId;
-      const project = this.projects[projectId];
-      switch (project.status) {
-        case project.STATUSES.process:
-          res.status(412).end();
-          break;
-        default:
-          await this.deleteProject(projectId);
-          res.status(205).end();
-          break;
-      }
-    });
-    
-    // handle user requests
-    const userRouter = express.Router({ mergeParams: true });
-    userRouter.get('/all', (req, res) => {
-      res.json(this.getProjectList(req.params.userId))
-        .status(200).end();
-    });
-    userRouter.post('/create', async (req, res) => {
-      const projectId = await this.createProject(req.params.userId);
-      res.json({ id: projectId })
-        .status(200).end();
-    });
-    userRouter.use('/projects/:projectId', projectRouter);
-    
-    
-    app.use('/api/:userId', userRouter);
     app.listen(Consts.PORT, () => G.log(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
   }
 
@@ -162,7 +49,7 @@ class Server {
   initWatcher() {
     G.log(Consts.LOG_TYPE_INIT, `starting watcher`);
     const options = { stdio: [0, 1, 2, 'ipc'] };
-    const watcher = child_process.fork(path.resolve(__dirname, 'watcher.js'), [], options);
+    const watcher = child_process.fork(Consts.WATCHER_PATH, [], options);
     watcher.on('message', async data => {
       const action = data.action;
       switch (action) {
