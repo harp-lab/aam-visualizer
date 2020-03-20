@@ -5,7 +5,7 @@ const nodemon = require('nodemon');
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 
 const SERVER_DIR = path.resolve(fconfig.FRAMEWORK_DIR, 'server');
-const NODEMON_LOG_TAG = chalk.blackBright('[ndmn]');
+const NODEMON_LOG_TAG = chalk.blackBright('[ndm]');
 
 /**
  * @param {String} content message content
@@ -30,7 +30,7 @@ function consoleError(content) {
 const devServer = nodemon({
 
   script: SERVER_DIR,
-  delay: '1000',
+  delay: '1500',
   watch: [
     SERVER_DIR
   ],
@@ -53,7 +53,7 @@ devServer.on('restart', function(files) {
   consoleLog(message);
 });
 devServer.on('quit', function() {
-  consoleLog('monitor quitted');
+  consoleLog('monitor exited');
   process.exit();
 });
 

@@ -1,4 +1,6 @@
 const path = require('path');
+const chalk = require('chalk');
+
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 
 // environment
@@ -26,8 +28,9 @@ exports.HOSTNAME = fconfig.SERVER_HOSTNAME;
 exports.PORT = fconfig.SERVER_PORT;
 
 // log
-exports.SERVER_LOG_TAG = '\x1b[90m[srvr]\x1b[0m';
-exports.LOG_TYPE_INIT = 'init';
+exports.SERVER_LOG_TAG = chalk.blackBright('[srv]');
+exports.INIT_LOG_TYPE = 'init';
+exports.DATA_LOG_TYPE = 'data';
 exports.LOG_TYPE_HTTP = 'http';
 exports.LOG_TYPE_SYS = 'syst';
 exports.LOG_TYPE_PROJ = 'proj';

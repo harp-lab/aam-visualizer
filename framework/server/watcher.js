@@ -2,11 +2,31 @@ const child_process = require('child_process');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const chalk = require('chalk');
+
 const Consts = require('./Consts');
 const { fext } = Consts;
-const { consoleLog } = require('./Global');
 
-const log = content => consoleLog(Consts.LOG_TYPE_WATCHER, content);
+const WATCHER_LOG_TAG = chalk.blackBright('[wch]');
+
+/**
+ * @param {String} content message content
+ */
+function consoleLog(content) {
+  const symbol = chalk.blue('i');
+  const tag = `${symbol} ${WATCHER_LOG_TAG}`;
+  console.log(`${tag} ${content}`);
+}
+
+/**
+ * @param {String} content message content
+ */
+function consoleError(content) {
+  const symbol = chalk.red('!');
+  const tag = `${symbol} ${WATCHER_LOG_TAG}`;
+  const error = chalk.redBright('[error]');
+  console.error(`${tag} ${content} ${error}`);
+}
 
 class Watcher {
   constructor() {
@@ -21,17 +41,18 @@ class Watcher {
           this.revert(data.id);
           break;
         default:
-          log(`invalid watcher action (${action})`);
+          consoleLog(`invalid watcher action (${action})`);
           break;
       }
     });
 
     this.state = { processing: false, interrupt: false };
-    this.processLoop = this.processLoop.bind(this);
+    consoleLog(`watcher started`);
     this.processLoop();
   }
+
   async processLoop() {
-    const file = await this.next();
+    const file = await this.getNextFile();
     if (file) {
       if (!this.state.interrupt) {
         this.state.processing = true;
@@ -41,6 +62,7 @@ class Watcher {
     } else
       this.state.processing = false;
   }
+
   interrupt() {
     this.state.interrupt = true;
     if (this.engineProcess) {
@@ -48,12 +70,18 @@ class Watcher {
       this.engineProcess = undefined;
     }
   }
+
   resume() {
     this.state.interrupt = false;
     if (this.state.processing)
       this.processLoop();
   }
-  async next() {
+
+  /**
+   * read input directory for oldest file
+   * @returns {String} file path
+   */
+  async getNextFile() {
     const files = await fsp.readdir(Consts.INPUT_DIR);
     let oldestFile, oldestCtime;
     if (files.length > 0) {
@@ -68,8 +96,10 @@ class Watcher {
     }
     return oldestFile;
   }
+
+  
   async process(file) {
-    log('calling engine');
+    consoleLog('calling engine');
     const inputPath = path.resolve(Consts.INPUT_DIR, file)
     const outputPath = path.resolve(Consts.OUTPUT_DIR, file);
     const {command, args} = fext.engine(inputPath, outputPath);
@@ -98,18 +128,18 @@ class Watcher {
     const inputPath = path.resolve(Consts.INPUT_DIR, file)
     switch (code) {
       case 0:
-        log('engine finished');
+        consoleLog('engine finished');
         break;
       case 2:
-        log('parse error');
+        consoleError('parse error');
         await this.mark(file, 'parse');
         break;
       default:
-        log('error');
+        consoleError('error');
         await this.mark(file);
         break;
     }
-    log('deleting input file')
+    consoleLog('deleting input file')
     await fsp.unlink(inputPath);
   }
   async mark(file, error) {

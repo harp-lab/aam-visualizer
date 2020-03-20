@@ -56,13 +56,12 @@ class Server {
 
     app.listen(Consts.PORT, function() {
       const address = chalk.blueBright(`${Consts.HOSTNAME}/${Consts.PORT}`);
-      consoleLog(Consts.LOG_TYPE_INIT, `server listening at ${address}`)
+      consoleLog(Consts.INIT_LOG_TYPE, `server listening at ${address}`)
     });
   }
 
   /** initialize watcher process */
   initWatcher() {
-    consoleLog(Consts.LOG_TYPE_INIT, `starting watcher`);
     const options = { stdio: [0, 1, 2, 'ipc'] };
     const watcher = child_process.fork(Consts.WATCHER_PATH, [], options);
     watcher.on('message', async data => {
@@ -85,7 +84,7 @@ class Server {
       }
     });
     watcher.on('close', code => {
-      consoleLog(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
+      consoleError(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
     });
     
@@ -120,7 +119,7 @@ class Server {
    */
   async createProject(userId) {
     const projectId = `${Date.now()}`;
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - create`);
+    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} creating`);
     const project = new Project(userId);
     this.projects[projectId] = project;
     await this.db.setProject(projectId, project.export());
@@ -132,7 +131,7 @@ class Server {
    * @param {Object} data project data
    */
   async saveProject(projectId, data) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - save`);
+    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} saving`);
     const project  = this.projects[projectId];
     const { name, analysisInput } = data;
     switch (project.status) {
@@ -151,7 +150,7 @@ class Server {
    * @param {String} projectId project id
    */
   async deleteProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - delete`);
+    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} deleting`);
     await this.db.deleteProject(projectId);
     delete this.projects[projectId];
   }
@@ -160,11 +159,11 @@ class Server {
    * @param {String} projectId project id
    */
   async processProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - process`);
+    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} processing`);
     const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.empty:
-        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} - cannot process empty project`);
+        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} empty`);
         break;
       case project.STATUSES.edit:
         project.status = project.STATUSES.process;
@@ -173,7 +172,7 @@ class Server {
         this.notifyWatcher(projectId);
         break;
       default:
-        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} - immutable`);
+        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} immutable`);
         break;
     }
   }
@@ -182,14 +181,14 @@ class Server {
    * @param {String} projectId project id
    */
   async cancelProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - cancel`);
+    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} canceling`);
     const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.process:
         this.cancelWatcher(projectId);
         break;
       default:
-        consoleError(Cosnts.LOG_TYPE_PROJ, `${projectId} - cannot cancel project not processing`)
+        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} ${project.status} status`)
         break;
     }
   }

@@ -1,5 +1,5 @@
 const Consts = require('../Consts.js');
-const G = require('../Global.js');
+const { consoleError } = require('../Global.js');
 
 // variables allowed for data import/export access
 const allowedDataKeys = [
@@ -54,7 +54,7 @@ class Project {
           this.status = this.STATUSES.edit;
         break;
       default:
-        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project analysis input import rejected - immutable');
+        consoleError(Consts.LOG_TYPE_SYS, 'project analysis input import rejected - immutable');
         break;
     }
   }
@@ -69,7 +69,7 @@ class Project {
         this.status = this.STATUSES.done;
         break;
       default:
-        G.log(Consts.LOG_TYPE_SYS, 'ERROR: project analysis output import rejected - immutable');
+        consoleError(Consts.LOG_TYPE_SYS, 'project analysis output import rejected - immutable');
         break;
     }
   }

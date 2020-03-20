@@ -3,10 +3,10 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 
-const Consts = require('../Consts');
-const { consoleLog } = require('../Global');
+const { SERVER_DIR, INIT_DATA, DATA_LOG_TYPE } = require('../Consts');
+const { consoleLog, consoleError } = require('../Global');
 
-const DATA_DIR = path.resolve(Consts.SERVER_DIR, 'data');
+const DATA_DIR = path.resolve(SERVER_DIR, 'data');
 const EDIT_DIR = path.resolve(DATA_DIR, 'save');
 const PROCESS_DIR = path.resolve(DATA_DIR, 'input');
 const DONE_DIR = path.resolve(DATA_DIR, 'output');
@@ -23,13 +23,13 @@ class Database {
 
   /** initialize instance */
   async init() {
-    if (Consts.INIT_DATA) {
-      consoleLog(Consts.LOG_TYPE_INIT, 'clear data');
+    if (INIT_DATA) {
+      consoleLog(DATA_LOG_TYPE, 'clear data');
       await fse.remove(DATA_DIR);
     }
 
     // ensure data directories
-    consoleLog(Consts.LOG_TYPE_INIT, 'ensure directories');
+    consoleLog(DATA_LOG_TYPE, 'ensure directories');
     const options = { recursive: true };
     await fsp.mkdir(DONE_DIR, options);
     await fsp.mkdir(PROCESS_DIR, options);
@@ -83,10 +83,10 @@ class Database {
     } catch(err) {
       switch (err.code) {
         case 'ENOENT':
-          consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
+          consoleError(DATA_LOG_TYPE, `project ${projectId} not found`);
           break;
         default:
-          consoleLog(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail (${err.code})`);
+          consoleError(DATA_LOG_TYPE, `project ${projectId} read fail (${err.code})`);
           break;
       }
     } finally {
