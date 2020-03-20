@@ -1,5 +1,7 @@
 const express = require('express');
 
+const { ENGINE_DISABLED } = require('../../Consts');
+
 /**
  * generate project request express router
  * @param {Object} server {Server} instance
@@ -77,6 +79,11 @@ function ProjectRouter(server) {
 
   /** process project */
   router.post('/process', async (req, res) => {
+    if (ENGINE_DISABLED) {
+      res.status(405).end();
+      return;
+    }
+
     const projectId = req.params.projectId;
     const project = server.projects[projectId];
     switch (project.status) {
@@ -94,6 +101,11 @@ function ProjectRouter(server) {
 
   /** cancel project processing */
   router.post('/cancel', async (req, res) => {
+    if (ENGINE_DISABLED) {
+      res.status(405).end();
+      return;
+    }
+    
     const projectId = req.params.projectId;
     const project = server.projects[projectId];
     switch (project.status) {
@@ -105,7 +117,7 @@ function ProjectRouter(server) {
         res.status(409).end();
         break;
       default:
-        res.status(412).end();
+        res.status(406).end();
         break;
     }
   });
@@ -116,7 +128,7 @@ function ProjectRouter(server) {
     const project = server.projects[projectId];
     switch (project.status) {
       case project.STATUSES.process:
-        res.status(412).end();
+        res.status(409).end();
         break;
       default:
         await server.deleteProject(projectId);

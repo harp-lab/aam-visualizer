@@ -28,7 +28,6 @@ function consoleError(content) {
 
 // create nodemon instance
 const devServer = nodemon({
-
   script: SERVER_DIR,
   delay: '1500',
   watch: [

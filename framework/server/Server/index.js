@@ -2,7 +2,13 @@ const child_process = require('child_process');
 const chalk = require('chalk');
 const express = require('express');
 
-const Consts = require('../Consts');
+const {
+  HOSTNAME, PORT,
+  ENGINE_DISABLED,
+  WATCHER_ACTION_PROCESS, WATCHER_ACTION_CANCEL, WATCHER_PATH,
+  BUILD_DIR,
+  LOG_TYPE_HTTP, INIT_LOG_TYPE, LOG_TYPE_PROJ, LOG_TYPE_WATCHER, ENGINE_LOG_TYPE, LOG_TYPE_SYS
+} = require('../Consts');
 const { consoleLog, consoleError } = require('../Global');
 
 const Project = require('./Project');
@@ -37,16 +43,16 @@ class Server {
   initWebServer() {
     const app = express();
     app.use(express.json());
-    app.use(express.static(Consts.BUILD_DIR));
+    app.use(express.static(BUILD_DIR));
     
     // logging
     app.all('*', (req, res, next) => {
-      const path = chalk.bold(req.path);
+      const path = req.path;
       const method = chalk.yellowBright(req.method);
-      consoleLog(Consts.LOG_TYPE_HTTP, `${path} ${method}`);
+      consoleLog(LOG_TYPE_HTTP, `${path} ${method}`);
       res.on('finish', function() {
         const status = chalk.bold(res.statusCode);
-        consoleLog(Consts.LOG_TYPE_HTTP, `${path} ${method} (${status})`)
+        consoleLog(LOG_TYPE_HTTP, `${path} ${method} (${status})`)
       });
       next();
     });
@@ -54,27 +60,35 @@ class Server {
     // api request routing
     app.use('/api/:userId', UserRouter(this));
 
-    app.listen(Consts.PORT, function() {
-      const address = chalk.blueBright(`${Consts.HOSTNAME}/${Consts.PORT}`);
-      consoleLog(Consts.INIT_LOG_TYPE, `server listening at ${address}`)
+    app.listen(PORT, function() {
+      const address = chalk.blueBright(`${HOSTNAME}/${PORT}`);
+      consoleLog(INIT_LOG_TYPE, `server listening at ${address}`)
     });
   }
 
   /** initialize watcher process */
   initWatcher() {
+    // reject if engine disabled
+    if (ENGINE_DISABLED) {
+      const engineStatus = chalk.yellowBright('undefined engine');
+      const analysisAPIStatus = chalk.bold('analysis api disabled');
+      consoleLog(INIT_LOG_TYPE, `${engineStatus}, ${analysisAPIStatus}`);
+      return;
+    }
+
     const options = { stdio: [0, 1, 2, 'ipc'] };
-    const watcher = child_process.fork(Consts.WATCHER_PATH, [], options);
+    const watcher = child_process.fork(WATCHER_PATH, [], options);
     watcher.on('message', async data => {
       const action = data.action;
       switch (action) {
-        case Consts.WATCHER_ACTION_PROCESS: {
+        case WATCHER_ACTION_PROCESS: {
           this.db.setStage(data.id, this.db.STAGES.done);
           const projectData = await this.db.getProject(data.id);
           const project = this.projects[data.id];
           project.import(projectData);
           break;
         }
-        case Consts.WATCHER_ACTION_CANCEL: {
+        case WATCHER_ACTION_CANCEL: {
           this.db.setStage(data.id, this.db.STAGES.edit);
           const projectData = await this.db.getProject(data.id);
           const project = this.projects[data.id];
@@ -84,7 +98,7 @@ class Server {
       }
     });
     watcher.on('close', code => {
-      consoleError(Consts.LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
+      consoleError(LOG_TYPE_WATCHER, `crashed (${code}) - restarting`);
       this.initWatcher();
     });
     
@@ -98,7 +112,7 @@ class Server {
   notifyWatcher(fileId) {
     this.watcher.send({
       id: fileId,
-      action: Consts.WATCHER_ACTION_PROCESS
+      action: WATCHER_ACTION_PROCESS
     });
   }
 
@@ -109,7 +123,7 @@ class Server {
   cancelWatcher(fileId) {
     this.watcher.send({
       id: fileId,
-      action: Consts.WATCHER_ACTION_CANCEL
+      action: WATCHER_ACTION_CANCEL
     });
   }
 
@@ -119,7 +133,10 @@ class Server {
    */
   async createProject(userId) {
     const projectId = `${Date.now()}`;
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} creating`);
+
+    const status = chalk.bold('creating');
+    consoleLog(LOG_TYPE_PROJ, `${projectId} ${status}`);
+
     const project = new Project(userId);
     this.projects[projectId] = project;
     await this.db.setProject(projectId, project.export());
@@ -131,7 +148,9 @@ class Server {
    * @param {Object} data project data
    */
   async saveProject(projectId, data) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} saving`);
+    const status = chalk.bold('saving');
+    consoleLog(LOG_TYPE_SYS, `project ${projectId} ${status}`);
+
     const project  = this.projects[projectId];
     const { name, analysisInput } = data;
     switch (project.status) {
@@ -150,7 +169,9 @@ class Server {
    * @param {String} projectId project id
    */
   async deleteProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} deleting`);
+    const status = chalk.bold('deleting');
+    consoleLog(LOG_TYPE_PROJ, `${projectId} ${status}`);
+
     await this.db.deleteProject(projectId);
     delete this.projects[projectId];
   }
@@ -159,11 +180,20 @@ class Server {
    * @param {String} projectId project id
    */
   async processProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} processing`);
+    // reject if engine disabled
+    if (ENGINE_DISABLED) {
+      const errorStatus = chalk.redBright('process rejected');
+      consoleError(ENGINE_LOG_TYPE, `project ${projectId} ${errorStatus} - disabled engine`);
+      return;
+    }
+
+    const status = chalk.bold('processing');
+    consoleLog(LOG_TYPE_PROJ, `${projectId} ${status}`);
+    
     const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.empty:
-        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} empty`);
+        consoleError(LOG_TYPE_PROJ, `${projectId} empty`);
         break;
       case project.STATUSES.edit:
         project.status = project.STATUSES.process;
@@ -172,7 +202,7 @@ class Server {
         this.notifyWatcher(projectId);
         break;
       default:
-        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} immutable`);
+        consoleError(LOG_TYPE_PROJ, `${projectId} immutable`);
         break;
     }
   }
@@ -181,14 +211,23 @@ class Server {
    * @param {String} projectId project id
    */
   async cancelProject(projectId) {
-    consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} canceling`);
+    // reject if engine disabled
+    if (ENGINE_DISABLED) {
+      const errorStatus = chalk.redBright('cancel rejected');
+      consoleError(ENGINE_LOG_TYPE, `project ${projectId} ${errorStatus} - disabled engine`);
+      return;
+    }
+
+    const status = chalk.bold('canceling');
+    consoleLog(LOG_TYPE_PROJ, `${projectId} ${status}`);
+
     const project = this.projects[projectId];
     switch (project.status) {
       case project.STATUSES.process:
         this.cancelWatcher(projectId);
         break;
       default:
-        consoleError(Consts.LOG_TYPE_PROJ, `${projectId} ${project.status} status`)
+        consoleError(LOG_TYPE_PROJ, `${projectId} ${project.status} status`)
         break;
     }
   }
