@@ -1,15 +1,18 @@
 const path = require('path');
+const chalk = require('chalk');
 const nodemon = require('nodemon');
 
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 
-const NODEMON_CONSOLE_TAG = '\x1b[90m[nodemon]\x1b[0m';
+const SERVER_DIR = path.resolve(fconfig.FRAMEWORK_DIR, 'server');
+const NODEMON_LOG_TAG = chalk.blackBright('[ndmn]');
 
 /**
  * @param {String} content message content
  */
 function consoleLog(content) {
-  const tag = `\x1b[94mi ${NODEMON_CONSOLE_TAG}`;
+  const symbol = chalk.blue('i');
+  const tag = `${symbol} ${NODEMON_LOG_TAG}`;
   console.log(`${tag} ${content}`);
 }
 
@@ -17,28 +20,41 @@ function consoleLog(content) {
  * @param {String} content message content
  */
 function consoleError(content) {
-  const tag = `\x1b[91m! ${NODEMON_CONSOLE_TAG}`;
-  const error = '\x1b[91m[error]'
+  const symbol = chalk.red('!');
+  const tag = `${symbol} ${NODEMON_LOG_TAG}`;
+  const error = chalk.redBright('[error]');
   console.error(`${tag} ${content} ${error}`);
 }
 
 // create nodemon instance
 const devServer = nodemon({
-  script: path.resolve(fconfig.FRAMEWORK_DIR, 'server'),
+
+  script: SERVER_DIR,
+  delay: '1000',
   watch: [
-    'framework/server'
+    SERVER_DIR
+  ],
+  ignore: [
+    path.resolve(SERVER_DIR, 'data')
   ],
   env: {
     'NODE_ENV': 'development'
   }
 });
 devServer.on('start', () => consoleLog('server started'));
+devServer.on('crash', () => consoleError('server crashed'));
 devServer.on('restart', function(files) {
   let message = 'server restarting...';
   for (const filePath of files) {
     const relPath = `./${path.relative(fconfig.ROOT_DIR, filePath)}`;
-    message += `\n  \x1b[1m${relPath}`;
+    const coloredPath = chalk.bold(relPath);
+    message += `\n  ${coloredPath}`;
   }
   consoleLog(message);
 });
-devServer.on('crash', () => consoleError('server crashed'));
+devServer.on('quit', function() {
+  consoleLog('monitor quitted');
+  process.exit();
+});
+
+consoleLog('monitor started');

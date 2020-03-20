@@ -26,6 +26,7 @@ exports.HOSTNAME = fconfig.SERVER_HOSTNAME;
 exports.PORT = fconfig.SERVER_PORT;
 
 // log
+exports.SERVER_LOG_TAG = '\x1b[90m[srvr]\x1b[0m';
 exports.LOG_TYPE_INIT = 'init';
 exports.LOG_TYPE_HTTP = 'http';
 exports.LOG_TYPE_SYS = 'syst';

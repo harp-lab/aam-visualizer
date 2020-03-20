@@ -1,4 +1,5 @@
 const child_process = require('child_process');
+const chalk = require('chalk');
 const express = require('express');
 
 const Consts = require('../Consts');
@@ -40,17 +41,23 @@ class Server {
     
     // logging
     app.all('*', (req, res, next) => {
-      const path = req.path;
-      const method = req.method;
+      const path = chalk.bold(req.path);
+      const method = chalk.yellowBright(req.method);
       consoleLog(Consts.LOG_TYPE_HTTP, `${path} ${method}`);
-      res.on('finish', () => consoleLog(Consts.LOG_TYPE_HTTP, `${path} ${method} ${res.statusCode}`));
+      res.on('finish', function() {
+        const status = chalk.bold(res.statusCode);
+        consoleLog(Consts.LOG_TYPE_HTTP, `${path} ${method} (${status})`)
+      });
       next();
     });
 
     // api request routing
     app.use('/api/:userId', UserRouter(this));
 
-    app.listen(Consts.PORT, () => consoleLog(Consts.LOG_TYPE_INIT, `http server listening on port ${Consts.PORT}`));
+    app.listen(Consts.PORT, function() {
+      const address = chalk.blueBright(`${Consts.HOSTNAME}/${Consts.PORT}`);
+      consoleLog(Consts.LOG_TYPE_INIT, `server listening at ${address}`)
+    });
   }
 
   /** initialize watcher process */
