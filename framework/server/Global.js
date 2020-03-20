@@ -1,17 +1,37 @@
 const Consts = require('./Consts');
 
-class Global {
-  static log(type, content) {
-    switch (type) {
-      case Consts.LOG_TYPE_PROJ:
-        content = `[${Consts.LOG_TYPE_SYS}] project ${content}`;
-        break;
-      default:
-        content = `[${type}] ${content}`;
-        break;
-    }
-    console.log(content);
-  }
+exports.consoleLog = function(type, content) {
+  const msgTag = messageTag(type);
+  const msgContent = messageContent(type, content);
+  console.log(`${msgTag} ${msgContent}`);
 }
 
-module.exports = Global;
+exports.consoleError = function(type, content) {
+  const msgTag = messageTag(type);
+  const msgContent = messageContent(type, content);
+  console.error(`${msgTag} ERROR: ${msgContent}`);
+}
+
+function messageTag(type) {
+  switch (type) {
+    case Consts.LOG_TYPE_PROJ:
+      tag = `[${Consts.LOG_TYPE_SYS}]`;
+      break;
+    default:
+      tag = `[${type}]`;
+      break;
+  }
+  return tag;
+}
+
+function messageContent(type, content) {
+  switch (type) {
+    case Consts.LOG_TYPE_PROJ:
+      content = `project ${content}`;
+      break;
+    default:
+      content = `${content}`;
+      break;
+  }
+  return content
+}

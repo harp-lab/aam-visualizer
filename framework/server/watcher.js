@@ -4,9 +4,9 @@ const fsp = fs.promises;
 const path = require('path');
 const Consts = require('./Consts');
 const { fext } = Consts;
-const G = require('./Global');
+const { consoleLog } = require('./Global');
 
-const log = content => G.log(Consts.LOG_TYPE_WATCHER, content);
+const log = content => consoleLog(Consts.LOG_TYPE_WATCHER, content);
 
 class Watcher {
   constructor() {

@@ -13,18 +13,13 @@
     "fextDir": "fext",
     "fextConfig": "fext.config.js"
   },
-  "nodemonConfig": {
-    "watch": [
-      "framework/server"
-    ]
-  },
   "scripts": {
     "build": "webpack --config $npm_package_config_frameworkDir/webpack.config.js",
     "release": "npm version patch --no-git-tag-version && npm run build",
-    "start": "node $npm_package_config_frameworkDir/server/main.js",
-    "dev": "npm run dev-client & nodemon -x \"npm run dev-server\"",
+    "start": "node $npm_package_config_frameworkDir/server",
+    "dev": "npm run dev-client & npm run dev-server",
     "dev-client": "webpack-dev-server --config $npm_package_config_frameworkDir/webpack.config.js",
-    "dev-server": "NODE_ENV=development npm run start",
+    "dev-server": "node $npm_package_config_frameworkDir/nodemon.js",
     "docs": "jsdoc -c $npm_package_config_frameworkDir/jsdoc.config.js"
   },
   "author": "",

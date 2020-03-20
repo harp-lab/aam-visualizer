@@ -3,7 +3,8 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 
-const Consts = require('../Consts.js');
+const Consts = require('../Consts');
+const { consoleLog } = require('../Global');
 
 const DATA_DIR = path.resolve(Consts.SERVER_DIR, 'data');
 const EDIT_DIR = path.resolve(DATA_DIR, 'save');
@@ -18,15 +19,31 @@ class Database {
       done: 'done'
     };
     this.projects = {};
-
   }
 
+  /** initialize instance */
   async init() {
+    if (Consts.INIT_DATA) {
+      consoleLog(Consts.LOG_TYPE_INIT, 'clear data');
+      await fse.remove(DATA_DIR);
+    }
+
+    // ensure data directories
+    consoleLog(Consts.LOG_TYPE_INIT, 'ensure directories');
+    const options = { recursive: true };
+    await fsp.mkdir(DONE_DIR, options);
+    await fsp.mkdir(PROCESS_DIR, options);
+    await fsp.mkdir(EDIT_DIR, options);
+
     for (const stage of Object.values(this.STAGES)) {
       await this.initStage(stage);
     }
   }
 
+  /**
+   * read projects in stage directory and store project stage
+   * @param {String} stage project stage
+   */
   async initStage(stage) {
     const path = this.stagePath(stage);
     const fileList = await fsp.readdir(path);
@@ -66,10 +83,10 @@ class Database {
     } catch(err) {
       switch (err.code) {
         case 'ENOENT':
-          G.log(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
+          consoleLog(Consts.LOG_TYPE_PROJ, `${projectId} - not found`);
           break;
         default:
-          G.log(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail (${err.code})`);
+          consoleLog(Consts.LOG_TYPE_SYS, `ERROR: project ${projectId} - read fail (${err.code})`);
           break;
       }
     } finally {
@@ -116,6 +133,10 @@ class Database {
     this.projects[projectId] = stage;
   }
 
+  /**
+   * 
+   * @param {String} projectId project id
+   */
   async deleteProject(projectId) {
     const stage = this.getStage(projectId);
     const path = this.path(projectId, stage);
@@ -131,6 +152,10 @@ class Database {
     return this.projects[projectId];
   }
 
+  /**
+   * @param {String} projectId project id
+   * @param {String} stage project stage
+   */
   setStage(projectId, stage) {
     this.projects[projectId] = stage;
   }
@@ -157,6 +182,10 @@ class Database {
     return path.resolve(dirPath, projectId);
   }
 
+  /**
+   * @param {String} stage project stage
+   * @returns {String} stage directory path
+   */
   stagePath(stage) {
     let path;
     switch (stage) {

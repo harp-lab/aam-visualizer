@@ -80,5 +80,6 @@ module.exports = {
   plugins: [
     HTMLWebpackPluginConfig,
     EnvironmentPluginConfig
-  ]
+  ],
+  stats: 'minimal'
 };
