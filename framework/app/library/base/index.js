@@ -8,6 +8,10 @@ export { default as IconToggle } from './IconToggle';
 export { default as Link } from './Link';
 export { default as Loading } from './Loading';
 export { default as Pane } from './Pane';
+export { default as PaneContent } from './PaneContent';
+export { default as PaneContext } from './PaneContext';
+export { default as PaneToolbar } from './PaneToolbar'
+export { default as PaneToolbarDrawer } from './PaneToolbarDrawer';
 export { default as PaneMessage } from './PaneMessage';
 export { default as PanelTable } from './PanelTable';
 export { default as PanelViewer } from './PanelViewer';

@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Loading } from 'library/base';
 import { downloadProject } from 'store/apis';
@@ -9,8 +9,6 @@ import {
 } from 'store/consts';
 
 import { EditorLayout, ProjectLayout } from 'extensions/layouts';
-
-import Toolbar from './Toolbar';
 
 function Project() {
   const projectId = useSelector(getSelectedProjectId);
@@ -65,12 +63,7 @@ function VisualView() {
   switch (clientStatus) {
     case CLIENT_DOWNLOADED_STATUS:
     case CLIENT_LOCAL_STATUS:
-      view = (
-        <Fragment>
-          <Toolbar>
-            <ProjectLayout />
-          </Toolbar>
-        </Fragment>);
+      view = <ProjectLayout />;
       break;
     default:
       view = <Loading status='Downloading' />;
