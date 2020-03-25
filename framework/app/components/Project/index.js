@@ -1,6 +1,6 @@
-import React, { Fragment, useState, useEffect, useRef, useCallback } from 'react';
+import React, { Fragment, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Loading, Pane } from 'library/base';
+import { Loading } from 'library/base';
 import { downloadProject } from 'store/apis';
 import { getSelectedProjectId, getProjectServerStatus, getProjectClientStatus } from 'store/selectors';
 import {
@@ -60,11 +60,6 @@ function Project() {
 
 function VisualView() {
   const clientStatus = useSelector(getProjectClientStatus);
-  const [toolbarWidth, setToolbarWidth] = useState(0);
-  const test = useCallback(node => {
-    if (node)
-      setToolbarWidth(node.children[0].offsetWidth);
-  }, []);
 
   let view;
   switch (clientStatus) {
@@ -72,10 +67,9 @@ function VisualView() {
     case CLIENT_LOCAL_STATUS:
       view = (
         <Fragment>
-          <Pane style={{width: `calc(100% - ${toolbarWidth}px)`}} >
+          <Toolbar>
             <ProjectLayout />
-          </Pane>
-          <Toolbar ref={ test } />
+          </Toolbar>
         </Fragment>);
       break;
     default:
