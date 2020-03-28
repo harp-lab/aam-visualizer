@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store/consts';
+import { NODE_ENV, DEV_ENV, LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store/consts';
 
 export const getUser = state => state.userId;
 export const getSelectedProjectId = state => state.selectedProjectId;
@@ -17,3 +17,11 @@ export const getView = createSelector(
 export const getTitle = state => state.title;
 
 export const getLabel = item => item.label;
+
+/**
+ * @returns {Boolean} dev env status
+ */
+export const isDevEnv = createSelector(
+  state => state,
+  state => NODE_ENV === DEV_ENV
+);

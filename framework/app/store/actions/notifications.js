@@ -1,8 +1,10 @@
+import store from 'store';
 import {
   QUEUE_SNACKBAR, DEQUEUE_SNACKBAR,
   SET_LOADING,
   SET_DIALOG
 } from 'store/actionTypes';
+import { isDevEnv } from 'store/selectors';
 
 export const queueSnackbar = text => ({
   type: QUEUE_SNACKBAR,
@@ -18,7 +20,10 @@ export const dequeueSnackbar = () => ({
  */
 export function consoleDebug(message) {
   return function(dispatch) {
-    console.debug(`[debug] ${message}`)
+    const state = store.getState();
+    const devEnv = isDevEnv(state);
+    if (devEnv)
+      console.debug(`[debug] ${message}`)
   };
 }
 
@@ -28,7 +33,10 @@ export function consoleDebug(message) {
  */
 export function consoleWarn(message) {
   return function(dispatch) {
-    console.warn(`[warn] ${message}`)
+    const state = store.getState();
+    const devEnv = isDevEnv(state);
+    if (devEnv)
+      console.warn(`[warn] ${message}`)
   };
 }
 
@@ -44,6 +52,7 @@ export function consoleError(message) {
 
 /**
  * @param {String} functionName function name
+ * @returns {Function} dispatch
  */
 export function warnDeprecate(functionName) {
   return function(dispatch) {

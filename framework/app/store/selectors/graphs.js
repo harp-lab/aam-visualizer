@@ -1,5 +1,4 @@
 import { createSelector } from 'reselect';
-import { warnDeprecate } from 'store/actions';
 import { getProjectAnalysisOutput, getProjectMetadata } from './projects';
 
 export const getGraphs = createSelector(
@@ -107,33 +106,6 @@ export const getViewedGraphIds = createSelector(
         viewedGraphs[graphId] = true;
     }
     return viewedGraphs;
-  }
-);
-
-/** deprecated */
-export const getMainGraphId = createSelector(
-  state => getProjectMetadata(state),
-  metadata => {
-    warnDeprecate('getMainGraphId');
-    return metadata.mainGraphId || 'funcs';
-  }
-);
-
-/** deprecated */
-export const getSubGraphId = createSelector(
-  state => getSelectedNodes(state, getMainGraphId(state)),
-  state => getProjectAnalysisOutput(state),
-  (selectedNodes, analysisOutput) => {
-    warnDeprecate('getSubGraphId');
-    let subGraphId = 'states';
-    if (selectedNodes.length > 0) {
-      const nodeId = selectedNodes[0];
-      const { form } = analysisOutput.funcs[nodeId];
-      const finalForms = ['halt', 'not found', 'non-func', 'unknown'];
-      if (!finalForms.includes(form))
-        subGraphId = nodeId;
-    }
-    return subGraphId;
   }
 );
 

@@ -4,7 +4,7 @@ import { Typography } from '@material-ui/core';
 import { ThemeProvider, withTheme, makeStyles } from '@material-ui/styles';
 import { DeleteDialog, RenameDialog } from 'components/dialogs';
 import { LOGIN_VIEW, LIST_VIEW, PROJECT_VIEW } from 'store/consts';
-import { getView } from 'store/selectors';
+import { getView, isDevEnv } from 'store/selectors';
 
 import AppBar from './AppBar';
 import Login from './Login';
@@ -21,6 +21,7 @@ const useStyles = makeStyles(theme => ({
 
 function App() {
   const view = useSelector(getView);
+  const devEnv = useSelector(isDevEnv);
 
   let viewElem;
   switch (view) {
@@ -53,7 +54,7 @@ function App() {
           height: '100%',
           overflow: 'hidden'
         }}>
-        { (process.env.NODE_ENV == 'development' && <Message content='Development Server'/>) }
+        { (devEnv && <Message content='Development Server'/>) }
         <AppBar />
         { viewElem }
         <Snackbar />
