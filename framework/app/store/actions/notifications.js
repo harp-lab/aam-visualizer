@@ -14,16 +14,27 @@ export const dequeueSnackbar = () => ({
   type: DEQUEUE_SNACKBAR
 });
 
+
 /**
  * @param {String} message 
  * @returns {Function} dispatch
  */
-export function consoleDebug(message) {
+export function consoleLog(message) {
+  return function(dispatch) {
+    console.log(`${message}`)
+  };
+}
+
+/**
+ * @param {String} message 
+ * @returns {Function} dispatch
+ */
+export function consoleInfo(message) {
   return function(dispatch) {
     const state = store.getState();
     const devEnv = isDevEnv(state);
     if (devEnv)
-      console.debug(`[debug] ${message}`)
+      console.info(`${message}`)
   };
 }
 
@@ -36,7 +47,7 @@ export function consoleWarn(message) {
     const state = store.getState();
     const devEnv = isDevEnv(state);
     if (devEnv)
-      console.warn(`[warn] ${message}`)
+      console.warn(`${message}`)
   };
 }
 
@@ -46,7 +57,7 @@ export function consoleWarn(message) {
  */
 export function consoleError(message) {
   return function(dispatch) {
-    console.error(`[error] ${message}`)
+    console.error(`${message}`)
   };
 }
 
