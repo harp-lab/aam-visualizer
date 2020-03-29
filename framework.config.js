@@ -7,6 +7,7 @@ exports.FRAMEWORK_DIR = path.resolve(exports.ROOT_DIR, package.config.frameworkD
 exports.FEXT_DIR = path.resolve(exports.ROOT_DIR, package.config.fextDir);
 exports.FEXT_CONFIG = path.resolve(exports.FEXT_DIR, package.config.fextConfig);
 exports.ENGINE_DIR = path.resolve(exports.FEXT_DIR, 'engine');
+exports.WEBPACK_CONFIG = path.resolve(exports.FEXT_DIR, 'webpack.config.js');
 
 exports.BUILD_DIR = path.resolve(exports.ROOT_DIR, 'build');
 

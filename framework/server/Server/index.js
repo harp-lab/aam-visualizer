@@ -61,7 +61,7 @@ class Server {
     app.use('/api/:userId', UserRouter(this));
 
     app.listen(PORT, function() {
-      const address = chalk.blueBright(`${HOSTNAME}/${PORT}`);
+      const address = chalk.blueBright(`${HOSTNAME}:${PORT}`);
       consoleLog(INIT_LOG_TYPE, `server listening at ${address}`)
     });
   }

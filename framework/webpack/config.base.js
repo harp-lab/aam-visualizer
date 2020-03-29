@@ -7,9 +7,7 @@ const package = require(path.resolve(process.cwd(), 'package.json'));
 const appDir = path.resolve(fconfig.FRAMEWORK_DIR, 'app');
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
-  template: path.resolve(appDir, 'index.html'),
-  filename: 'index.html',
-  inject: 'body'
+  template: path.resolve(appDir, 'template.js')
 });
 const EnvironmentPluginConfig = new EnvironmentPlugin({
   VERSION: package.version

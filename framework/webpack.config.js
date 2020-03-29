@@ -1,6 +1,5 @@
 const path = require('path');
 const merge = require('webpack-merge');
-
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 
 const target = process.env.npm_lifecycle_event;
@@ -14,6 +13,6 @@ switch (target) {
     break;
 }
 
-const configExtension = path.resolve(fconfig.FEXT_DIR, 'webpack.config.js');
+const { config: fextWebpackConfig } = require(fconfig.WEBPACK_CONFIG);
 
-module.exports = merge(require('./webpack/config.base.js'), config, require(configExtension));
+module.exports = merge(require('./webpack/config.base.js'), config, fextWebpackConfig);
