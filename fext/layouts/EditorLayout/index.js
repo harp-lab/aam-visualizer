@@ -7,6 +7,7 @@ import { getSelectedProjectId, getProject, getProjectServerStatus } from 'store/
 
 import codemirror from 'codemirror/lib/codemirror';
 import 'codemirror/mode/scheme/scheme';
+import './styles.scss';
 
 function EditorLayout(props) {
   const { edit = true, error } = props;
