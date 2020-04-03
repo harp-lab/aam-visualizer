@@ -9,7 +9,6 @@ import { ErrorBoundary, PaneContext, SplitPaneContext } from 'library/base';
  */
 function Pane(props) {
   const { overflow, children, style } = props;
-  const { height, width } = useContext(SplitPaneContext);
   const [toolbarWidth, setToolbarWidth] = useState(0);
   const updateToolbar = useCallback(elem => {
     if (elem)
@@ -34,34 +33,70 @@ function Pane(props) {
     content = React.cloneElement(content, { style: { width: `calc(100% - ${toolbarWidth}px)` } });
     toolbar = React.cloneElement(toolbar, { ref: updateToolbar });
     elem = (
-      <PaneContext.Provider
-        value={{
-          toolbarWidth
+      <ContentContainer
+        overflow={ overflow }
+        style={{
+          flexDirection: 'row'
         }}>
-        { content }
-        { toolbar }
-      </PaneContext.Provider>);
+        <PaneContext.Provider
+          value={{
+            toolbarWidth
+          }}>
+          { content }
+          { toolbar }
+        </PaneContext.Provider>
+      </ContentContainer>);
   } else {
     // default output
-    elem = children;
+    elem = (
+      <ContentContainer
+        overflow={ overflow }
+        style={ style }>
+        { children }
+      </ContentContainer>);
   }
+
+  return elem;
+}
+
+export default Pane;
+
+/**
+ * @param {Object} props 
+ * @param {String} [props.overflow = 'hidden']
+ * @param {String} [props.height = '100%']
+ * @param {String} [props.width = '100%']
+ * @param {Object} [props.style]
+ */
+function ContentContainer(props) {
+  const {
+    overflow = 'hidden',
+    children, style } = props;
+  const {
+    height = '100%',
+    width = '100%'
+  } = useContext(SplitPaneContext);
 
   return (
     <div
       style={{
         ...{
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          height: height ? height : '100%',
-          width: width ? width : '100%',
-          overflow: overflow ? overflow : 'hidden'
+          height, width,
+          overflow
         },
         ...style
       }}>
-      <ErrorBoundary>
-        { elem }
-      </ErrorBoundary>
+      <SplitPaneContext.Provider
+        value={{
+          height: '100%',
+          width: '100%'
+        }}>
+        <ErrorBoundary>
+          { children }
+        </ErrorBoundary>
+      </SplitPaneContext.Provider>
     </div>);
 }
-
-export default Pane;

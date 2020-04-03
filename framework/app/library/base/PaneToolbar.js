@@ -1,10 +1,11 @@
 import React, { Fragment, forwardRef } from 'react';
-import { Drawer as MUIDrawer } from '@material-ui/core';
+import { Drawer as MUIDrawer, Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles(theme => ({
-  appbar: theme.mixins.toolbar,
-  message: theme.mixins.message
+  toolbar: {
+    zIndex: theme.zIndex.drawer + 1
+  },
 }));
 
 /**
@@ -13,29 +14,16 @@ const useStyles = makeStyles(theme => ({
  * @param {Function} ref ref callback passed to Paper
  */
 function PaneToolbar(props, ref) {
-
-  // TODO: make toolbar and drawers local to panel (nested within)
-
   const { children } = props;
+  const classes = useStyles();
 
   return (
-      <MUIDrawer
-        anchor='right'
-        variant='permanent'
-        open={ true }
-        PaperProps={{ ref }}>
-        <DrawerPadding />
-        { children }
-      </MUIDrawer>);
+    <Paper
+      square
+      ref={ ref }
+      classes={{ root: classes.toolbar }}>
+      { children }
+    </Paper>);
 }
 
 export default forwardRef(PaneToolbar);
-
-function DrawerPadding() {
-  const classes = useStyles();
-  return (
-    <Fragment>
-      { (process.env.NODE_ENV == 'development' && <div className={ classes.message }/>) }
-      <div className={ classes.appbar } />
-    </Fragment>);
-}

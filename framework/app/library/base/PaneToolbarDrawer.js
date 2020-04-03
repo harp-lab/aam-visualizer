@@ -1,11 +1,17 @@
-import React, { Fragment, useContext } from 'react';
-import { Drawer as MUIDrawer } from '@material-ui/core';
+import React, { useContext } from 'react';
+import { Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { ErrorBoundary, PaneContext } from 'library/base';
 
 const useStyles = makeStyles(theme => ({
   appbar: theme.mixins.toolbar,
-  message: theme.mixins.message
+  message: theme.mixins.message,
+  drawer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: theme.zIndex.drawer
+  }
 }));
 
 /**
@@ -15,35 +21,23 @@ const useStyles = makeStyles(theme => ({
 function PaneToolbarDrawer(props) {
   const { open, children } = props;
   const { toolbarWidth } = useContext(PaneContext);
-
-  // TODO: make toolbar and drawers local to panel (nested within)
-  // TODO: implement user draggable drawer width
+  const classes = useStyles();
+  if (!open)
+    return null;
 
   return (
-    <MUIDrawer
-      anchor='right'
-      variant='persistent'
-      open={ open }
-      PaperProps={{
-        style: {
-          width: '50vw',
-          marginRight: toolbarWidth
-        }
-      }} >
-      <DrawerPadding />
+    <Paper
+      square
+      classes={{ root: classes.drawer }} 
+      style={{
+        width: `calc(100% - ${toolbarWidth}px)`,
+        height: '100%',
+        marginRight: toolbarWidth
+      }}>
       <ErrorBoundary>
         { children }
       </ErrorBoundary>
-    </MUIDrawer>);
-}
-
-function DrawerPadding() {
-  const classes = useStyles();
-  return (
-    <Fragment>
-      { (process.env.NODE_ENV == 'development' && <div className={ classes.message }/>) }
-      <div className={ classes.appbar } />
-    </Fragment>);
+    </Paper>);
 }
 
 export default PaneToolbarDrawer;
