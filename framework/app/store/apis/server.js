@@ -7,7 +7,7 @@ import {
 } from 'store/actions';
 import {
   EMPTY_STATUS, EDIT_STATUS, PROCESS_STATUS, COMPLETE_STATUS, ERROR_STATUS,
-  CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS
+  CLIENT_DOWNLOADED_STATUS, CLIENT_LOCAL_STATUS, CLIENT_WAITING_STATUS
 } from 'store/consts';
 import { getUser, getProject, getProjectServerStatus, getProjectClientStatus } from 'store/selectors';
 
@@ -301,6 +301,7 @@ export function getAnalysisInput(projectId) {
       const { analysisInput } = await res.json();
       const data = { analysisInput };
       dispatch(setProjectData(projectId, data));
+      dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS));
     }
     await projectRequest(projectId, localCallback, serverCallback);
   };
@@ -358,6 +359,7 @@ export function processAnalysisInput(projectId, analysisInput, options) {
       switch (res.status) {
         case 200:
           dispatch(setProjectData(projectId, { status: 'process' }));
+          dispatch(setClientStatus(projectId, CLIENT_WAITING_STATUS));
           break;
         case 412:
           dispatch(queueSnackbar('Project process request rejected'));
@@ -382,6 +384,7 @@ export function cancelProcess(projectId) {
       switch (res.status) {
         case 200:
           dispatch(setProjectData(projectId, { status: EDIT_STATUS }));
+          dispatch(setClientStatus(projectId, CLIENT_DOWNLOADED_STATUS));
           break;
         case 409:
           const msg = `Project ${projectId} cancel request denied - already finished`;
