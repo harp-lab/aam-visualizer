@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import withTheme from '@material-ui/styles/withTheme';
+import { Toolbar, Typography } from '@material-ui/core';
+import { withTheme } from '@material-ui/styles';
 
 function PanelViewer(props) {
   const { label, panels } = props;

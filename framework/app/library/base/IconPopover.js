@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import { IconButton, Popover, Tooltip } from '@material-ui/core';
-import withStyles from '@material-ui/styles/withStyles';
+import { withStyles } from '@material-ui/styles';
 
 function IconPopover(props) {
   const { icon, tooltip, children, classes } = props;

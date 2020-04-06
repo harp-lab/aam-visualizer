@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import {
+  Button,
+  Dialog, DialogContent, DialogActions,
+  TextField
+} from '@material-ui/core';
 import { renameProject } from 'store/apis';
 import { setRenameDialog } from 'store/actions';
 import { getRenameDialog, getProject } from 'store/selectors';
-
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
 
 /** RenameDialog component */
 function RenameDialog() {

@@ -18,11 +18,9 @@ module.exports = {
   resolve: {
     alias: {
       'extensions': path.resolve(fconfig.FRAMEWORK_DIR, 'extensions'),
-
       'components': path.resolve(appDir, 'components'),
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),
-
       'fext': fconfig.FEXT_DIR
     }
   },
@@ -64,15 +62,10 @@ module.exports = {
   },
   optimization: {
     moduleIds: 'hashed',
-    runtimeChunk: 'single',
+    runtimeChunk: 'multiple',
     splitChunks: {
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all'
-        }
-      }
+      chunks: 'all',
+      maxSize: 244000
     },
   },
   plugins: [

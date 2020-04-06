@@ -1,9 +1,5 @@
 import React from 'react';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
+import { Table, TableHead, TableBody, TableRow, TableCell } from '@material-ui/core';
 
 function PanelTable(props) {
   const labels = props.labels
