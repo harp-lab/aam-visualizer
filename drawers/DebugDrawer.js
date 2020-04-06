@@ -8,17 +8,18 @@ function DebugDrawer() {
   const analOut = useSelector(getProjectAnalysisOutput);
   const { debug } = analOut;
   const [open, setOpen] = useState(false);
+
+  if (!debug)
+    return null;
   
-  let debugButton;
-  if (debug)
-    debugButton = <IconButton
-      icon={ <BugReport /> }
-      tooltip='Show debug'
-      onClick={ () => setOpen(!open) } />;
+  const iconColor = open ? 'primary' : 'inherit';
   
   return (
     <Fragment>
-      { debugButton }
+      <IconButton
+        icon={ <BugReport color={ iconColor } /> }
+        tooltip='Show debug'
+        onClick={ () => setOpen(!open) } />
       <PaneToolbarDrawer open={ open }>
         <div
           style={{

@@ -1,5 +1,5 @@
-import React, { Fragment, forwardRef } from 'react';
-import { Drawer as MUIDrawer, Paper } from '@material-ui/core';
+import React, { forwardRef } from 'react';
+import { Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles(theme => ({

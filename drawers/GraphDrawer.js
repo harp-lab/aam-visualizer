@@ -11,6 +11,8 @@ function GraphDrawer() {
   const [graph, setGraph] = useState(graphs[0]);
   const [open, setOpen] = useState(false);
 
+  const iconColor = open ? 'primary' : 'inherit';
+
   const graphItems = graphs.map(graphId => {
     return (
       <MenuItem
@@ -23,7 +25,7 @@ function GraphDrawer() {
   return (
     <Fragment>
       <IconButton
-        icon={ <Share /> }
+        icon={ <Share color={ iconColor } /> }
         tooltip='Show graph'
         onClick={ () => setOpen(!open) } />
       <PaneToolbarDrawer open={ open }>
