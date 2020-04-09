@@ -14,13 +14,11 @@
     "fextConfig": "fext.config.js"
   },
   "scripts": {
-    "build": "webpack --config $npm_package_config_frameworkDir/webpack.config.js",
+    "build": "./framework/cli.js build",
     "release": "npm version patch --no-git-tag-version && npm run build",
-    "start": "node $npm_package_config_frameworkDir/server",
-    "dev": "npm run dev-client & npm run dev-server",
-    "dev-client": "webpack-dev-server --config $npm_package_config_frameworkDir/webpack.config.js",
-    "dev-server": "node $npm_package_config_frameworkDir/nodemon.js",
-    "docs": "jsdoc -c $npm_package_config_frameworkDir/jsdoc.config.js"
+    "start": "./framework/cli.js start",
+    "dev": "./framework/cli.js dev",
+    "docs": "./framework/cli.js docs"
   },
   "author": "",
   "license": "ISC",
@@ -39,7 +37,8 @@
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
-    "reselect": "^4.0.0"
+    "reselect": "^4.0.0",
+    "yargs": "^15.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
