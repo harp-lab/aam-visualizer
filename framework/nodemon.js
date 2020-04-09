@@ -51,9 +51,5 @@ devServer.on('restart', function(files) {
   }
   consoleLog(message);
 });
-devServer.on('quit', function() {
-  consoleLog('monitor exited');
-  process.exit();
-});
 
 consoleLog('monitor started');
