@@ -2,7 +2,7 @@ import React, { Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { MenuItem, Select } from '@material-ui/core';
 import { Share } from '@material-ui/icons';
-import { IconButton, PaneToolbarDrawer } from 'library/base';
+import { IconButton, Pane, PaneToolbarDrawer } from 'library/base';
 import { Graph } from 'library/connected';
 import { getGraphIds } from 'store/selectors';
 
@@ -29,12 +29,14 @@ function GraphDrawer() {
         tooltip='Show graph'
         onClick={ () => setOpen(!open) } />
       <PaneToolbarDrawer open={ open }>
-        <Select
-          value={ graph }
-          onChange={ evt => setGraph(evt.target.value) }>
-          { graphItems }
-        </Select>
-        <Graph graphId={ graph } external style={{ height: '100%' }}/>
+        <Pane>
+          <Select
+            value={ graph }
+            onChange={ evt => setGraph(evt.target.value) }>
+            { graphItems }
+          </Select>
+          <Graph graphId={ graph } external />
+        </Pane>
       </PaneToolbarDrawer>
     </Fragment>);
 }
