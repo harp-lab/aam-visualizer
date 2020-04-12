@@ -1,6 +1,6 @@
 docs
 node_modules
-framework/server/data
+hueshift/server/data
 *.DS_Store
 *.*~
 *.*#
