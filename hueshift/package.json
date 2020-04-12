@@ -14,7 +14,7 @@
     "nodemon.js",
     "webpack.config.js"
   ],
-  "main": "index.js",
+  "main": "cli.js",
   "bin": "cli.js",
   "dependencies": {
     "@material-ui/core": "^4.9.10",
