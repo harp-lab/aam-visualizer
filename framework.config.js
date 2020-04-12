@@ -2,7 +2,6 @@ const path = require('path');
 const package = require(path.resolve(process.cwd(), 'package.json'));
 
 exports.ROOT_DIR = process.cwd();
-exports.FRAMEWORK_DIR = path.resolve(exports.ROOT_DIR, package.config.frameworkDir);
 
 exports.FEXT_DIR = path.resolve(exports.ROOT_DIR, package.config.fextDir);
 exports.FEXT_CONFIG = path.resolve(exports.FEXT_DIR, package.config.fextConfig);

@@ -4,7 +4,8 @@ const nodemon = require('nodemon');
 
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 
-const SERVER_DIR = path.resolve(fconfig.FRAMEWORK_DIR, 'server');
+const FRAMEWORK_DIR = __dirname;
+const SERVER_DIR = path.resolve(FRAMEWORK_DIR, 'server');
 const NODEMON_LOG_TAG = chalk.blackBright('[ndm]');
 
 /**
@@ -50,6 +51,9 @@ devServer.on('restart', function(files) {
     message += `\n  ${coloredPath}`;
   }
   consoleLog(message);
+});
+devServer.on('quit', function() {
+  process.exit();
 });
 
 consoleLog('monitor started');

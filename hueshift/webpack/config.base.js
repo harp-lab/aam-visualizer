@@ -4,7 +4,8 @@ const { EnvironmentPlugin } = require('webpack');
 const fconfig = require(path.resolve(process.cwd(), 'framework.config.js'));
 const package = require(path.resolve(process.cwd(), 'package.json'));
 
-const appDir = path.resolve(fconfig.FRAMEWORK_DIR, 'app');
+const frameworkDir = path.resolve(__dirname, '..');
+const appDir = path.resolve(frameworkDir, 'app');
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   template: path.resolve(appDir, 'template.js')
@@ -17,7 +18,7 @@ module.exports = {
   entry: path.resolve(appDir, 'index.js'),
   resolve: {
     alias: {
-      'extensions': path.resolve(fconfig.FRAMEWORK_DIR, 'extensions'),
+      'extensions': path.resolve(frameworkDir, 'extensions'),
       'components': path.resolve(appDir, 'components'),
       'library': path.resolve(appDir, 'library'),
       'store': path.resolve(appDir, 'store'),
