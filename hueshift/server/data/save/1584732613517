@@ -1,1 +1,0 @@
-{"userId":"guest","status":"edit","analysisInput":"(let ([a #f]\n      [b (lambda(x)(x x))]\n      [c (lambda(y) y)])\n  (let ([d #t]\n        [e (lambda(r)(if r #f #t))])\n    (((b c) e)(e d))))"}
