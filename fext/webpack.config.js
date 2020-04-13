@@ -1,6 +1,6 @@
 const path = require('path');
 
-const rootDir = process.cwd();
+const rootDir = path.resolve(__dirname, '..');
 
 /** webpack config extension */
 exports.config = {
