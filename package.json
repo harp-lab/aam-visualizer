@@ -26,7 +26,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/styles": "^4.9.10",
     "codemirror": "^5.52.2",
-    "hueshift": "0.0.8",
+    "hueshift": "0.0.12",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",
